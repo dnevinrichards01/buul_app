@@ -1,35 +1,39 @@
 //
-//  SwiftUIView.swift
+//  RobinhoodView.swift
 //  accumate_app
 //
-//  Created by Nevin Richards on 12/13/24.
+//  Created by Nevin Richards on 12/14/24.
 //
 
 import SwiftUI
 
-struct LoginView: View {
+struct RobinhoodView: View {
     @State private var username: String = ""
     @State private var password: String = ""
+    @State private var password2: String = ""
     
-    @FocusState private var focusedField: Int?
-    @State private var isKeyboardVisible = false
-    
-    private var fieldBindings: [SignUpField: Binding<String>] {
+    private var fieldBindings: [RobinhoodFields: Binding<String>] {
         [
             .username: $username,
             .password: $password,
+            .password2: $password2
         ]
     }
     
-    @EnvironmentObject var navManager : NavigationPathManager
+    @FocusState private var focusedField: Int?
+    
+    @EnvironmentObject var navManager: NavigationPathManager
     
     var body: some View {
         ScrollViewReader { scrollProxy in
             GeometryReader { geometry in
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 0) { 
-                        ForEach(SignUpField.allCases.indices, id: \.self) { index in
-                            let option = SignUpField.allCases[index]
+                    VStack {
+                        Image("RobinhoodLogo")
+                            .resizable()
+                            .frame(width: 150, height: 150)
+                        ForEach(RobinhoodFields.allCases.indices, id: \.self) { index in
+                            let option = RobinhoodFields.allCases[index]
                             if let binding = fieldBindings[option] {
                                 SignUpFieldView(
                                     instruction: option.instruction,
@@ -43,38 +47,54 @@ struct LoginView: View {
                             Spacer().frame(height: 20)
                         }
                         
-                        // Continue Button
                         Button {
-                            navManager.path.append("HomeView")
+                            navManager.path.append(NavigationPathViews.etf)
                         } label: {
-                            Text("Continue")
+                            Text("Connect")
                                 .font(.headline)
                                 .foregroundColor(.black)
                                 .frame(maxWidth: .infinity, minHeight: 50)
-                                .background(.white)
+                                .background(Color(red: 75/255, green: 135/255, blue: 120/255))
                                 .cornerRadius(10)
                         }
+                        .padding(.top, 20)
+                        Button {
+                            
+                        } label: {
+                            Text("Sign up for Robinhood")
+                                .font(.headline)
+                                .foregroundColor(.white.opacity(0.8))
+                                .frame(maxWidth: .infinity, minHeight: 50)
+                                .background(.black)
+                                .cornerRadius(10)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .stroke(.gray.opacity(0.4), lineWidth: 2)
+                                )
+                        }
+                        .padding(.top, 10)
+                        
                         Spacer()
+                        
                         if focusedField != nil {
                             Color.clear
                                 .frame(height: geometry.size.height * 0.8)
                         }
                     }
                     .padding()
-                    .frame(minHeight: geometry.size.height)
-                    
+                    .frame(maxWidth: .infinity, minHeight: geometry.size.height, maxHeight: .infinity)
                 }
-                .onChange(of: focusedField) { oldValue, newValue in
-                    if let newValue = newValue {
+                .onChange(of: focusedField) { oldFocusedField, newFocusedField in
+                    if let newFocusedField = newFocusedField {
                         scrollToField(
-                            id: newValue,
+                            id: newFocusedField,
                             scrollProxy: scrollProxy
                         )
                     }
                 }
-                .ignoresSafeArea(.keyboard, edges: .all)
                 .background(Color.black.ignoresSafeArea())
-                .navigationBarBackButtonHidden(true)
+                .navigationBarTitleDisplayMode(.inline)
+                .navigationBarBackButtonHidden()
                 .toolbar {
                     ToolbarItem(placement: .navigationBarLeading) {
                         Button(action: {
@@ -87,7 +107,7 @@ struct LoginView: View {
                         }
                     }
                     ToolbarItem(placement: .principal) {
-                        Text("Login")
+                        Text("Connect to Robinhood")
                             .foregroundColor(.white)
                             .font(.system(size: 24, weight: .semibold))
                             .frame(maxHeight: 30)
@@ -122,9 +142,6 @@ struct LoginView: View {
                         .foregroundColor(.blue) // Customize the button appearance
                     }
                 }
-                .navigationDestination(for: String.self) { value in
-                    HomeView()
-                }
             }
         }
     }
@@ -144,14 +161,7 @@ struct LoginView: View {
     }
 }
 
-struct HomeView: View {
-    @EnvironmentObject var navManager: NavigationPathManager
-    var body: some View {
-        Text("Hellooooo")
-    }
-}
-
-
 #Preview {
-    LoginView()
+    RobinhoodView()
+        .environmentObject(NavigationPathManager())
 }

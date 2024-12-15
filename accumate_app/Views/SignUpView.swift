@@ -10,6 +10,7 @@ import SwiftUI
 struct SignUpView: View {
     @State private var username: String = ""
     @State private var password: String = ""
+    @State private var password2: String = ""
     @State private var phoneNumber: String = ""
     @State private var verificationCode: String = ""
     @State private var email: String = ""
@@ -18,10 +19,11 @@ struct SignUpView: View {
     
     @FocusState private var focusedField: Int?
     
-    private var fieldBindings: [SignUpField: Binding<String>] {
+    private var fieldBindings: [SignUpFields: Binding<String>] {
         [
             .username: $username,
             .password: $password,
+            .password2: $password2,
             .firstName: $firstName,
             .lastName: $lastName,
             .phoneNumber: $phoneNumber,
@@ -36,9 +38,29 @@ struct SignUpView: View {
             GeometryReader { geometry in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
+                        HStack {
+                            Spacer()
+                            Text("Already a member?")
+                                .foregroundColor(.white.opacity(0.9))
+                                .font(.system(size: 12))
+                                .background(.black)
+                                .cornerRadius(10)
+                            Button {
+                                navManager.path.append(NavigationPathViews.login)
+                            } label: {
+                                Text("Sign In")
+                                    .foregroundColor(.blue)
+                                    .font(.system(size: 12))
+                                    .background(.black)
+                                    .cornerRadius(10)
+                            }
+                        }
                         
-                        ForEach(SignUpField.allCases.indices, id: \.self) { index in
-                            let option = SignUpField.allCases[index]
+                        Spacer()
+                            .frame(height: 30)
+                        
+                        ForEach(SignUpFields.allCases.indices, id: \.self) { index in
+                            let option = SignUpFields.allCases[index]
                             if let binding = fieldBindings[option] {
                                 SignUpFieldView(
                                     instruction: option.instruction,
@@ -54,7 +76,7 @@ struct SignUpView: View {
                         
                         // Continue Button
                         Button {
-                            navManager.path.append("LinkView")
+                            navManager.path.append(NavigationPathViews.link)
                         } label: {
                             Text("Continue")
                                 .font(.headline)
@@ -63,21 +85,18 @@ struct SignUpView: View {
                                 .background(.white)
                                 .cornerRadius(10)
                         }
-                        .padding(.top, 20)
+                        .padding([.top, .bottom], 20)
                         
-                        if focusedField != nil {
-                            Color.clear
-                                .frame(height: geometry.size.height * 0.7)
-                        }
-                        
-                        Spacer()
-                        
-                        // Footer Text
                         Text("By signing up, you agree to our Terms and Privacy Policy")
                             .foregroundColor(.gray)
                             .font(.system(size: 12))
                             .multilineTextAlignment(.center)
                             .frame(maxWidth: .infinity)
+                        
+                        if focusedField != nil {
+                            Color.clear
+                                .frame(height: geometry.size.height * 0.8)
+                        }
                     }
                     .padding()
                     .frame(minHeight: geometry.size.height)
@@ -87,8 +106,10 @@ struct SignUpView: View {
                         scrollToField(id: newValue, scrollProxy: scrollProxy)
                     }
                 }
+                //.ignoresSafeArea(.keyboard)
                 .background(Color.black.ignoresSafeArea())
                 .navigationBarBackButtonHidden(true)
+                .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .navigationBarLeading) {
                         Button(action: {
@@ -135,9 +156,6 @@ struct SignUpView: View {
                         }
                         .foregroundColor(.blue) // Customize the button appearance
                     }
-                }
-                .navigationDestination(for: String.self) { value in
-                    LinkView()
                 }
             }
         }

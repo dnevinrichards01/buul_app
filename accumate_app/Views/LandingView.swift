@@ -42,7 +42,7 @@ struct LandingView: View {
                     // Buttons
                     VStack(spacing: 20) {
                         Button {
-                            navManager.path.append("LoginView")
+                            navManager.path.append(NavigationPathViews.login)
                         } label: {
                             Text("Login")
                                 .font(.headline)
@@ -53,7 +53,7 @@ struct LandingView: View {
                         }
                         
                         Button {
-                            navManager.path.append("SignUpView")
+                            navManager.path.append(NavigationPathViews.signUp)
                         } label: {
                             Text("Sign Up")
                                 .font(.headline)
@@ -79,11 +79,30 @@ struct LandingView: View {
                 }
             }
             .background(Color.black.ignoresSafeArea())
-            .navigationDestination(for: String.self) { value in
-                if value == "LoginView" {
-                    LoginView()
-                } else if value == "SignUpView" {
+            .navigationDestination(for: NavigationPathViews.self) { view in
+                switch view {
+                case .landing:
+                    LandingView()
+                case .signUp:
                     SignUpView()
+                case .login:
+                    LoginView()
+                case .passwordRecovery:
+                    PasswordRecoveryView()
+                case .link:
+                    LinkView()
+                case .home:
+                    HomeView()
+                case .brokerage:
+                    BrokerageView()
+                case .robinhood:
+                    RobinhoodView()
+                case .etf:
+                    ETFView()
+                case .cards:
+                    CardsView()
+                case .settings:
+                    SettingsView()
                 }
             }
             .toolbar {
@@ -105,15 +124,6 @@ struct LandingView: View {
     }
 }
 
-
-struct NewView: View {
-    var body: some View {
-        Text("Welcome to the New View!")
-            .font(.largeTitle)
-            .padding()
-    }
-    
-}
 
 #Preview {
     LandingView()
