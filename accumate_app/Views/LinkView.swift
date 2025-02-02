@@ -9,6 +9,7 @@ import SwiftUI
 
 struct LinkView: View {
     @EnvironmentObject var navManager : NavigationPathManager
+    @EnvironmentObject var sessionManager: UserSessionManager
     
     @State private var linkCompleted = false
     
@@ -39,9 +40,10 @@ struct LinkView: View {
                     }
                     Spacer()
                     Button {
-                        navManager.path.append(NavigationPathViews.brokerage)
+                        sessionManager.isLoggedIn = true
+                        navManager.path.append(NavigationPathViews.home)
                     } label: {
-                        Text("to Robinhood (temp)")
+                        Text("completed signup (temp)")
                             .font(.headline)
                             .foregroundColor(.black)
                             .frame(maxWidth: .infinity, minHeight: 50)
@@ -56,6 +58,7 @@ struct LinkView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.black)
+        .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden()
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
@@ -69,9 +72,9 @@ struct LinkView: View {
                 }
             }
         }
-        .onChange(of: linkCompleted) {
-            navManager.path.append(NavigationPathViews.brokerage)
-        }
+//        .onChange(of: linkCompleted) {
+//            navManager.path.append(NavigationPathViews.home)
+//        }
     }
 
 }

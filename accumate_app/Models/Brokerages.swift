@@ -18,17 +18,17 @@ enum Brokerages: CaseIterable {
         }
     }
     
-    var logo: Image {
+    var imageName: String {
         switch self {
         case .robinhood:
-            return Image("RobinhoodLogo")
+            return "RobinhoodLogo"
         }
     }
     
     var connectPage: NavigationPathViews {
         switch self {
         case .robinhood:
-            return NavigationPathViews.robinhood
+            return NavigationPathViews.signUpRobinhood
         }
     }
     

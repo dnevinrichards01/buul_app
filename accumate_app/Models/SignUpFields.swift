@@ -13,8 +13,7 @@ enum SignUpFields: CaseIterable {
     case username
     case password
     case password2
-    case firstName
-    case lastName
+    case fullName
     case phoneNumber
     case email
     
@@ -26,14 +25,46 @@ enum SignUpFields: CaseIterable {
             return "Enter a password"
         case .password2:
             return "Retype your password"
-        case .firstName:
-            return "Enter your first name"
-        case .lastName:
-            return "Enter your last name"
+        case .fullName:
+            return "Enter your full name"
         case .phoneNumber:
             return "Enter your phone number"
         case .email:
             return "Enter your email"
+        }
+    }
+    
+    var loginInstruction: String {
+        switch self {
+        case .username:
+            return "Enter your user name"
+        case .password:
+            return "Enter your password"
+        case .password2:
+            return "Retype your password"
+        case .fullName:
+            return "Enter your full name"
+        case .phoneNumber:
+            return "Enter your phone number"
+        case .email:
+            return "Enter your email"
+        }
+    }
+        
+    var resetInstruction: String {
+        switch self {
+        case .username:
+            return "Enter your new user name"
+        case .password:
+            return "Enter your new password"
+        case .password2:
+            return "Retype your new password"
+        case .fullName:
+            return "Enter your corrected full name"
+        case .phoneNumber:
+            return "Enter your new phone number"
+        case .email:
+            return "Enter your new email"
         }
     }
     
@@ -45,10 +76,8 @@ enum SignUpFields: CaseIterable {
             return "password"
         case .password2:
             return "password"
-        case .firstName:
-            return "First name"
-        case .lastName:
-            return "Last name"
+        case .fullName:
+            return ""
         case .phoneNumber:
             return "(555) 123-4567"
         case .email:
@@ -64,15 +93,12 @@ enum SignUpFields: CaseIterable {
             return .default
         case .password2:
             return .default
-        case .firstName:
-            return .default
-        case .lastName:
+        case .fullName:
             return .default
         case .phoneNumber:
             return .phonePad
         case .email:
             return .emailAddress
-        
         }
     }
 }

@@ -40,6 +40,8 @@ struct SignUpFieldView: View {
     var placeholder : String
     @Binding var inputValue : String
     var keyboard : UIKeyboardType
+    var errorMessage : String?
+    var displayErrorMessage : Bool = true
     
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
@@ -53,6 +55,20 @@ struct SignUpFieldView: View {
                 placeholder: placeholder,
                 keyboard: keyboard
             )
+            
+            if displayErrorMessage {
+                if let error = errorMessage {
+                    Text(error)
+                        .foregroundColor(.red)
+                        .font(.system(size: 18))
+                        .background(.black)
+                        .cornerRadius(10)
+                        .padding(.bottom, 10)
+                } else {
+                    Spacer()
+                        .frame(height: 20)
+                }
+            }
         }
     }
 }
@@ -62,7 +78,8 @@ struct SignUpFieldView: View {
         instruction: "example instruction",
         placeholder: "value like this",
         inputValue: .constant(""),
-        keyboard: UIKeyboardType.phonePad
+        keyboard: UIKeyboardType.phonePad,
+        errorMessage: nil
     )
     .background(.black)
 }

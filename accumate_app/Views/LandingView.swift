@@ -3,20 +3,12 @@ import SwiftUI
 
 struct LandingView: View {
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
-
-    @EnvironmentObject var navManager : NavigationPathManager
     
-    init() {
-        // Configure appearance for the navigation bar
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor.black
-        
-        // Apply appearance to the navigation bar
-        UINavigationBar.appearance().standardAppearance = appearance
-        UINavigationBar.appearance().scrollEdgeAppearance = appearance
-    }
-
+    @EnvironmentObject var navManager: NavigationPathManager
+    @EnvironmentObject var sessionManager: UserSessionManager
+    
+    @State var temp: String = ""
+    
     var body: some View {
         
         NavigationStack(path: $navManager.path) {
@@ -53,7 +45,8 @@ struct LandingView: View {
                         }
                         
                         Button {
-                            navManager.path.append(NavigationPathViews.signUp)
+                            navManager.path.append(NavigationPathViews.signUpPhone)
+//                            navManager.path.append(NavigationPathViews.home)
                         } label: {
                             Text("Sign Up")
                                 .font(.headline)
@@ -77,33 +70,114 @@ struct LandingView: View {
                     Spacer()
                         .frame(height: geometry.size.height * 0.1)
                 }
+//                .onAppear {
+//                    navManager.resetNavigation()
+//                }
             }
+            .navigationBarBackButtonHidden(true)
+            .navigationBarTitleDisplayMode(.inline)
             .background(Color.black.ignoresSafeArea())
             .navigationDestination(for: NavigationPathViews.self) { view in
                 switch view {
                 case .landing:
                     LandingView()
-                case .signUp:
-                    SignUpView()
-                case .login:
-                    LoginView()
-                case .passwordRecovery:
-                    PasswordRecoveryView()
-                case .link:
-                    LinkView()
                 case .home:
                     HomeView()
-                case .brokerage:
-                    BrokerageView()
-                case .robinhood:
-                    RobinhoodView()
-                case .etf:
-                    ETFView()
-                case .cards:
-                    CardsView()
-                case .settings:
-                    SettingsView()
+                
+                case .signUpPhone:
+                    SignUpPhoneView()
+                case .signUpEmail:
+                    SignUpEmailView()
+                case .signUpEmailVerify:
+                    SignUpEmailVerifyView()
+                case .signUpFullName:
+                    SignUpFullNameView()
+                case .signUpETFs:
+                    SignUpETFsView()
+                case .signUpBrokerage:
+                    SignUpBrokerageView()
+                case .signUpRobinhoodSecurityInfo:
+                    RobinhoodSecurityInfoView()
+                case .signUpRobinhood:
+                    SignUpRobinhoodView()
+                case .login:
+                    LoginView(signUpFields: [.username, .password])
+                case .link:
+                    LinkView()
+                case .emailRecover:
+                    EmailRecoverView()
+                case .passwordRecoverInitiate:
+                    PasswordRecoverInitiateView()
+                case .passwordRecoveryOTP:
+                    OTPView(
+                        title: "Reset Password",
+                        subtitle: "Enter the code sent to your email",
+                        nextPage: NavigationPathViews.passwordRecover
+                    )
+                case .passwordRecover:
+                    ChangeAccountInfoView(signUpFields: [.password, .password2])
+                case .accountInfo:
+                    SettingsAccountInfoView()
+                case .bank:
+                    SettingsBankInfoView()
+                case .help:
+                    SettingsHelpView()
+                case .deleteOTP:
+                    OTPView(
+                        title: "Delete Account",
+                        subtitle: "Enter the code sent to your email to proceed. You cannot undo this action and all data will be lost.",
+                        nextPage: NavigationPathViews.delete
+                    )
+                case .delete:
+                    SettingsDeleteView()
+                case .changePasswordOTP:
+                    OTPView(
+                        title: "Reset Password",
+                        subtitle: "Enter the code sent to your email to verify your identity before we proceed.",
+                        nextPage: NavigationPathViews.changePassword
+                    )
+                case .changePassword:
+                    ChangeAccountInfoView(signUpFields: [.password, .password2])
+                case .changeEmailOTP:
+                    OTPView(
+                        title: "Change Email Address",
+                        subtitle: "Enter the code sent to your email to verify your identity before we proceed.",
+                        nextPage: NavigationPathViews.changeEmail
+                    )
+                case .changeEmail:
+                    ChangeAccountInfoView(signUpFields: [SignUpFields.email])
+                case .changePhoneOTP:
+                    OTPView(
+                        title: "Change Phone Number",
+                        subtitle: "Enter the code sent to your email to verify your identity before we proceed.",
+                        nextPage: NavigationPathViews.changePhone
+                    )
+                case .changePhone:
+                    ChangeAccountInfoView(signUpFields: [SignUpFields.phoneNumber])
+                case .changeNameOTP:
+                    OTPView(
+                        title: "Change Name",
+                        subtitle: "Enter the code sent to your email to verify your identity before we proceed.",
+                        nextPage: NavigationPathViews.changeName
+                    )
+                case .changeName:
+                    ChangeAccountInfoView(signUpFields: [SignUpFields.fullName])
+                case .changeBrokerage:
+                    SignUpBrokerageView(isSignUp: false)
+                case .robinhoodSecurityInfo:
+                    RobinhoodSecurityInfoView(isSignUp: false)
+                case .connectRobinhood:
+                    SignUpRobinhoodView(isSignUp: false)
+                case .changeETFOTP:
+                    OTPView(
+                        title: "Change Your Investment",
+                        subtitle: "Enter the code sent to your email to verify your identity before we proceed.",
+                        nextPage: NavigationPathViews.changeETF
+                    )
+                case .changeETF:
+                    SignUpETFsView(isSignUp: false)
                 }
+
             }
             .toolbar {
                 ToolbarItem (placement: .topBarLeading) {
@@ -119,13 +193,12 @@ struct LandingView: View {
                 }
             }
             .environmentObject(navManager)
-            
         }
     }
 }
 
-
 #Preview {
     LandingView()
         .environmentObject(NavigationPathManager())
+        .environmentObject(UserSessionManager())
 }

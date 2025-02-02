@@ -7,45 +7,38 @@
 
 import SwiftUI
 
-enum ETFProviders: CaseIterable {
-    case invesco
-    case vanguard
-    case ishares
-    
-    var text: String {
-        switch self {
-        case .invesco: return "Invesco"
-        case .vanguard: return "Vanguard"
-        case .ishares: return "iShares"
-        }
-    }
-    
-    var logo: Image {
-        switch self {
-        case .invesco: return Image("RobinhoodLogo")
-        case .vanguard: return Image("RobinhoodLogo")
-        case .ishares: return Image("RobinhoodLogo")
-        }
-    }
-    
-    var etfs: [ETF] {
-        switch self {
-        case .invesco:
-            return [ETF(text: "iShares Bitcoin Trust ETF", growth: "101.73%")]
-        case .vanguard:
-            return [
-                ETF(text: "VOO (Vanguard S&P 500 ETF)", growth: "89.99%"),
-                ETF(text: "VOOG (Vanguard S&P 500 Growth)", growth: "110.98%")
-            ]
-        case .ishares:
-            return [ETF(text: "Invesco QQQ", growth: "159.59%")]
-        }
-    }
+
+var etfsList: [ETF] = [invesco, voo, voog, ishares]
+
+var invesco: ETF = ETF(
+    imageName: "Invesco",
+    name: "Invesco QQQ",
+    timePeriod: "5 years",
+    growth: 138.76
+)
+var voo: ETF = ETF(
+    imageName: "Vanguard",
+    name: "VOO (Vanguard S&P 500)",
+    timePeriod: "5 years",
+    growth: 88.64
+)
+var voog: ETF = ETF(
+    imageName: "Vanguard",
+    name: "VOOG (Vanguard S&P 500 Growth)",
+    timePeriod: "5 years",
+    growth: 111.64
+)
+var ishares: ETF = ETF(
+    imageName: "Bitcoin",
+    name: "IBIT (iShares Bitcoin Trust)",
+    timePeriod: "1 year",
+    growth: 113.74
+)
+
+struct ETF: Identifiable, Hashable {
+    let id: UUID = UUID()
+    let imageName: String
+    let name: String
+    let timePeriod: String
+    let growth: Double
 }
-
-struct ETF: Codable, Hashable {
-    let text: String
-    let growth: String
-}
-
-
