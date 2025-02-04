@@ -100,6 +100,8 @@ struct LandingView: View {
                     RobinhoodSecurityInfoView()
                 case .signUpRobinhood:
                     SignUpRobinhoodView()
+                case .signUpMfaRobinhood:
+                    SignUpRobinhoodMFAView()
                 case .login:
                     LoginView(signUpFields: [.username, .password])
                 case .link:
@@ -168,6 +170,8 @@ struct LandingView: View {
                     RobinhoodSecurityInfoView(isSignUp: false)
                 case .connectRobinhood:
                     SignUpRobinhoodView(isSignUp: false)
+                case .mfaRobinhood:
+                    SignUpRobinhoodMFAView(isSignUp: false)
                 case .changeETFOTP:
                     OTPView(
                         title: "Change Your Investment",
@@ -176,6 +180,8 @@ struct LandingView: View {
                     )
                 case .changeETF:
                     SignUpETFsView(isSignUp: false)
+                case .plaidSettings:
+                    SettingsPlaidView()
                 }
 
             }

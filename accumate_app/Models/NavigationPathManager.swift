@@ -24,7 +24,9 @@ class UserSessionManager: ObservableObject {
     @Published var accessToken: String? // keychain
     @Published var refreshToken: String? // keychain
     @Published var username: String? // keychain
-    // also store password in keychain. add keychain / autofill support to remember uname/pword
+    @Published var otp: String? // don't store
+    @Published var rhMfaMethod: RobinhoodMFAMethod? // don't store
+    // also store password in keychain but don't load it into UserSessionManager
     // face ID can come later
     
 }

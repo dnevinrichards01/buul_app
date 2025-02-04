@@ -71,8 +71,7 @@ struct SettingsBankInfoView: View {
             if let selectedBankingSetting = selectedBankingSetting {
                 switch selectedBankingSetting {
                 case .accounts:
-//                    navManager.path.append(NavigationPathViews.changePasswordOTP)
-                    EmptyView()
+                    navManager.path.append(NavigationPathViews.plaidSettings)
                 case .changeBrokerage:
                     navManager.path.append(NavigationPathViews.changeBrokerage)
                 case .changeInvestment:
@@ -123,4 +122,6 @@ enum BankingSettings: CaseIterable {
 
 #Preview {
     SettingsBankInfoView()
+        .environmentObject(NavigationPathManager())
+        .environmentObject(UserSessionManager())
 }

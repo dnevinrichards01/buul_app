@@ -25,6 +25,7 @@ struct SignUpRobinhoodView: View {
     @State private var showAlert: Bool = false
     
     @EnvironmentObject var navManager: NavigationPathManager
+    @EnvironmentObject var sessionManager: UserSessionManager
     
     var body: some View {
         VStack {
@@ -47,20 +48,22 @@ struct SignUpRobinhoodView: View {
                 Spacer().frame(height: 20)
             }
             
+            Spacer()
+            
             Button {
-                let mfaMethod: RobinhoodMFAMethod = signInToRobinhood()
-                switch mfaMethod {
-                case .sms:
-                    EmptyView()
-                case .deviceApprovals:
-                    EmptyView()
-                case .app:
-                    EmptyView()
-                case .none:
+                let mfaMethod: RobinhoodMFAMethod = .app//signInToRobinhood()
+                sessionManager.rhMfaMethod = mfaMethod
+                if mfaMethod == .none {
                     if isSignUp {
                         navManager.path.append(NavigationPathViews.link)
                     } else {
                         showAlert = true
+                    }
+                } else {
+                    if isSignUp {
+                        navManager.path.append(NavigationPathViews.signUpMfaRobinhood)
+                    } else {
+                        navManager.path.append(NavigationPathViews.mfaRobinhood)
                     }
                 }
             } label: {
@@ -108,8 +111,6 @@ struct SignUpRobinhoodView: View {
             }
             .padding(.horizontal, 20)
             .padding(.top, 10)
-            
-            Spacer()
         }
         .padding()
         .background(Color.black.ignoresSafeArea())
@@ -155,4 +156,5 @@ enum RobinhoodMFAMethod: CaseIterable {
 #Preview {
     SignUpRobinhoodView()
         .environmentObject(NavigationPathManager())
+        .environmentObject(UserSessionManager())
 }

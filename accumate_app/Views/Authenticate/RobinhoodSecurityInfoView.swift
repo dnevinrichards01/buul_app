@@ -79,6 +79,20 @@ struct RobinhoodSecurityInfoView: View {
             .padding()
         }
         .background(.black)
+        .navigationBarBackButtonHidden(true)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: {
+                    navManager.path.removeLast()
+                }) {
+                    Image(systemName: "chevron.left")
+                        .foregroundColor(.white)
+                        .font(.system(size: 20, weight: .medium))
+                        .frame(maxHeight: 30)
+                }
+            }
+        }
     }
 }
 

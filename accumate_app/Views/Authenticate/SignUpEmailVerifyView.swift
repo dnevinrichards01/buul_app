@@ -19,6 +19,20 @@ struct SignUpEmailVerifyView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+            VStack (alignment: .center) {
+                Text("Verify Your Email")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.white)
+                    .multilineTextAlignment(.center)
+                    .padding(.bottom, 20)
+                Text("Enter the code sent to your email address")
+                    .font(.headline)
+                    .foregroundStyle(.white.opacity(0.8))
+                    .multilineTextAlignment(.leading)
+            }
+            .frame(maxWidth: .infinity)
+            
             Spacer()
             OTPFieldView(otp: $otp)
             Spacer()

@@ -19,6 +19,7 @@ enum NavigationPathViews: CaseIterable {
     case signUpBrokerage
     case signUpRobinhoodSecurityInfo
     case signUpRobinhood
+    case signUpMfaRobinhood
     case login
     case link
     case passwordRecoveryOTP
@@ -42,7 +43,9 @@ enum NavigationPathViews: CaseIterable {
     case changeBrokerage
     case robinhoodSecurityInfo
     case connectRobinhood
+    case mfaRobinhood
     case changeETFOTP
     case changeETF
+    case plaidSettings
 }
 
