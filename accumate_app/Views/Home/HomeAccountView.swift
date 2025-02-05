@@ -63,20 +63,20 @@ struct HomeAccountView: View {
             .onChange(of: showAlert) { oldValue, newValue in
                 if oldValue == true && newValue == false {
                     sessionManager.isLoggedIn = false
-                    navManager.resetNavigation()
+                    navManager.reset(views: [.landing])
                 }
             }
             .onChange(of: selectedSetting) { newSetting, oldSetting in
                 if let selectedSetting = selectedSetting {
                     switch selectedSetting {
                     case .accountInfo:
-                        navManager.path.append(NavigationPathViews.accountInfo)
+                        navManager.append(NavigationPathViews.accountInfo)
                     case .bank:
-                        navManager.path.append(NavigationPathViews.bank)
+                        navManager.append(NavigationPathViews.bank)
                     case .help:
-                        navManager.path.append(NavigationPathViews.help)
+                        navManager.append(NavigationPathViews.help)
                     case .delete:
-                        navManager.path.append(NavigationPathViews.deleteOTP)
+                        navManager.append(NavigationPathViews.deleteOTP)
                     case .logout:
                         // some code
                         showAlert = true
@@ -91,24 +91,6 @@ struct HomeAccountView: View {
         }
     }
 }
-
-//import SwiftUI
-//
-//enum AccountInfo: CaseIterable {
-//    case .password
-//    case .email
-//    case .phone
-//    case .name
-//    
-//    var displayName: String {
-//        switch self {
-//        case .password: return "Password"
-//        case .email: return "Email"
-//        case .phone: return "Phone Number"
-//        case .name: return "Full Name"
-//        }
-//    }
-//}
 
 enum AccountSettings: CaseIterable {
     case accountInfo

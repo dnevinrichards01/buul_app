@@ -41,7 +41,7 @@ struct PasswordRecoverInitiateView: View {
             
             Button {
                 sendEmailOTP()
-                navManager.path.append(NavigationPathViews.passwordRecoveryOTP)
+                navManager.append(NavigationPathViews.passwordRecoveryOTP)
             } label: {
                 Text("Send")
                     .font(.headline)

@@ -37,7 +37,7 @@ struct SignUpFullNameView: View {
                     if !validateFullName() {
                         errorMessage = "Avoid numbers and special characters like punctuation"
                     } else {
-                        navManager.path.append(NavigationPathViews.signUpETFs)
+                        navManager.append(NavigationPathViews.signUpETFs)
                     }
                     
                 } label: {

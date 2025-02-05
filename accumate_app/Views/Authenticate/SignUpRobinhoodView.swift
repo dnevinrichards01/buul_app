@@ -55,15 +55,15 @@ struct SignUpRobinhoodView: View {
                 sessionManager.rhMfaMethod = mfaMethod
                 if mfaMethod == .none {
                     if isSignUp {
-                        navManager.path.append(NavigationPathViews.link)
+                        navManager.append(NavigationPathViews.link)
                     } else {
                         showAlert = true
                     }
                 } else {
                     if isSignUp {
-                        navManager.path.append(NavigationPathViews.signUpMfaRobinhood)
+                        navManager.append(NavigationPathViews.signUpMfaRobinhood)
                     } else {
-                        navManager.path.append(NavigationPathViews.mfaRobinhood)
+                        navManager.append(NavigationPathViews.mfaRobinhood)
                     }
                 }
             } label: {

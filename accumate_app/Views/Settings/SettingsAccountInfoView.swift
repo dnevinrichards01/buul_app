@@ -56,14 +56,14 @@ struct SettingsAccountInfoView: View {
             if let selectedAccountInfo = selectedAccountInfo {
                 switch selectedAccountInfo {
                 case .password:
-                    navManager.path.append(NavigationPathViews.changePasswordOTP)
+                    navManager.append(NavigationPathViews.changePasswordOTP)
                 case .email:
-                    navManager.path.append(NavigationPathViews.changeEmailOTP)
+                    navManager.append(NavigationPathViews.changeEmailOTP)
                     // another one in case someone forgot their account and want us to email them
                 case .phone:
-                    navManager.path.append(NavigationPathViews.changePhoneOTP)
+                    navManager.append(NavigationPathViews.changePhoneOTP)
                 case .name:
-                    navManager.path.append(NavigationPathViews.changeNameOTP)
+                    navManager.append(NavigationPathViews.changeNameOTP)
                 }
             }
         }

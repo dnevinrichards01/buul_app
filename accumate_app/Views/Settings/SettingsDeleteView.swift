@@ -66,7 +66,7 @@ struct SettingsDeleteView: View {
                 }
                 .onChange(of: showAlert) { oldValue, newValue in
                     if oldValue == true && newValue == false {
-                        navManager.resetNavigation()
+                        navManager.reset(views: [.landing])
                     }
                 }
             }

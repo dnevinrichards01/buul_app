@@ -35,10 +35,20 @@ var ishares: ETF = ETF(
     growth: 113.74
 )
 
-struct ETF: Identifiable, Hashable {
-    let id: UUID = UUID()
+struct ETF: Identifiable, Hashable, Codable {
+    let id: UUID
     let imageName: String
     let name: String
     let timePeriod: String
     let growth: Double
+    
+    
+    init(id: UUID = UUID(), imageName: String, name: String, timePeriod: String, growth: Double) {
+        self.id = id
+        self.imageName = imageName
+        self.name = name
+        self.timePeriod = timePeriod
+        self.growth = growth
+    }
 }
+

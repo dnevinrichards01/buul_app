@@ -14,7 +14,9 @@ struct SignUpPhoneView: View {
     @State private var phoneNumber: String = "+1"
     @State private var errorMessage: String?
     
-    @EnvironmentObject var navManager : NavigationPathManager
+    @EnvironmentObject var navManager: NavigationPathManager
+    @EnvironmentObject var sessionManager: UserSessionManager
+    
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -28,7 +30,7 @@ struct SignUpPhoneView: View {
                     .background(.black)
                     .cornerRadius(10)
                 Button {
-                    navManager.path.append(NavigationPathViews.login)
+                    navManager.append(NavigationPathViews.login)
                 } label: {
                     Text("Log In")
                         .foregroundColor(.blue)
@@ -59,7 +61,8 @@ struct SignUpPhoneView: View {
                     if !validatePhone() {
                         errorMessage = "Number is either invalid or already in use"
                     } else {
-                        navManager.path.append(NavigationPathViews.signUpEmail)
+                        sessionManager.phoneNumber = phoneNumber
+                        navManager.append(NavigationPathViews.signUpEmail)
                     }
                 } label: {
                     Text("Continue")
@@ -86,9 +89,7 @@ struct SignUpPhoneView: View {
         .navigationBarBackButtonHidden(true)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
-//            if let countryCode = Locale.current.regionCode {
-//                phoneNumber = "+\(countryCodeToPrefix[countryCode] ?? "1")"
-//            }
+            phoneNumber = sessionManager.phoneNumber ?? "+1"
             startKeyboardObserver()
         }
         .onDisappear {
@@ -165,4 +166,5 @@ struct SignUpPhoneView: View {
 #Preview {
     SignUpPhoneView()
         .environmentObject(NavigationPathManager())
+        .environmentObject(UserSessionManager())
 }

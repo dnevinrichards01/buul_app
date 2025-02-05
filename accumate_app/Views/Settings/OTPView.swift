@@ -48,7 +48,7 @@ struct OTPView: View {
                     if !validateOTPEmail() {
                         errorMessage = "Code is incorrect or expired"
                     } else {
-                        navManager.path.append(nextPage)
+                        navManager.append(nextPage)
                     }
                     
                 } label: {

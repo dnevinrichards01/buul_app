@@ -43,7 +43,7 @@ struct SignUpEmailVerifyView: View {
                     if !validateOTP() {
                         errorMessage = "Code is incorrect or expired"
                     } else {
-                        navManager.path.append(NavigationPathViews.signUpFullName)
+                        navManager.append(NavigationPathViews.signUpFullName)
                     }
                     
                 } label: {
@@ -76,9 +76,6 @@ struct SignUpEmailVerifyView: View {
         .navigationBarBackButtonHidden(true)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
-//            if let countryCode = Locale.current.regionCode {
-//                phoneNumber = "+\(countryCodeToPrefix[countryCode] ?? "1")"
-//            }
             startKeyboardObserver()
         }
         .onDisappear {

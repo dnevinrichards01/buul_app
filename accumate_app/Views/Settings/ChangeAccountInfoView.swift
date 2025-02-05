@@ -18,6 +18,8 @@ struct ChangeAccountInfoView: View {
     @State private var showAlert: Bool = false
     @FocusState private var focusedField: Int?
     
+    var title: String
+    
     
     
     @EnvironmentObject var navManager: NavigationPathManager
@@ -38,8 +40,12 @@ struct ChangeAccountInfoView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Spacer()
-                .frame(height: 50)
+            Text(title)
+                .font(.largeTitle)
+                .fontWeight(.bold)
+                .foregroundStyle(.white)
+                .multilineTextAlignment(.center)
+                .padding(.bottom, 20)
             
             ForEach(SignUpFields.allCases.indices, id: \.self) { index in
                 let signUpField = SignUpFields.allCases[index]
@@ -79,7 +85,7 @@ struct ChangeAccountInfoView: View {
                     }
                     if !isError {
                         showAlert = true
-                        navManager.path.append(NavigationPathViews.home)
+                        navManager.append(NavigationPathViews.home)
                     }
                 } label: {
                     Text("Submit")
@@ -95,7 +101,7 @@ struct ChangeAccountInfoView: View {
                 }
                 .onChange(of: showAlert) { oldValue, newValue in
                     if oldValue == true && newValue == false {
-                        navManager.resetNavigation()
+                        navManager.reset()
                     }
                 }
             }
@@ -203,7 +209,7 @@ struct ChangeAccountInfoView: View {
 
 
 #Preview {
-    ChangeAccountInfoView(signUpFields: [.password, .password2])
+    ChangeAccountInfoView(title: "Reset Password", signUpFields: [.password, .password2])
         .environmentObject(NavigationPathManager())
         .environmentObject(UserSessionManager())
 }

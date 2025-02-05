@@ -61,7 +61,7 @@ struct SignUpETFsView: View {
         }
         .onChange(of: selectedETF) {
             if isSignUp {
-                navManager.path.append(NavigationPathViews.signUpRobinhoodSecurityInfo)
+                navManager.append(NavigationPathViews.signUpBrokerage)
             } else {
                 showAlert = true
             }
@@ -89,11 +89,13 @@ struct SignUpETFsView: View {
                         .frame(maxHeight: 30)
                 }
             }
-            ToolbarItem(placement: .principal) {
-                Text("Sign Up")
-                    .foregroundColor(.white)
-                    .font(.system(size: 24, weight: .semibold))
-                    .frame(maxHeight: 30)
+            if isSignUp {
+                ToolbarItem(placement: .principal) {
+                    Text("Sign Up")
+                        .foregroundColor(.white)
+                        .font(.system(size: 24, weight: .semibold))
+                        .frame(maxHeight: 30)
+                }
             }
         }
     }

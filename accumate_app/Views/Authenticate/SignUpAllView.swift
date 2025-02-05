@@ -44,7 +44,7 @@
 //                                .background(.black)
 //                                .cornerRadius(10)
 //                            Button {
-//                                navManager.path.append(NavigationPathViews.login)
+//                                navManager.append(NavigationPathViews.login)
 //                            } label: {
 //                                Text("Sign In")
 //                                    .foregroundColor(.blue)

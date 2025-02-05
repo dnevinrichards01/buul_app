@@ -37,7 +37,7 @@ struct SignUpEmailView: View {
                     if !validateEmail() {
                         errorMessage = "Enter a valid email address"
                     } else {
-                        navManager.path.append(NavigationPathViews.signUpEmailVerify)
+                        navManager.append(NavigationPathViews.signUpEmailVerify)
                     }
                     
                 } label: {

@@ -65,11 +65,12 @@ struct SignUpBrokerageView: View {
                 case .robinhood:
                     // save robinhood
                     if isSignUp {
-                        navManager.path.append(NavigationPathViews.signUpRobinhoodSecurityInfo)
+                        navManager.append(NavigationPathViews.signUpRobinhoodSecurityInfo)
                     } else {
-                        navManager.path.append(NavigationPathViews.robinhoodSecurityInfo)
+                        navManager.append(NavigationPathViews.robinhoodSecurityInfo)
                     }
                 }
+                
             }
         }
         .toolbar {

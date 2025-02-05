@@ -57,7 +57,7 @@ struct LoginView: View {
                     .foregroundColor(.white.opacity(0.9))
                     .font(.system(size: 15))
                 Button {
-                    navManager.path.append(NavigationPathViews.emailRecover)
+                    navManager.append(NavigationPathViews.emailRecover)
                 } label: {
                     Text("email")
                         .foregroundColor(.blue)
@@ -67,7 +67,7 @@ struct LoginView: View {
                     .foregroundColor(.white.opacity(0.9))
                     .font(.system(size: 15))
                 Button {
-                    navManager.path.append(NavigationPathViews.passwordRecoverInitiate)
+                    navManager.append(NavigationPathViews.passwordRecoverInitiate)
                 } label: {
                     Text("password?")
                         .foregroundColor(.blue)
@@ -100,7 +100,7 @@ struct LoginView: View {
                 }
                 if !isError {
                     sessionManager.isLoggedIn = true
-                    navManager.path.append(NavigationPathViews.home)
+                    navManager.append(NavigationPathViews.home)
                 }
             } label: {
                 Text("Continue")

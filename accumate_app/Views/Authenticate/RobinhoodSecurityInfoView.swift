@@ -64,9 +64,9 @@ struct RobinhoodSecurityInfoView: View {
             // Continue Button
             Button {
                 if isSignUp {
-                    navManager.path.append(NavigationPathViews.signUpRobinhood)
+                    navManager.append(NavigationPathViews.signUpRobinhood)
                 } else {
-                    navManager.path.append(NavigationPathViews.connectRobinhood)
+                    navManager.append(NavigationPathViews.connectRobinhood)
                 }
             } label: {
                 Text("Connect")

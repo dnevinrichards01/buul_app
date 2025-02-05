@@ -88,7 +88,7 @@ struct SignUpRobinhoodMFAView: View {
                     } else {
                         sessionManager.rhMfaMethod = nil
                         if isSignUp {
-                            navManager.path.append(NavigationPathViews.link)
+                            navManager.append(NavigationPathViews.link)
                         } else {
                             showAlert = true
                         }
@@ -220,12 +220,12 @@ struct SignUpRobinhoodMFAView: View {
     
     private func validateOTP() -> String? {
         let error = "Code is incorrect or expired. \nEnter a new code or resubmit your login credentials on the previous page."
-        return error
+        return nil
     }
     
     private func validateDeviceApprovalLogin() -> String? {
         let error = "Login unsuccessful or expired. \nResubmit your login credentials on the previous page."
-        return error
+        return nil
     }
 
     

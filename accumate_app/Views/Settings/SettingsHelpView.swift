@@ -12,7 +12,9 @@ struct SettingsHelpView: View {
     
     private var email: String = "accumate-verify@accumatewealth.com"
     @State private var selectedHelpSetting: HelpSettings?
+    
     @EnvironmentObject var navManager: NavigationPathManager
+    @EnvironmentObject var sessionManager: UserSessionManager
     
     var body: some View {
         VStack() {
@@ -117,4 +119,5 @@ enum HelpSettings: CaseIterable {
 #Preview {
     SettingsHelpView()
         .environmentObject(NavigationPathManager())
+        .environmentObject(UserSessionManager())
 }

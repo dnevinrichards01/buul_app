@@ -14,58 +14,54 @@ struct HomeView: View {
 //    private var currentData = [StockDataPoint(date: Date.now, price: 0.0), StockDataPoint(date: Date.now, price: 0.0)]
     
     var body: some View {
-        if sessionManager.isLoggedIn {
-            VStack {
-                Color.black
-                    .frame(height: 5)
-                    .edgesIgnoringSafeArea(.top)
-                ScrollView {
-                    switch tabSelected {
-                    case .stocks:
-                        HomeStocksView()
-                    case .cards:
-                        HomeCardsView()
-                    case .account:
-                        HomeAccountView()
-                    } 
+        VStack {
+            Color.black
+                .frame(height: 5)
+                .edgesIgnoringSafeArea(.top)
+            ScrollView {
+                switch tabSelected {
+                case .stocks:
+                    HomeStocksView()
+                case .cards:
+                    HomeCardsView()
+                case .account:
+                    HomeAccountView()
                 }
-                Spacer()
             }
-            .navigationTitle("")
-            .navigationBarBackButtonHidden(true)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                //            ToolbarItem(placement: .topBarTrailing) {
-                //                Image(systemName: "line.3.horizontal")
-                //                    .resizable()
-                //                    .frame(width: 27, height: 20)
-                //                    .foregroundColor(.white)
-                //                    .padding()
-                //            }
-                ToolbarItemGroup(placement: .bottomBar) {
-                    HStack {
-                        Spacer()
-                        ForEach(HomeTabs.allCases, id: \.self) { tab in
-                            Button {
-                                tabSelected = tab
-                            } label: {
-                                Image(systemName: tab.imageName)
-                                    .resizable()
-                                    .scaledToFit()
-                                    .foregroundStyle(tabSelected == tab ? .white : .gray)
-                                    .frame(width: tab == .account ? 40 : 50, height: 40)
-                            }
-                            .padding(.horizontal, 25)
-                            
+            Spacer()
+        }
+        .navigationTitle("")
+        .navigationBarBackButtonHidden(true)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            //            ToolbarItem(placement: .topBarTrailing) {
+            //                Image(systemName: "line.3.horizontal")
+            //                    .resizable()
+            //                    .frame(width: 27, height: 20)
+            //                    .foregroundColor(.white)
+            //                    .padding()
+            //            }
+            ToolbarItemGroup(placement: .bottomBar) {
+                HStack {
+                    Spacer()
+                    ForEach(HomeTabs.allCases, id: \.self) { tab in
+                        Button {
+                            tabSelected = tab
+                        } label: {
+                            Image(systemName: tab.imageName)
+                                .resizable()
+                                .scaledToFit()
+                                .foregroundStyle(tabSelected == tab ? .white : .gray)
+                                .frame(width: tab == .account ? 40 : 50, height: 40)
                         }
-                        Spacer()
+                        .padding(.horizontal, 25)
+                        
                     }
-                    .padding(.leading, -20)
-                    //                .padding(.bottom, 5)
+                    Spacer()
                 }
+                .padding(.leading, -20)
+                //                .padding(.bottom, 5)
             }
-        } else {
-            LandingView()
         }
     }
             

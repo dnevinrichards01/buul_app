@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-enum Brokerages: CaseIterable {
+enum Brokerages: CaseIterable, Codable {
     case robinhood
     //case placeholder
     

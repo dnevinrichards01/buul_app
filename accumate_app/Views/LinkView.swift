@@ -41,7 +41,7 @@ struct LinkView: View {
                     Spacer()
                     Button {
                         sessionManager.isLoggedIn = true
-                        navManager.path.append(NavigationPathViews.home)
+                        navManager.append(NavigationPathViews.home)
                     } label: {
                         Text("completed signup (temp)")
                             .font(.headline)
@@ -73,7 +73,7 @@ struct LinkView: View {
             }
         }
 //        .onChange(of: linkCompleted) {
-//            navManager.path.append(NavigationPathViews.home)
+//            navManager.append(NavigationPathViews.home)
 //        }
     }
 

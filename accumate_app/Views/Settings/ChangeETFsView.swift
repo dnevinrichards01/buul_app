@@ -59,7 +59,7 @@ struct ChangeETFsView: View {
         }
         .onChange(of: selectedETF) {
             showAlert = true
-            navManager.path.append(NavigationPathViews.home)
+            navManager.append(NavigationPathViews.home)
         }
         .alert("Your investment choice has been updated", isPresented: $showAlert) {
             Button("OK", role: .cancel) {}

@@ -71,11 +71,11 @@ struct SettingsBankInfoView: View {
             if let selectedBankingSetting = selectedBankingSetting {
                 switch selectedBankingSetting {
                 case .accounts:
-                    navManager.path.append(NavigationPathViews.plaidSettings)
+                    navManager.append(NavigationPathViews.plaidSettings)
                 case .changeBrokerage:
-                    navManager.path.append(NavigationPathViews.changeBrokerage)
+                    navManager.append(NavigationPathViews.changeBrokerage)
                 case .changeInvestment:
-                    navManager.path.append(NavigationPathViews.changeETFOTP)
+                    navManager.append(NavigationPathViews.changeETFOTP)
                 }
             }
         }
