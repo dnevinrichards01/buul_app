@@ -62,7 +62,8 @@ struct HomeCardsButtonView: View {
                 
                 if isToggled {
                     VStack (alignment: .leading) {
-                        Text("We recommended this card because your spending is high in \(category) at \(formatAsDecimal(categoryPercentage))% of spending. \n\nYou can learn more and sign up here:")
+//                        Text("We recommended this card because your spending is high in \(category) at \(formatAsDecimal(categoryPercentage))% of spending. \n\nYou can learn more and sign up here:")
+                        Text("We recommend this card if your spending is high in \(category). \n\nYou can learn more and sign up here:")
                             .font(.subheadline)
                             .foregroundColor(.white.opacity(0.8))
                             .lineLimit(nil)

@@ -29,7 +29,6 @@ struct ChangeAccountInfoView: View {
     
     private var fieldBindings: [SignUpFields: Binding<String>] {
         [
-            .username: $username,
             .password: $password,
             .password2: $password2,
             .fullName: $fullName,
@@ -159,8 +158,6 @@ struct ChangeAccountInfoView: View {
         for signUpField in fieldBindings.keys {
             let errorMessage: String?
             switch signUpField {
-            case .username:
-                errorMessage = validateUsername()
             case .password:
                 errorMessage = validatePassword()
             case .password2:

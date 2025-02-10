@@ -11,6 +11,11 @@ struct SignUpBrokerageView: View {
     @EnvironmentObject var navManager: NavigationPathManager
     @EnvironmentObject var sessionManager: UserSessionManager
     @State private var selectedBrokerage: Brokerages?
+    @State private var submitted: Bool = false
+    @State private var toggleRefresh: Bool = false
+    @State private var showAlert: Bool = false
+    @State private var alertMessage: String = ""
+    @State private var buttonDisabled: Bool = false
     
     var isSignUp: Bool = true
 
@@ -29,48 +34,63 @@ struct SignUpBrokerageView: View {
             .padding(.bottom, 50)
             
             ForEach(Brokerages.allCases, id: \.self) { brokerage in
-                Button {
-                    selectedBrokerage = brokerage
-                } label: {
-                    HStack {
-                        Image(brokerage.imageName)
-                            .resizable()
-                            .frame(width: 60, height: 60)
-                            .clipShape(Circle())
-                            .padding(.leading, 10)
-                        Text(brokerage.name)
-                            .font(.headline)
-                            .foregroundStyle(.white)
-                            .padding(.leading, 10)
-                        Spacer()
+                switch brokerage {
+                case .robinhood:
+                    Button {
+                        buttonDisabled = true
+                        selectedBrokerage = brokerage
+                    } label: {
+                        HStack {
+                            Image(brokerage.imageName)
+                                .resizable()
+                                .frame(width: 60, height: 60)
+                                .clipShape(Circle())
+                                .padding(.leading, 10)
+                            Text(brokerage.displayName)
+                                .font(.headline)
+                                .foregroundStyle(.white)
+                                .padding(.leading, 10)
+                            Spacer()
+                        }
+                        .padding(.vertical, 10)
+                        .disabled(buttonDisabled)
                     }
-                    .padding(.vertical, 10)
+                    Divider()
+                        .frame(height: 1.5)
+                        .frame(maxWidth: .infinity)
+                        .background(.white.opacity(0.6))
+                default:
+                    Rectangle()
+                        .background(.black)
+                        .frame(maxWidth: .infinity)
                 }
-                Divider()
-                    .frame(height: 1.5)
-                    .frame(maxWidth: .infinity)
-                    .background(.white.opacity(0.6))
             }
             Spacer()
+        }
+        .alert(alertMessage, isPresented: $showAlert) {
+            if showAlert {
+                Button("OK", role: .cancel) { showAlert = false }
+            }
         }
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden()
         .background(.black)
-        .onAppear() {
-            selectedBrokerage = nil
-        }
         .onChange(of: selectedBrokerage) {
-            if let selectedBrokerage = selectedBrokerage {
-                switch selectedBrokerage {
-                case .robinhood:
-                    // save robinhood
-                    if isSignUp {
-                        navManager.append(NavigationPathViews.signUpRobinhoodSecurityInfo)
-                    } else {
-                        navManager.append(NavigationPathViews.robinhoodSecurityInfo)
-                    }
+            setBrokerageInvestment()
+        }
+        .onChange(of: submitted) {
+            guard let brokerage = selectedBrokerage else { return }
+            sessionManager.brokerageName = brokerage.displayName
+            switch brokerage {
+            case .robinhood:
+                // save robinhood
+                if isSignUp {
+                    navManager.append(NavigationPathViews.signUpRobinhoodSecurityInfo)
+                } else {
+                    navManager.append(NavigationPathViews.robinhoodSecurityInfo)
                 }
-                
+            default:
+                break
             }
         }
         .toolbar {
@@ -86,7 +106,39 @@ struct SignUpBrokerageView: View {
             }
         }
     }
+    
+    private func setBrokerageInvestment() {
+        ServerCommunicator().callMyServer(
+            path: "api/user/setbrokerageinvestment/",
+            httpMethod: .post,
+            params: [
+                "brokerage" : sessionManager.brokerageName?.lowercased() as Any,
+                "symbol" : sessionManager.etfSymbol as Any
+            ],
+            accessToken: sessionManager.accessToken,
+            responseType: ErrorOrSuccessResponse.self
+        ) { response in
+            switch response {
+            case .success:
+                self.selectedBrokerage = nil
+                self.buttonDisabled = false
+                self.submitted = true
+            case .failure(let error):
+                self.selectedBrokerage = nil
+                self.alertMessage = error.errorMessage
+                self.showAlert = true
+                self.buttonDisabled = false
+                return
+            }
+        }
+    }
 }
+    
+struct ErrorOrSuccessResponse: Codable {
+    let error: String?
+    let success: String?
+}
+
 
 #Preview {
     SignUpBrokerageView()

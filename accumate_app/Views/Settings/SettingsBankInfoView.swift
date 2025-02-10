@@ -30,7 +30,6 @@ struct SettingsBankInfoView: View {
                 Button {
                     selectedBankingSetting = bankingSetting
                 } label: {
-//                    Rectangle()
                     HStack {
                         VStack (alignment: .leading) {
                             Text(bankingSetting.label)
@@ -96,9 +95,9 @@ struct SettingsBankInfoView: View {
     func getValue(bankingSetting: BankingSettings) -> String {
         switch bankingSetting {
         case .changeBrokerage:
-            return sessionManager.brokerage?.name ?? "Could not load or find brokerage"
+            return sessionManager.brokerageName ?? "Could not load or find brokerage"
         case .changeInvestment:
-            return sessionManager.etf?.name ?? "Could not load or find ETF"
+            return sessionManager.etfSymbol ?? "Could not load or find ETF"
         case .accounts:
             return "Could not find or load accounts"
         }

@@ -10,12 +10,13 @@ import Combine
 import Foundation
 
 struct SignUpFullNameView: View {
-    @State private var keyboardHeight: CGFloat = 0
-    @State private var cancellable: AnyCancellable?
     @State private var fullName: String = ""
     @State private var errorMessage: String?
+    @State private var submitted: Bool = false
+    @State private var buttonDisabled: Bool = false
     
     @EnvironmentObject var navManager : NavigationPathManager
+    @EnvironmentObject var sessionManager: UserSessionManager
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -34,12 +35,43 @@ struct SignUpFullNameView: View {
             // Continue Button
             VStack() {
                 Button {
-                    if !validateFullName() {
-                        errorMessage = "Avoid numbers and special characters like punctuation"
-                    } else {
-                        navManager.append(NavigationPathViews.signUpETFs)
+                    Task {
+                        await MainActor.run {
+                            buttonDisabled = true
+                            submitted = false
+                        }
+                        // validate inputs
+                        if let _errorMessage = SignUpFieldsUtils.validateFullname(fullName) {
+                            await MainActor.run {
+                                sessionManager.fullName = nil
+                                errorMessage = _errorMessage
+                                buttonDisabled = false
+                            }
+                            return
+                        }
+                        
+                        // if passes, validate inputs in backend, create user / login if relevant
+                        let errorMessagesDict = await SignUpFieldsUtils.validateInputsBackend(
+                            fullName: fullName
+                        )
+                        if let errorMessagesList = SignUpFieldsUtils.parseErrorMessages(errorMessagesDict) {
+                            await MainActor.run {
+                                sessionManager.fullName = nil
+                                errorMessage = errorMessagesList[0]
+                                buttonDisabled = false
+                            }
+                            return
+                        }
+                        
+                        // update state
+                        sessionManager.updateSignUpFieldsState(
+                            fullName: fullName
+                        )
+                        await MainActor.run {
+                            submitted = true
+                            errorMessage = nil
+                        }
                     }
-                    
                 } label: {
                     Text("Continue")
                         .font(.headline)
@@ -49,24 +81,24 @@ struct SignUpFullNameView: View {
                         .cornerRadius(10)
                 }
                 .padding([.top, .bottom], 20)
-
             }
-            .padding(.bottom, keyboardHeight) // Adjust based on keyboard height
-            .animation(.easeInOut(duration: 0.3), value: keyboardHeight)
         }
         .padding(30)
+        .onChange(of: submitted) {
+            if !submitted { return }
+            buttonDisabled = false
+            navManager.append(.signUpPassword)
+        }
+        .onAppear {
+            if let _fullName = sessionManager.fullName {
+                fullName = !sessionManager.isLoggedIn ? _fullName : ""
+            }
+            
+        }
+        .animation(.easeInOut(duration: 0.5), value: errorMessage)
         .background(Color.black.ignoresSafeArea())
         .navigationBarBackButtonHidden(true)
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear {
-//            if let countryCode = Locale.current.regionCode {
-//                phoneNumber = "+\(countryCodeToPrefix[countryCode] ?? "1")"
-//            }
-            startKeyboardObserver()
-        }
-        .onDisappear {
-            cancellable?.cancel()
-        }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: {
@@ -87,37 +119,12 @@ struct SignUpFullNameView: View {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
                 Button("Done") {
-                    dismissKeyboard()
+                    Utils.dismissKeyboard()
                 }
                 .foregroundColor(.blue) // Customize the button appearance
             }
         }
     }
-    
-    private func dismissKeyboard() {
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-    }
-    
-    func startKeyboardObserver() {
-        cancellable = NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)
-            .compactMap { notification -> CGFloat? in
-                if let frame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
-                    return frame.height > 0 ? frame.height : 0
-                }
-                return nil
-            }
-            .sink { height in
-                withAnimation {
-                    keyboardHeight = 0
-                }
-            }
-    }
-    
-    private func validateFullName() -> Bool {
-        return true
-    }
-
-    
 }
 
 
@@ -125,4 +132,5 @@ struct SignUpFullNameView: View {
 #Preview {
     SignUpFullNameView()
         .environmentObject(NavigationPathManager())
+        .environmentObject(UserSessionManager())
 }

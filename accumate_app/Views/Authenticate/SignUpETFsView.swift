@@ -13,6 +13,7 @@ struct SignUpETFsView: View {
     @State private var showAlert: Bool = false
     
     @EnvironmentObject var navManager : NavigationPathManager
+    @EnvironmentObject var sessionManager: UserSessionManager
     
     var isSignUp: Bool = true
 
@@ -60,6 +61,8 @@ struct SignUpETFsView: View {
             .background(.black)
         }
         .onChange(of: selectedETF) {
+            guard let etf = selectedETF else { return }
+            sessionManager.etfSymbol = etf.symbol
             if isSignUp {
                 navManager.append(NavigationPathViews.signUpBrokerage)
             } else {
@@ -102,9 +105,8 @@ struct SignUpETFsView: View {
 }
 
 
-
-
 #Preview {
     SignUpETFsView()
         .environmentObject(NavigationPathManager())
+        .environmentObject(UserSessionManager())
 }

@@ -54,6 +54,8 @@ struct PasswordRecoverInitiateView: View {
             
         }
         .background(.black)
+        .navigationBarBackButtonHidden(true)
+        .navigationBarTitleDisplayMode(.inline)
     }
     
     private func sendEmailOTP() {

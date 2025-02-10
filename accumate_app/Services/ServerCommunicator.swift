@@ -19,10 +19,10 @@ class ServerCommunicator {
         case post = "POST"
     }
 
-    enum Error: LocalizedError {
+    enum NetworkError: LocalizedError {
         case invalidUrl
         case networkError
-        case statusCodeError
+        case statusCodeError(Int)
         case invalidResponseError
         case encodingError
         case decodingError
@@ -30,19 +30,19 @@ class ServerCommunicator {
 
         var errorMessage: String {
             switch self {
-            case .invalidUrl: return "Invalid URL"
-            case .networkError: return "Network Error"
-            case .statusCodeError: return "Status Code"
-            case .invalidResponseError: return "Invalid Response"
-            case .encodingError: return "Encoding Error"
-            case .decodingError: return "Decoding Error"
-            case .nilData: return "Server return null data"
+            case .invalidUrl: return "Invalid URL. Please try again or contact Accumate"
+            case .networkError: return "Network Error. Please try again later, check your internet connection, or contact Accumate"
+            case .statusCodeError(let status): return "Internal server error \(status). Please try again or contact Accumate"
+            case .invalidResponseError: return "Network Error. Please try again later, check your internet connection, or contact Accumate"
+            case .encodingError: return "We couldn't encode your web request. Please check your inputs or contact Accumate"
+            case .decodingError: return "Invalid server response. Please try again or contact Accumate"
+            case .nilData: return "Server returned no data. Please try again or contact Accumate"
             }
         }
     }
 
 
-    init(baseURL: String = "https://localhost:8000/") {
+    init(baseURL: String = "http://10.0.0.100:8000/") { //"http://localhost:8000/"
         self.baseURL = baseURL
     }
 
@@ -50,91 +50,71 @@ class ServerCommunicator {
         path: String,
         httpMethod: HTTPMethod,
         params: [String: Any]? = nil,
-        responseType: T.Type
-    ) throws -> T {
+        accessToken: String? = nil,
+        responseType: T.Type,
+        completion: @escaping (Result<T, NetworkError>) -> Void
+    ) {
 
-        let path = path.hasPrefix("/") ? String(path.dropFirst()) : path
-        let urlString = baseURL + path
-
-        guard let url = URL(string: urlString) else {
-            throw Error.invalidUrl
+        guard let url = URL(string: baseURL + path) else {
+            completion(.failure(.invalidUrl))
+            return
         }
 
         var request = URLRequest(url: url)
         request.httpMethod = httpMethod.rawValue
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
+        if let accessToken = accessToken {
+            request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        }
+//        maybe add the host field here, and make sure it matches server_name in nginx
         request.timeoutInterval = 3
 
-        switch httpMethod {
-        case .post where params != nil:
+        if httpMethod == .post, let params = params {
             do {
-                let jsonData = try JSONSerialization.data(withJSONObject: params!, options: [])
+                let jsonData = try JSONSerialization.data(withJSONObject: params, options: [])
                 request.httpBody = jsonData
             } catch {
-                throw Error.encodingError
+                completion(.failure(.encodingError))
+                return
             }
-        default:
-            break
         }
 
-            // Create the task
-        let semaphore = DispatchSemaphore(value: 0)
-        var dataFinal: T?
-        var errorFinal: Error?
-        let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
-            guard let response = response as? HTTPURLResponse else {
-                errorFinal = Error.invalidResponseError
-                semaphore.signal()
-                return
-            }
-            if !(200...299).contains(response.statusCode) {
-                errorFinal = Error.statusCodeError
-                semaphore.signal()
-                return
-            }
-            
-            guard let data = data else {
-                errorFinal = Error.nilData
-                semaphore.signal()
-                return
-            }
-            
-            do {
-                let decoder = JSONDecoder()
-                decoder.keyDecodingStrategy = .convertFromSnakeCase
-                dataFinal = try decoder.decode(T.self, from: data)
-                semaphore.signal()
-                return
-            } catch {
-                errorFinal = Error.decodingError
-                semaphore.signal()
-                return
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                
+                if error != nil {
+                    completion(.failure(.networkError))
+                    return
+                }
+
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    completion(.failure(.invalidResponseError))
+                    return
+                }
+
+                guard (200...299).contains(httpResponse.statusCode) else {
+                    completion(.failure(.statusCodeError(httpResponse.statusCode)))
+                    return
+                }
+
+                guard let data = data else {
+                    completion(.failure(.nilData))
+                    return
+                }
+
+                do {
+                    let decoder = JSONDecoder()
+                    decoder.keyDecodingStrategy = .convertFromSnakeCase
+                    let decodedResponse = try decoder.decode(T.self, from: data)
+                    completion(.success(decodedResponse))
+                } catch {
+                    print(data)
+                    completion(.failure(.decodingError))
+                }
             }
         }
-        task.resume()
-        semaphore.wait()
         
-        if let errorFinal = errorFinal {
-            throw errorFinal
-        }
-        if let dataFinal = dataFinal {
-            return dataFinal
-        } else {
-            throw Error.nilData
-        }
+        task.resume()
     }
 }
-        
-        // "try" bc this method throws an error
-        // try? would return nil, try! would cause a crash. both avoid do-catch
-            
-            
-//        No internet connection (NSURLErrorNotConnectedToInternet)
-//        Timeout (NSURLErrorTimedOut)
-//        Network unreachable (NSURLErrorNetworkConnectionLost)
-//        Invalid URL (NSURLErrorUnsupportedURL)
-//        SSL errors (NSURLErrorSecureConnectionFailed)
-        
-        
-

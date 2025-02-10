@@ -10,12 +10,13 @@ import Combine
 import Foundation
 
 struct SignUpEmailVerifyView: View {
-    @State private var keyboardHeight: CGFloat = 0
-    @State private var cancellable: AnyCancellable?
     @State private var otp: String = ""
     @State private var errorMessage: String?
+    @State private var buttonDisabled = true
+    @State private var submitted = false
     
     @EnvironmentObject var navManager : NavigationPathManager
+    @EnvironmentObject var sessionManager : UserSessionManager
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -35,17 +36,50 @@ struct SignUpEmailVerifyView: View {
             
             Spacer()
             OTPFieldView(otp: $otp)
+            if let errorMessage = errorMessage {
+                Text(errorMessage)
+                    .font(.headline)
+                    .foregroundStyle(.red)
+                    .multilineTextAlignment(.leading)
+                    .padding()
+            }
             Spacer()
             
             // Continue Button
             VStack() {
                 Button {
-                    if !validateOTP() {
-                        errorMessage = "Code is incorrect or expired"
-                    } else {
-                        navManager.append(NavigationPathViews.signUpFullName)
+                    Task {
+                        await MainActor.run {
+                            buttonDisabled = true
+                            submitted = false
+                        }
+                        // validate inputs
+                        if let _errorMessage = SignUpFieldsUtils.validateOTP(otp) {
+                            await MainActor.run {
+                                errorMessage = _errorMessage
+                                buttonDisabled = false
+                            }
+                            return
+                        }
+                        
+                        // if passes, validate inputs in backend, create user / login if relevant
+                        if let _errorMessage = await SignUpFieldsUtils.sendEmailOTP(otp) {
+                            await MainActor.run {
+                                errorMessage = _errorMessage
+                                buttonDisabled = false
+                            }
+                            return
+                        }
+                        
+                        // update state
+                        sessionManager.updateSignUpFieldsState(
+                            email: sessionManager.unverifiedEmail
+                        )
+                        await MainActor.run {
+                            submitted = true
+                            errorMessage = nil
+                        }
                     }
-                    
                 } label: {
                     Text("Continue")
                         .font(.headline)
@@ -68,19 +102,17 @@ struct SignUpEmailVerifyView: View {
                 }
                 
             }
-            .padding(.bottom, keyboardHeight) // Adjust based on keyboard height
-            .animation(.easeInOut(duration: 0.3), value: keyboardHeight)
         }
         .padding(30)
+        .onChange(of: submitted) {
+            if !submitted { return }
+            buttonDisabled = false
+            navManager.append(.signUpFullName)
+        }
+        .animation(.easeInOut(duration: 0.5), value: errorMessage)
         .background(Color.black.ignoresSafeArea())
         .navigationBarBackButtonHidden(true)
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear {
-            startKeyboardObserver()
-        }
-        .onDisappear {
-            cancellable?.cancel()
-        }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: {
@@ -101,35 +133,14 @@ struct SignUpEmailVerifyView: View {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
                 Button("Done") {
-                    dismissKeyboard()
+                    Utils.dismissKeyboard()
                 }
                 .foregroundColor(.blue) // Customize the button appearance
             }
         }
     }
     
-    private func dismissKeyboard() {
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-    }
     
-    func startKeyboardObserver() {
-        cancellable = NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)
-            .compactMap { notification -> CGFloat? in
-                if let frame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
-                    return frame.height > 0 ? frame.height : 0
-                }
-                return nil
-            }
-            .sink { height in
-                withAnimation {
-                    keyboardHeight = 0
-                }
-            }
-    }
-    
-    private func validateOTP() -> Bool {
-        return true
-    }
     
     private func resendCode() {
         return
@@ -143,4 +154,5 @@ struct SignUpEmailVerifyView: View {
 #Preview {
     SignUpEmailVerifyView()
         .environmentObject(NavigationPathManager())
+        .environmentObject(UserSessionManager())
 }

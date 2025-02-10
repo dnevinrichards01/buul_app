@@ -48,9 +48,8 @@ struct LoadingScreen: View {
     
     @EnvironmentObject var navManager: NavigationPathManager
     @EnvironmentObject var sessionManager: UserSessionManager
-    
-    @State var destinationPage: NavigationPathViews? = nil
     @State private var rotationAngle: Double = 0.0
+    @State private var destinationPage: NavigationPathViews? = nil
     
     var body: some View {
         NavigationStack(path: $navManager.path) {
@@ -91,29 +90,18 @@ struct LoadingScreen: View {
                     }
                 }
                 .task {
-                    destinationPage = await sessionManager.login()
+//                    await sessionManager.accessTokenSet(nil)
+//                    await sessionManager.refreshTokenSet(nil)
+                    await sessionManager.loadSavedTokens()
+                    if !sessionManager.isLoggedIn {
+                        _ = await sessionManager.reset()
+                    }
+                    destinationPage = sessionManager.signUpFlowPlacement()
                 }
                 .onChange(of: destinationPage) {
-                    if destinationPage == .signUpPhone {
-                        navManager.extend([.landing, .signUpPhone])
-                    } else if destinationPage == .signUpEmail {
-                        navManager.extend([.landing, .signUpPhone, .signUpEmail])
-                    } else if destinationPage == .signUpFullName {
-                        navManager.extend([.landing, .signUpPhone, .signUpEmail, .signUpEmailVerify, .signUpFullName])
-                    } else if destinationPage == .signUpETFs {
-                        navManager.extend([.landing, .signUpPhone, .signUpEmail, .signUpEmailVerify, .signUpFullName,
-                                           .signUpETFs])
-                    } else if destinationPage == .signUpBrokerage {
-                        navManager.extend([.landing, .signUpPhone, .signUpEmail, .signUpEmailVerify, .signUpFullName,
-                                           .signUpETFs, .signUpBrokerage])
-                    } else if destinationPage == .link {
-                        navManager.extend([.landing, .signUpPhone, .signUpEmail, .signUpEmailVerify, .signUpFullName,
-                                           .signUpETFs, .signUpBrokerage, .signUpRobinhoodSecurityInfo, .signUpRobinhood])
-                        // leaving out rh mfa bc not relevant to them, and they can always get it by going back then forward.
-                    } else if destinationPage == .home {
-                        navManager.extend([.home])
-                    } else if destinationPage == .landing {
-                        navManager.extend([.landing])
+                    if let destinationPage = destinationPage {
+                        let path = sessionManager.signUpFlowPlacementPaths(destinationPage)
+                        navManager.extend(path)
                     }
                 }
             }
@@ -132,6 +120,11 @@ struct LoadingScreen: View {
                     SignUpEmailVerifyView()
                 case .signUpFullName:
                     SignUpFullNameView()
+                case .signUpPassword:
+                    SignUpPasswordView()
+                case .accountCreated:
+                    AccountCreated()
+                        .transition(.move(edge: .trailing))
                 case .signUpETFs:
                     SignUpETFsView()
                 case .signUpBrokerage:
@@ -143,7 +136,7 @@ struct LoadingScreen: View {
                 case .signUpMfaRobinhood:
                     SignUpRobinhoodMFAView()
                 case .login:
-                    LoginView(signUpFields: [.username, .password])
+                    LoginView()
                 case .link:
                     LinkView()
                 case .emailRecover:
@@ -226,9 +219,7 @@ struct LoadingScreen: View {
                 
             }
         }
-        
     }
-    
 }
 
 #Preview {

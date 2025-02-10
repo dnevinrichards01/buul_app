@@ -8,19 +8,16 @@
 import SwiftUI
 
 // Enum to represent input fields
-enum SignUpFields: CaseIterable {
-    
-    case username
+enum SignUpFields: String, CaseIterable {
+    case email
     case password
     case password2
     case fullName
     case phoneNumber
-    case email
+    
     
     var instruction: String {
         switch self {
-        case .username:
-            return "Enter a user name"
         case .password:
             return "Enter a password"
         case .password2:
@@ -36,8 +33,6 @@ enum SignUpFields: CaseIterable {
     
     var loginInstruction: String {
         switch self {
-        case .username:
-            return "Enter your user name"
         case .password:
             return "Enter your password"
         case .password2:
@@ -53,8 +48,6 @@ enum SignUpFields: CaseIterable {
         
     var resetInstruction: String {
         switch self {
-        case .username:
-            return "Enter your new user name"
         case .password:
             return "Enter your new password"
         case .password2:
@@ -70,8 +63,6 @@ enum SignUpFields: CaseIterable {
     
     var placeholder: String {
         switch self {
-        case .username:
-            return "username"
         case .password:
             return "password"
         case .password2:
@@ -87,8 +78,6 @@ enum SignUpFields: CaseIterable {
     
     var keyboardType: UIKeyboardType {
         switch self {
-        case .username:
-            return .default
         case .password:
             return .default
         case .password2:

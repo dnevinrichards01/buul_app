@@ -9,14 +9,13 @@ import SwiftUI
 import Combine
 
 struct SignUpPhoneView: View {
-    @State private var keyboardHeight: CGFloat = 0
-    @State private var cancellable: AnyCancellable?
     @State private var phoneNumber: String = "+1"
     @State private var errorMessage: String?
+    @State private var submitted: Bool = false
+    @State private var buttonDisabled: Bool = false
     
     @EnvironmentObject var navManager: NavigationPathManager
     @EnvironmentObject var sessionManager: UserSessionManager
-    
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -50,19 +49,48 @@ struct SignUpPhoneView: View {
                 keyboard: SignUpFields.phoneNumber.keyboardType,
                 errorMessage: errorMessage
             )
-            .onChange(of: phoneNumber) { oldValue, newValue in
-                formatPhoneNumber()
-            }
+            
             Spacer()
             
-            // Continue Button
             VStack() {
                 Button {
-                    if !validatePhone() {
-                        errorMessage = "Number is either invalid or already in use"
-                    } else {
-                        sessionManager.phoneNumber = phoneNumber
-                        navManager.append(NavigationPathViews.signUpEmail)
+                    Task {
+                        await MainActor.run {
+                            buttonDisabled = true
+                            submitted = false
+                        }
+                        // validate inputs
+                        if let _errorMessage = SignUpFieldsUtils.validatePhoneNumber(phoneNumber) {
+                            await MainActor.run {
+                                sessionManager.phoneNumber = nil
+                                errorMessage = _errorMessage
+                                buttonDisabled = false
+                            }
+                            return
+                        }
+                        
+                        // if passes, validate inputs in backend, create user / login if relevant
+                        let errorMessagesDict = await SignUpFieldsUtils.validateInputsBackend(
+                            phoneNumber: phoneNumber
+                        )
+                        if let errorMessagesList = SignUpFieldsUtils.parseErrorMessages(errorMessagesDict) {
+                            await MainActor.run {
+                                sessionManager.phoneNumber = nil
+                                errorMessage = errorMessagesList[0]
+                                buttonDisabled = false
+                            }
+                            return
+                        }
+                        
+                        // update state
+                        sessionManager.updateSignUpFieldsState(
+                            phoneNumber: phoneNumber
+                        )
+                        await MainActor.run {
+                            submitted = true
+                            errorMessage = nil
+                        }
+                        
                     }
                 } label: {
                     Text("Continue")
@@ -73,6 +101,7 @@ struct SignUpPhoneView: View {
                         .cornerRadius(10)
                 }
                 .padding([.top, .bottom], 20)
+                .disabled(buttonDisabled)
                 
                 Text("By signing up, you agree to our Terms and Privacy Policy")
                     .foregroundColor(.gray)
@@ -81,25 +110,33 @@ struct SignUpPhoneView: View {
                     .frame(maxWidth: .infinity)
 
             }
-            .padding(.bottom, keyboardHeight) // Adjust based on keyboard height
-            .animation(.easeInOut(duration: 0.3), value: keyboardHeight)
         }
         .padding(30)
-        .background(Color.black.ignoresSafeArea())
+        .onChange(of: phoneNumber) {
+            phoneNumber = SignUpFieldsUtils.formatPhoneNumber(phoneNumber)
+        }
+        .onChange(of: submitted) {
+            if !submitted { return }
+            buttonDisabled = false
+            navManager.append(.signUpEmail)
+        }
+        .animation(.easeInOut(duration: 0.5), value: errorMessage)
+        .background(Color.black)
         .navigationBarBackButtonHidden(true)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
-            phoneNumber = sessionManager.phoneNumber ?? "+1"
-            startKeyboardObserver()
-        }
-        .onDisappear {
-            cancellable?.cancel()
+            if let _phoneNumber = sessionManager.phoneNumber { 
+                phoneNumber = !sessionManager.isLoggedIn ? _phoneNumber : "+1"
+            } else {
+                phoneNumber = "+1"
+            }
+            
         }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: {
+                Button {
                     navManager.path.removeLast()
-                }) {
+                } label: {
                     Image(systemName: "chevron.left")
                         .foregroundColor(.white)
                         .font(.system(size: 20, weight: .medium))
@@ -115,48 +152,11 @@ struct SignUpPhoneView: View {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
                 Button("Done") {
-                    dismissKeyboard()
+                    Utils.dismissKeyboard()
                 }
                 .foregroundColor(.blue) // Customize the button appearance
             }
         }
-    }
-    
-    private func dismissKeyboard() {
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-    }
-    
-    func startKeyboardObserver() {
-        cancellable = NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)
-            .compactMap { notification -> CGFloat? in
-                if let frame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
-                    return frame.height > 0 ? frame.height : 0
-                }
-                return nil
-            }
-            .sink { height in
-                withAnimation {
-                    keyboardHeight = 0
-                }
-            }
-    }
-    
-    private func formatPhoneNumber() {
-        var filtered = phoneNumber.filter { "+0123456789".contains($0) }
-
-        if !filtered.hasPrefix("+") {
-            filtered = "+" + filtered
-        }
-
-        if filtered.count > 15 {
-            filtered = String(filtered.prefix(15))
-        }
-
-        phoneNumber = filtered
-    }
-    
-    private func validatePhone() -> Bool {
-        return true
     }
     
 }

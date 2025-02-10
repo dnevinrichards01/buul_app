@@ -7,14 +7,17 @@
 
 import SwiftUI
 
-enum Brokerages: CaseIterable, Codable {
+enum Brokerages: CaseIterable {
     case robinhood
+    case webull
     //case placeholder
     
-    var name: String {
+    var displayName: String {
         switch self {
         case .robinhood:
             return "Robinhood"
+        case .webull:
+            return "WeBull"
         }
     }
     
@@ -22,12 +25,16 @@ enum Brokerages: CaseIterable, Codable {
         switch self {
         case .robinhood:
             return "RobinhoodLogo"
+        case .webull:
+            return "WeBullLogo"
         }
     }
     
     var connectPage: NavigationPathViews {
         switch self {
         case .robinhood:
+            return NavigationPathViews.signUpRobinhood
+        case .webull:
             return NavigationPathViews.signUpRobinhood
         }
     }

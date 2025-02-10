@@ -15,6 +15,8 @@ enum NavigationPathViews: CaseIterable {
     case signUpEmail
     case signUpEmailVerify
     case signUpFullName
+    case signUpPassword
+    case accountCreated
     case signUpETFs
     case signUpBrokerage
     case signUpRobinhoodSecurityInfo

@@ -14,6 +14,8 @@ struct HomeAccountView: View {
     @EnvironmentObject var sessionManager: UserSessionManager
     @State private var selectedSetting: AccountSettings?
     @State private var showAlert: Bool = false
+    @State private var alertMessage: String = ""
+    @State private var logout: Bool = false
 
     var body: some View {
         VStack {
@@ -57,13 +59,15 @@ struct HomeAccountView: View {
                     .background(.white.opacity(0.8))
                     .padding(.vertical, 5)
             }
-            .alert("You have been logged out", isPresented: $showAlert) {
+            .alert(alertMessage, isPresented: $showAlert) {
                 Button("OK", role: .cancel) { showAlert = false}
             }
             .onChange(of: showAlert) { oldValue, newValue in
                 if oldValue == true && newValue == false {
-                    sessionManager.isLoggedIn = false
-                    navManager.reset(views: [.landing])
+                    if logout {
+                        sessionManager.isLoggedIn = false
+                        navManager.reset(views: [.landing])
+                    }
                 }
             }
             .onChange(of: selectedSetting) { newSetting, oldSetting in
@@ -78,12 +82,22 @@ struct HomeAccountView: View {
                     case .delete:
                         navManager.append(NavigationPathViews.deleteOTP)
                     case .logout:
-                        // some code
-                        showAlert = true
+                        logout = true
                     }
                 }
             }
             Spacer()
+        }
+        .onChange(of: logout) {
+            Task {
+                let logoutSuccess: Bool = await sessionManager.reset()
+                if !logoutSuccess {
+                    alertMessage = "Your session data could not be removed. Please try again or contact Accumate"
+                } else {
+                    alertMessage = "You have been logged out."
+                }
+                showAlert = true
+            }
         }
         .background(.black)
         .onAppear() {

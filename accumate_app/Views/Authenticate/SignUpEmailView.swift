@@ -10,12 +10,13 @@ import Combine
 import Foundation
 
 struct SignUpEmailView: View {
-    @State private var keyboardHeight: CGFloat = 0
-    @State private var cancellable: AnyCancellable?
     @State private var email: String = ""
     @State private var errorMessage: String?
-    
+    @State private var submitted: Bool = false
+    @State private var buttonDisabled: Bool = false
+
     @EnvironmentObject var navManager : NavigationPathManager
+    @EnvironmentObject var sessionManager: UserSessionManager
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -34,12 +35,43 @@ struct SignUpEmailView: View {
             // Continue Button
             VStack() {
                 Button {
-                    if !validateEmail() {
-                        errorMessage = "Enter a valid email address"
-                    } else {
-                        navManager.append(NavigationPathViews.signUpEmailVerify)
+                    Task {
+                        await MainActor.run {
+                            buttonDisabled = true
+                            submitted = false
+                        }
+                        // validate inputs
+                        if let _errorMessage = SignUpFieldsUtils.validateEmail(email) {
+                            await MainActor.run {
+                                sessionManager.email = nil
+                                sessionManager.unverifiedEmail = nil
+                                errorMessage = _errorMessage
+                                buttonDisabled = false
+                            }
+                            return
+                        }
+                        
+                        // if passes, validate inputs in backend, create user / login if relevant
+                        let errorMessagesDict = await SignUpFieldsUtils.validateInputsBackend(
+                            email: email
+                        )
+                        if let errorMessagesList = SignUpFieldsUtils.parseErrorMessages(errorMessagesDict) {
+                            await MainActor.run {
+                                sessionManager.email = nil
+                                sessionManager.unverifiedEmail = nil
+                                errorMessage = errorMessagesList[0]
+                                buttonDisabled = false
+                            }
+                            return
+                        }
+                        
+                        // update state
+                        sessionManager.unverifiedEmail = email
+                        await MainActor.run {
+                            submitted = true
+                            errorMessage = nil
+                        }
                     }
-                    
                 } label: {
                     Text("Continue")
                         .font(.headline)
@@ -49,6 +81,7 @@ struct SignUpEmailView: View {
                         .cornerRadius(10)
                 }
                 .padding([.top, .bottom], 20)
+                .disabled(buttonDisabled)
                 
                 Text("By signing up, you agree to our Terms and Privacy Policy")
                     .foregroundColor(.gray)
@@ -57,22 +90,24 @@ struct SignUpEmailView: View {
                     .frame(maxWidth: .infinity)
 
             }
-            .padding(.bottom, keyboardHeight) // Adjust based on keyboard height
-            .animation(.easeInOut(duration: 0.3), value: keyboardHeight)
         }
         .padding(30)
+        .onChange(of: submitted) {
+            if !submitted { return }
+            buttonDisabled = false
+            navManager.append(.signUpEmailVerify)
+        }
+        .animation(.easeInOut(duration: 0.5), value: errorMessage)
+        .onAppear {
+            if let _email = sessionManager.email {
+                email = !sessionManager.isLoggedIn ? _email : ""
+            } else if let _unverifiedEmail = sessionManager.unverifiedEmail {
+                email = !sessionManager.isLoggedIn ? _unverifiedEmail : "" 
+            }
+        }
         .background(Color.black.ignoresSafeArea())
         .navigationBarBackButtonHidden(true)
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear {
-//            if let countryCode = Locale.current.regionCode {
-//                phoneNumber = "+\(countryCodeToPrefix[countryCode] ?? "1")"
-//            }
-            startKeyboardObserver()
-        }
-        .onDisappear {
-            cancellable?.cancel()
-        }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: {
@@ -93,42 +128,16 @@ struct SignUpEmailView: View {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
                 Button("Done") {
-                    dismissKeyboard()
+                    Utils.dismissKeyboard()
                 }
                 .foregroundColor(.blue) // Customize the button appearance
             }
         }
     }
-    
-    private func dismissKeyboard() {
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-    }
-    
-    func startKeyboardObserver() {
-        cancellable = NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)
-            .compactMap { notification -> CGFloat? in
-                if let frame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
-                    return frame.height > 0 ? frame.height : 0
-                }
-                return nil
-            }
-            .sink { height in
-                withAnimation {
-                    keyboardHeight = 0
-                }
-            }
-    }
-    
-    private func validateEmail() -> Bool {
-        return true
-    }
-
-    
 }
-
-
 
 #Preview {
     SignUpEmailView()
         .environmentObject(NavigationPathManager())
+        .environmentObject(UserSessionManager())
 }

@@ -86,7 +86,7 @@ struct SettingsAccountInfoView: View {
         case .password:
             return "********" // Assuming UserSessionManager has a password property
         case .email:
-            return userSession.emailAddress ?? "Could not load or find email"
+            return userSession.email ?? "Could not load or find email"
         case .phone:
             return userSession.phoneNumber ?? "Could not load or find email"
         case .name:

@@ -6,6 +6,7 @@
 //
 import SwiftUI
 
+@MainActor
 class NavigationPathManager: ObservableObject {
     
     @Published var path: NavigationPath = NavigationPath()
