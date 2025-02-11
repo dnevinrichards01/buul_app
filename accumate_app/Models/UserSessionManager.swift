@@ -127,13 +127,14 @@ class UserSessionManager: ObservableObject {
     // login / sign up navigation path helpers
     
     func signUpFlowPlacement() -> NavigationPathViews? {
-        if isLoggedIn == true { 
+//        print(phoneNumber, email, fullName, etfSymbol, brokerageName, isLoggedIn)
+        if isLoggedIn == true {
             if let _ = phoneNumber, let _ = email, let _ = fullName, let _ = etfSymbol, let _ = brokerageName, let _ = brokerageCompleted, let _ = linkCompleted {
                 return .home
             } else if let _ = phoneNumber, let _ = email, let _ = fullName, let _ = etfSymbol, let _ = brokerageName, let _ = brokerageCompleted {
                 return .link
             } else if let _ = phoneNumber, let _ = email, let _ = fullName, let _ = etfSymbol, let _ = brokerageName {
-                return .robinhoodSecurityInfo
+                return .signUpRobinhoodSecurityInfo
             } else if let _ = phoneNumber, let _ = email, let _ = fullName, let _ = etfSymbol {
                 return .signUpBrokerage
             } else if let _ = phoneNumber, let _ = email, let _ = fullName {
@@ -158,6 +159,7 @@ class UserSessionManager: ObservableObject {
         let sharedPath: [NavigationPathViews] = [.accountCreated, .signUpETFs, .signUpBrokerage, .signUpRobinhoodSecurityInfo, .signUpRobinhood, .signUpMfaRobinhood, .link, .home]
         let signUpBasePath: [NavigationPathViews] = [.landing, .signUpPhone, .signUpEmail, .signUpEmailVerify, .signUpFullName, .signUpPassword]
         
+//        print(destinationPage)
         
         if destinationPage == .signUpPhone {
             return Array(signUpBasePath[0..<2])
@@ -213,6 +215,7 @@ class UserSessionManager: ObservableObject {
     }
     
     
+    
     // robinhood
     
 }
@@ -264,13 +267,11 @@ class KeychainHelper {
     
     func setWithBiometrics(_ value: String?, forKey key: String, context: LAContext) async -> Bool {
         return await Task(priority: .userInitiated) {
-            print("set begun")
             guard let value = value else {
                 return delete(forKey: key)
             }
             
             let data = Data(value.utf8)
-            print("data", data)
             
             let accessControl = SecAccessControlCreateWithFlags(
                 nil,
@@ -278,7 +279,6 @@ class KeychainHelper {
                 .biometryCurrentSet, // Requires Face ID / Touch ID authentication
                 nil
             )
-            print("accessControl")
             let query: [String: Any] = [
                 kSecClass as String: kSecClassGenericPassword,
                 kSecAttrAccount as String: key,
@@ -286,7 +286,6 @@ class KeychainHelper {
                 kSecAttrAccessControl as String: accessControl as Any,
                 kSecUseAuthenticationContext as String: context
             ]
-            print("query")
             if !delete(forKey: key) {
                 return false
             }

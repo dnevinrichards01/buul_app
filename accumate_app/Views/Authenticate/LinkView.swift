@@ -11,77 +11,119 @@ import LinkKit
 struct LinkView: View {
     @EnvironmentObject var navManager : NavigationPathManager
     @EnvironmentObject var sessionManager: UserSessionManager
+    @StateObject private var linkManager: PlaidLinkManager = PlaidLinkManager()
     
-    @State private var linkCompleted = false
-    @State private var isPresentingLink = false
-    @State private var rotationAngle: Double = 0.0
-    
-    @StateObject var linkManager = PlaidLinkManager()
     
     var body: some View {
-        VStack (alignment: .center) {
-            Spacer()
-            
-            ZStack {
-                VStack {
-                    HStack {
-                        Text("Connecting to your bank with Plaid")
-                            .font(.system(size: 30, weight: .bold))
-                            .foregroundColor(.white)
-                            .multilineTextAlignment(.center)
-                            .padding([.leading, .trailing], 20)
+        PlaidLinkPageBackground(isPresentingLink: $linkManager.isPresentingLink)
+            .padding()
+            .fullScreenCover(
+                isPresented: $linkManager.isPresentingLink,
+                onDismiss: { linkManager.isPresentingLink = false },
+                content: {
+                    if let linkController = linkManager.linkController {
+                        linkController
+                            .ignoresSafeArea(.all)
+                    } else {
+                        Text("Error: LinkController not initialized")
                     }
-                    Spacer()
-                    VStack {
-                        Image("AccumateLogoText")
-                            .resizable()
-                            .frame(width: 200, height: 70)
-                        Image(systemName: "plus")
-                            .resizable()
-                            .frame(width: 30, height: 30)
-                            .foregroundColor(.white)
-                        Image("PlaidLinkLogo")
-                            .resizable()
-                            .frame(width: 200, height: 70)
-                    }
-                    Spacer()
-//                            Button {
-//                                triggerLinkFlow()
-//                            } label: {
-//                                Text("completed signup (temp)")
-//                                    .font(.headline)
-//                                    .foregroundColor(.black)
-//                                    .frame(maxWidth: .infinity, minHeight: 50)
-//                                    .background(.white)
-//                                    .cornerRadius(10)
-//                            }
                 }
-                if !isPresentingLink && !linkCompleted {
-                    HStack {
-                        Spacer()
-                        VStack {
-                            Spacer()
-                            ZStack {
-                                Circle()
-                                    .stroke(Color.gray.opacity(0.3), lineWidth: 5)
-                                    .frame(width: 60)
-                                
-                                Circle()
-                                    .trim(from: 0.2, to: 1.0)
-                                    .stroke(Color.white, lineWidth: 5)
-                                    .frame(width: 60)
-                                    .rotationEffect(.degrees(rotationAngle))
-                            }
-                            .frame(width: 100, height: 100)
-                            Spacer()
-                        }
-                        Spacer()
-                    }
-                    .background(.black.opacity(0.65))
+            )
+            .alert(linkManager.alertMessage, isPresented: $linkManager.showAlert) {
+                if linkManager.showAlert {
+                    Button("OK", role: .cancel) { linkManager.showAlert = false }
                 }
-                
             }
-                
+            .onChange(of: linkManager.showAlert) { oldValue, newValue in
+                if oldValue && !newValue {
+                    linkManager.reset(sessionManager: sessionManager)
+                }
+            }
+            .onAppear {
+                print("user create request")
+                linkManager.requestCreatePlaidUser(sessionManager.accessToken)
+            }
+            .onChange(of: linkManager.plaidUserRequested) {
+                Task {
+                    if !linkManager.plaidUserRequested { return }
+                    print("user create verify")
+                    try? await Task.sleep(nanoseconds: 1_500_000_000)
+                    linkManager.verifyCreatePlaidUser(sessionManager.accessToken)
+                }
+            }
+            .onChange(of: linkManager.plaidUserCreated) {
+                Task {
+                    if !linkManager.plaidUserCreated { return }
+                    print("token request begin")
+                    linkManager.requestLinkToken(sessionManager.accessToken)
+                    print("token request complete")
+                }
+            }
+            .onChange(of: linkManager.linkTokenRequested) {
+                Task {
+                    if !linkManager.linkTokenRequested { return }
+                    print("token fetch begin")
+                    try? await Task.sleep(nanoseconds: 1_500_000_000)
+                    linkManager.fetchLinkToken(sessionManager.accessToken)
+                    print("token fetch complete")
+                }
+            }
+            .onChange(of: linkManager.linkToken) {
+                guard let linkToken = linkManager.linkToken else { return }
+                print("handler")
+                let createResult = linkManager.createLinkHandler(linkToken)
+                switch createResult {
+                case .failure(let createError):
+                    print("Link Creation Error: \(createError.localizedDescription)")
+                case .success(let handler):
+                    linkManager.linkController = LinkController(handler: handler)
+                    linkManager.linkControllerCreated = true
+                case .none:
+                    print("none")
+                    //                also failure
+                }
+            }
+            .onChange(of: linkManager.linkControllerCreated) {
+                print("link flow")
+                if !linkManager.linkControllerCreated { return }
+                linkManager.isPresentingLink = true
+            }
+            .onChange(of: linkManager.linkSuccess) {
+                if !linkManager.linkSuccess { return }
+                print("link success and request exchange")
+                linkManager.isPresentingLink = false
+                linkManager.requestExchangePublicToken(sessionManager.accessToken)
+            }
+            .onChange(of: linkManager.exchangeRequested) {
+                Task {
+                    if !linkManager.exchangeRequested { return }
+                    print("exchange verify")
+                    try? await Task.sleep(nanoseconds: 1_500_000_000)
+                    linkManager.verifyExchangePublicToken(sessionManager.accessToken)
+                }
+            }
+            .onChange(of: linkManager.exchangeSuccess) {
+                if !linkManager.exchangeSuccess { return }
+                print("flow completed")
+                sessionManager.linkCompleted = true
+                navManager.append(.home)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.black)
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden()
+    }
+}
+
+
+#Preview {
+    LinkView()
+        .environmentObject(NavigationPathManager())
+        .environmentObject(UserSessionManager())
+        .environmentObject(PlaidLinkManager())
+}
+
+
 //            Button {
 //                triggerLinkFlow()
 //            } label: {
@@ -92,61 +134,3 @@ struct LinkView: View {
 //                    .background(.white)
 //                    .cornerRadius(10)
 //            }
-                
-            
-            .padding()
-            Spacer()
-        }
-        .fullScreenCover(
-            isPresented: $isPresentingLink,
-            onDismiss: { isPresentingLink = false },
-            content: {
-                if let controller = linkManager.controller {
-                    controller.ignoresSafeArea(.all)
-                } else {
-                    Text("Error: LinkController not initialized")
-                }
-            }
-        )
-        .onAppear {
-            withAnimation(Animation.linear(duration: 3).repeatForever(autoreverses: false)) {
-                rotationAngle = 360
-            }
-        }
-        .task {
-            await linkManager.fetchLinkToken()
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.black)
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden()
-        .toolbar {
-//            ToolbarItem(placement: .navigationBarLeading) {
-//                Button(action: {
-//                    navManager.path.removeLast()
-//                }) {
-//                    Image(systemName: "chevron.left")
-//                        .foregroundColor(.white)
-//                        .font(.system(size: 20, weight: .medium))
-//                        .frame(maxHeight: 30)
-//                }
-//            }
-        }
-        .onChange(of: linkCompleted) {
-            sessionManager.linkCompleted = linkCompleted
-            navManager.append(NavigationPathViews.home)
-        }
-    }
-    
-    func triggerLinkFlow() {
-        isPresentingLink = true
-//        linkCompleted = true
-        return
-    }
-
-}
-
-#Preview {
-    LinkView()
-        .environmentObject(NavigationPathManager())
-}

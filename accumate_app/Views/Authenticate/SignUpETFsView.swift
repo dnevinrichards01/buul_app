@@ -60,6 +60,9 @@ struct SignUpETFsView: View {
             }
             .background(.black)
         }
+        .onAppear {
+            selectedETF = nil
+        }
         .onChange(of: selectedETF) {
             guard let etf = selectedETF else { return }
             sessionManager.etfSymbol = etf.symbol

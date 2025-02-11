@@ -25,7 +25,7 @@ var bofaCustomizedCash = Card(
     name: "Bank of America Customized Cash Rewards",// Credit Card",
     description: "Shopping 3%",
     imageName: "BofaCustomizedCash",
-    url: "https://www.google.com",
+    url: "https://promo.bankofamerica.com/ccsearchlp10/compare-cards-3/?cm_mmc=Cons-CC-_-Google-PS-_-bank_of_america_customized_cash_rewards-_-Brand_Cash&code=TC0306&cq_src=google_ads&cq_med=Credit_Card&cq_cmp=20837226170&cq_term=bank%20of%20america%20customized%20cash%20rewards&cq_net=g&cq_plt=gp&gclsrc=aw.ds&gad_source=1&gbraid=0AAAAAD-5Cc1GggRu8QYeEEWPNkmJdI3Cg&gclid=Cj0KCQiA-5a9BhCBARIsACwMkJ7bbRNu6Fch2MJUvOmiM4eA5T_9sCnNS2moU5GJLaj2-drdEKeqZgsaAmLwEALw_wcB",
     category: "dining",
     categoryPercentage: 22.54
 )
@@ -64,15 +64,4 @@ struct Card: Identifiable, Hashable {
     let category: String
     let categoryPercentage: Double
 }
-//
-//var cardImageMap: [String: Image] {
-//    [
-//        "U.S. Bank Cash + Visa Signature" : Image("RobinhoodLogo"),
-//        "Bank of America Customized Cash Rewards" : Image("RobinhoodLogo"),
-//        "Citi Custom Cash" : Image("RobinhoodLogo"),
-//        "Discover It" : Image("RobinhoodLogo"),
-//        "Chase Freedom Flex" : Image("AccumateLogo")
-//    ]
-//}
-
 

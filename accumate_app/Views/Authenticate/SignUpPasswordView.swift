@@ -15,7 +15,8 @@ struct SignUpPasswordView: View {
     
     @State private var errorMessages: [String?]? = nil
     
-    @State private var submitted: Bool = false
+    @State private var userCreated: Bool = false
+    @State private var tokensRecieved: Bool = false
     @State private var alertMessage: String = ""
     @State private var showAlert: Bool = false
     @State private var reEnterField: SignUpFields?
@@ -56,7 +57,7 @@ struct SignUpPasswordView: View {
             
             Button {
                 buttonDisabled = true
-                submitted = false
+                userCreated = false
             } label: {
                 Text("Create Account")
                     .font(.headline)
@@ -74,6 +75,9 @@ struct SignUpPasswordView: View {
         }
         .onChange(of: showAlert) { oldValue, newValue in
             if oldValue == true && newValue == false {
+                if userCreated && !tokensRecieved {
+                    login()
+                }
                 if reEnterField == .email {
                     reEnterField = nil
                     navManager.path.removeLast(3)
@@ -102,10 +106,24 @@ struct SignUpPasswordView: View {
                 createUser()
             }
         }
-        .onChange(of: submitted) {
-            if !submitted { return }
-            buttonDisabled = false
-            navManager.append(.accountCreated)
+        .onChange(of: userCreated) {
+            if !userCreated { return }
+            login()
+        }
+        .onChange(of: tokensRecieved) {
+            Task {
+                if !tokensRecieved { return }
+                let accessSaved = await sessionManager.accessTokenSet(sessionManager.accessToken)
+                let refreshSaved = await sessionManager.refreshTokenSet(sessionManager.refreshToken)
+                if !accessSaved || !refreshSaved {
+                    alertMessage = "Your account has been created but an internal error is preventing you from logging in. Click ok to retry."
+                    showAlert = true
+                    return
+                }
+                buttonDisabled = false
+                sessionManager.isLoggedIn = true
+                navManager.append(.accountCreated)
+            }
         }
         .animation(.easeInOut(duration: 0.5), value: errorMessages)
         .padding()
@@ -154,8 +172,6 @@ struct SignUpPasswordView: View {
             }
         }
     }
-    
-    
     
     private func createUser() {
         ServerCommunicator().callMyServer(
@@ -226,10 +242,54 @@ struct SignUpPasswordView: View {
             } else {
                 self.errorMessages = Array(repeating: nil, count: SignUpFields.allCases.count) // can just make it nil
                 self.buttonDisabled = false
-                self.submitted = true
+                self.userCreated = true
             }
         }
     }
+    
+    
+    private func login() {
+        ServerCommunicator().callMyServer(
+            path: "api/token/",
+            httpMethod: .post,
+            params: [
+                "username" : sessionManager.email as Any,
+                "password" : password as Any,
+            ],
+            responseType: LoginResponse.self
+        ) { response in
+            // extract errorMessages and network error from the Result<T, NetworkError> object
+            var accessToken: String?
+            var refreshToken: String?
+            var networkError: ServerCommunicator.NetworkError?
+            switch response {
+            case .success(let responseData):
+                accessToken = responseData.access
+                refreshToken = responseData.refresh
+            case .failure(let error):
+                networkError = error
+            }
+            
+            // error if network error
+            if let networkError = networkError {
+                self.alertMessage = networkError.errorMessage
+                self.showAlert = true
+                self.buttonDisabled = false
+                return
+            }
+            // process response
+            if let accessToken = accessToken, let refreshToken = refreshToken {
+                sessionManager.refreshToken = refreshToken
+                sessionManager.accessToken = accessToken
+                self.tokensRecieved = true
+            } else {
+                self.alertMessage = ServerCommunicator.NetworkError.nilData.errorMessage
+                self.showAlert = true
+                self.buttonDisabled = false
+            }
+        }
+    }
+    
 }
 
 struct CreateUserRequest: Codable {

@@ -54,7 +54,7 @@ class ServerCommunicator {
         responseType: T.Type,
         completion: @escaping (Result<T, NetworkError>) -> Void
     ) {
-
+        print(params)
         guard let url = URL(string: baseURL + path) else {
             completion(.failure(.invalidUrl))
             return
@@ -107,9 +107,9 @@ class ServerCommunicator {
                     let decoder = JSONDecoder()
                     decoder.keyDecodingStrategy = .convertFromSnakeCase
                     let decodedResponse = try decoder.decode(T.self, from: data)
+                    print(decodedResponse)
                     completion(.success(decodedResponse))
                 } catch {
-                    print(data)
                     completion(.failure(.decodingError))
                 }
             }

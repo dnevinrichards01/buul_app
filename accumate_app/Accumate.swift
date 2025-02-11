@@ -90,12 +90,16 @@ struct LoadingScreen: View {
                     }
                 }
                 .task {
-//                    await sessionManager.accessTokenSet(nil)
-//                    await sessionManager.refreshTokenSet(nil)
-                    await sessionManager.loadSavedTokens()
+                    await sessionManager.accessTokenSet(nil)
+                    await sessionManager.refreshTokenSet(nil)
+                    // TODO eventually need to check if they can log in with biometrics or not?
+                    _ = await sessionManager.loadSavedTokens()
                     if !sessionManager.isLoggedIn {
                         _ = await sessionManager.reset()
+                    } else {
+                        await sessionManager.loadSavedTokens()
                     }
+                    
                     destinationPage = sessionManager.signUpFlowPlacement()
                 }
                 .onChange(of: destinationPage) {

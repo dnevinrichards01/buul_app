@@ -54,6 +54,7 @@ struct SignUpBrokerageView: View {
                         }
                         .padding(.vertical, 10)
                         .disabled(buttonDisabled)
+                        .background(.black)
                     }
                     Divider()
                         .frame(height: 1.5)
@@ -61,12 +62,17 @@ struct SignUpBrokerageView: View {
                         .background(.white.opacity(0.6))
                 default:
                     Rectangle()
-                        .background(.black)
-                        .frame(maxWidth: .infinity)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .foregroundStyle(.black)
                 }
             }
             Spacer()
         }
+        .onAppear {
+            submitted = false
+            selectedBrokerage = nil
+        }
+        .background(.black)
         .alert(alertMessage, isPresented: $showAlert) {
             if showAlert {
                 Button("OK", role: .cancel) { showAlert = false }
@@ -74,20 +80,26 @@ struct SignUpBrokerageView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden()
-        .background(.black)
         .onChange(of: selectedBrokerage) {
-            setBrokerageInvestment()
+            if let selectedBrokerage = selectedBrokerage {
+                sessionManager.brokerageName = selectedBrokerage.displayName
+                setBrokerageInvestment()
+            }
         }
         .onChange(of: submitted) {
-            guard let brokerage = selectedBrokerage else { return }
+            guard let brokerage = selectedBrokerage, submitted else { return }
+            self.selectedBrokerage = nil
             sessionManager.brokerageName = brokerage.displayName
+            print(brokerage)
             switch brokerage {
             case .robinhood:
                 // save robinhood
                 if isSignUp {
-                    navManager.append(NavigationPathViews.signUpRobinhoodSecurityInfo)
+                    print(isSignUp)
+                    navManager.append(.signUpRobinhoodSecurityInfo)
                 } else {
-                    navManager.append(NavigationPathViews.robinhoodSecurityInfo)
+                    print(isSignUp)
+                    navManager.append(.robinhoodSecurityInfo)
                 }
             default:
                 break
@@ -116,14 +128,15 @@ struct SignUpBrokerageView: View {
                 "symbol" : sessionManager.etfSymbol as Any
             ],
             accessToken: sessionManager.accessToken,
-            responseType: ErrorOrSuccessResponse.self
+            responseType: SuccessErrorResponse.self
         ) { response in
             switch response {
             case .success:
-                self.selectedBrokerage = nil
+                print("success", response)
                 self.buttonDisabled = false
                 self.submitted = true
             case .failure(let error):
+                print("failure", response)
                 self.selectedBrokerage = nil
                 self.alertMessage = error.errorMessage
                 self.showAlert = true
@@ -133,12 +146,6 @@ struct SignUpBrokerageView: View {
         }
     }
 }
-    
-struct ErrorOrSuccessResponse: Codable {
-    let error: String?
-    let success: String?
-}
-
 
 #Preview {
     SignUpBrokerageView()
