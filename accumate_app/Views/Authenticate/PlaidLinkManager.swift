@@ -41,8 +41,6 @@ class PlaidLinkManager: ObservableObject {
         exchangeRequested = false
         exchangeSuccess = false
         sessionManager.linkCompleted = nil
-        
-        requestCreatePlaidUser(sessionManager.accessToken)
     }
     
     func requestCreatePlaidUser(_ accessToken: String?) {
@@ -204,7 +202,8 @@ class PlaidLinkManager: ObservableObject {
             print("User exited link early. \(linkEvent)")
         }
         linkTokenConfig.onEvent = { linkExit in
-            print("Hit an event \(linkExit.eventName)")
+            self.alertMessage = "Link flow was exited before completion."
+            self.showAlert = true
         }
         return Plaid.create(linkTokenConfig)
     }

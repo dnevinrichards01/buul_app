@@ -36,7 +36,11 @@ struct LinkView: View {
             }
             .onChange(of: linkManager.showAlert) { oldValue, newValue in
                 if oldValue && !newValue {
-                    linkManager.reset(sessionManager: sessionManager)
+                    if linkManager.publicToken != "" && linkManager.exchangeRequested && !linkManager.exchangeSuccess {
+                        linkManager.verifyExchangePublicToken(sessionManager.accessToken)
+                    } else {
+                        linkManager.reset(sessionManager: sessionManager)
+                    }
                 }
             }
             .onAppear {
@@ -73,14 +77,15 @@ struct LinkView: View {
                 print("handler")
                 let createResult = linkManager.createLinkHandler(linkToken)
                 switch createResult {
-                case .failure(let createError):
-                    print("Link Creation Error: \(createError.localizedDescription)")
+                case .failure:
+                    linkManager.alertMessage = "An error occured while preparing to connect to Plaid Link. Press ok to retry."
+                    linkManager.showAlert = true
                 case .success(let handler):
                     linkManager.linkController = LinkController(handler: handler)
                     linkManager.linkControllerCreated = true
                 case .none:
-                    print("none")
-                    //                also failure
+                    linkManager.alertMessage = "An error occured while preparing to connect to Plaid Link. Press ok to retry."
+                    linkManager.showAlert = true
                 }
             }
             .onChange(of: linkManager.linkControllerCreated) {

@@ -20,6 +20,10 @@ class UserSessionManager: ObservableObject {
     @Published var password: String?
     @Published var password2: String?
     
+    @Published var doRefresh: Bool = false
+    @Published var refreshFailed: Bool = false
+    @Published var refreshFailedMessage: String = ""
+    
     // page?
     @AppStorage("accumate.user.isLoggedIn") var isLoggedIn: Bool = false
     @AppStorage("accumate.user.phoneNumber") var phoneNumber: String?
@@ -62,33 +66,61 @@ class UserSessionManager: ObservableObject {
     
     // login
     
-    func refreshTokenGet() async -> String? {
-        return await KeychainHelper.shared.getWithBiometrics(
-            "accumate.user.refreshToken",
-            context: sharedKeychainReadContext
-        )
+    func authenticateUser(completion: @escaping (String?, String?) -> Void) {
+        let context = LAContext()
+        var error: NSError?
+
+        if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
+            context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: "Authenticate to access your saved credentials") { success, authenticationError in
+                if success {
+                    self.loadSavedTokens()
+                    self.isLoggedIn = true
+                    completion(self.accessToken, self.refreshToken)
+                } else {
+                    completion(nil, nil)
+                }
+            }
+        } else {
+            completion(nil, nil) // Face ID not available
+        }
+    }
+
+    func refreshTokens() {
+        ServerCommunicator().callMyServer(
+            path: "api/token/",
+            httpMethod: .post,
+            params: [
+                "refresh" : self.refreshToken as Any,
+            ],
+            responseType: LoginResponse.self
+        ) { response in
+            switch response {
+            case .success(let responseData):
+                self.accessToken = responseData.access
+                self.refreshToken = responseData.refresh
+                self.doRefresh = false
+                self.refreshFailed = false
+                self.refreshFailedMessage = ""
+            case .failure(let error):
+                self.refreshFailed = true
+                self.refreshFailedMessage = error.errorMessage
+                self.doRefresh = false
+            }
+        }
+    }
+        
+    func refreshTokenGet() -> String? {
+        return KeychainHelper.shared.get("accumate.user.refreshToken")
     }
     func refreshTokenSet(_ value: String?) async -> Bool {
-        return await KeychainHelper.shared.setWithBiometrics(
-            value,
-            forKey: "accumate.user.refreshToken",
-            context: sharedKeychainReadContext
-        )
+        return await KeychainHelper.shared.set(value, forKey: "accumate.user.refreshToken")
     }
-    func accessTokenGet() async -> String? {
-        return await KeychainHelper.shared.getWithBiometrics(
-            "accumate.user.accessToken",
-            context: sharedKeychainReadContext
-        )
+    func accessTokenGet() -> String? {
+        return KeychainHelper.shared.get("accumate.user.accessToken")
     }
     func accessTokenSet(_ value: String?) async -> Bool {
-        return await KeychainHelper.shared.setWithBiometrics(
-            value,
-            forKey: "accumate.user.accessToken",
-            context: sharedKeychainReadContext
-        )
+        return await KeychainHelper.shared.set(value, forKey: "accumate.user.accessToken")
     }
-    
     
     
     func refreshTokens() async -> Bool {
@@ -106,14 +138,9 @@ class UserSessionManager: ObservableObject {
     }
     
     
-    
-    
-    
-    
-    
-    func loadSavedTokens() async {
+    func loadSavedTokens() {
         if self.accessToken == nil || self.refreshToken == nil {
-            guard let refreshToken = await refreshTokenGet(), let accessToken = await accessTokenGet() else {
+            guard let refreshToken = refreshTokenGet(), let accessToken = accessTokenGet() else {
                 isLoggedIn = false
                 return
             }
@@ -125,14 +152,13 @@ class UserSessionManager: ObservableObject {
     
     
     // login / sign up navigation path helpers
-    
     func signUpFlowPlacement() -> NavigationPathViews? {
 //        print(phoneNumber, email, fullName, etfSymbol, brokerageName, isLoggedIn)
         if isLoggedIn == true {
             if let _ = phoneNumber, let _ = email, let _ = fullName, let _ = etfSymbol, let _ = brokerageName, let _ = brokerageCompleted, let _ = linkCompleted {
                 return .home
             } else if let _ = phoneNumber, let _ = email, let _ = fullName, let _ = etfSymbol, let _ = brokerageName, let _ = brokerageCompleted {
-                return .link
+                return .plaidInfo
             } else if let _ = phoneNumber, let _ = email, let _ = fullName, let _ = etfSymbol, let _ = brokerageName {
                 return .signUpRobinhoodSecurityInfo
             } else if let _ = phoneNumber, let _ = email, let _ = fullName, let _ = etfSymbol {
@@ -156,7 +182,7 @@ class UserSessionManager: ObservableObject {
     }
     
     func signUpFlowPlacementPaths(_ destinationPage: NavigationPathViews?) -> [NavigationPathViews] {
-        let sharedPath: [NavigationPathViews] = [.accountCreated, .signUpETFs, .signUpBrokerage, .signUpRobinhoodSecurityInfo, .signUpRobinhood, .signUpMfaRobinhood, .link, .home]
+        let sharedPath: [NavigationPathViews] = [.accountCreated, .signUpETFs, .signUpBrokerage, .signUpRobinhoodSecurityInfo, .signUpRobinhood, .signUpMfaRobinhood, .plaidInfo, .link, .home]
         let signUpBasePath: [NavigationPathViews] = [.landing, .signUpPhone, .signUpEmail, .signUpEmailVerify, .signUpFullName, .signUpPassword]
         
 //        print(destinationPage)
@@ -175,7 +201,7 @@ class UserSessionManager: ObservableObject {
             return Array(sharedPath[0..<3])
         } else if destinationPage == .signUpRobinhoodSecurityInfo {
             return Array(sharedPath[0..<4])
-        } else if destinationPage == .link {
+        } else if destinationPage == .plaidInfo {
             return Array(sharedPath[0..<7])
         } else if destinationPage == .home {
             return [.home]
@@ -226,42 +252,39 @@ class KeychainHelper {
     
     static let shared = KeychainHelper()
     
-    func get(_ key: String) async -> String? {
-        return await withUnsafeContinuation { continuation in
-            let query: [String: Any] = [
-                kSecClass as String: kSecClassGenericPassword,
-                kSecAttrAccount as String: key,
-                kSecReturnData as String: true,
-                kSecMatchLimit as String: kSecMatchLimitOne
-            ]
-            var dataTypeRef: AnyObject?
-            let status = SecItemCopyMatching(query as CFDictionary, &dataTypeRef)
-            
-            if status == errSecSuccess, let data = dataTypeRef as? Data {
-                continuation.resume(returning: String(data: data, encoding: .utf8))
-            } else {
-                continuation.resume(returning: nil)
-            }
+    
+    func get(_ key: String) -> String? {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: key,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne
+        ]
+        var dataTypeRef: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &dataTypeRef)
+        
+        if status == errSecSuccess, let data = dataTypeRef as? Data {
+            return String(data: data, encoding: .utf8)
+        } else {
+            return nil
         }
     }
 
-    func getWithBiometrics(_ key: String, context: LAContext) async -> String? {
-        return await withUnsafeContinuation { continuation in
-            let query: [String: Any] = [
-                kSecClass as String: kSecClassGenericPassword,
-                kSecAttrAccount as String: key,
-                kSecReturnData as String: true,
-                kSecMatchLimit as String: kSecMatchLimitOne,
-                kSecUseAuthenticationContext as String: context
-            ]
-            var dataTypeRef: AnyObject?
-            let status = SecItemCopyMatching(query as CFDictionary, &dataTypeRef)
-            
-            if status == errSecSuccess, let data = dataTypeRef as? Data {
-                continuation.resume(returning: String(data: data, encoding: .utf8))
-            } else {
-                continuation.resume(returning: nil)
-            }
+    func getWithBiometrics(_ key: String, context: LAContext) -> String? {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: key,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne,
+            kSecUseAuthenticationContext as String: context
+        ]
+        var dataTypeRef: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &dataTypeRef)
+        
+        if status == errSecSuccess, let data = dataTypeRef as? Data {
+            return String(data: data, encoding: .utf8)
+        } else {
+            return nil
         }
     }
     

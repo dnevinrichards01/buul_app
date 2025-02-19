@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		DE3889062D666A4900E565C1 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = DECD96AA2D59DA5400FF38A9 /* Info.plist */; };
 		DECD96AE2D59DE2D00FF38A9 /* LinkKit in Frameworks */ = {isa = PBXBuildFile; productRef = DECD96AD2D59DE2D00FF38A9 /* LinkKit */; };
 /* End PBXBuildFile section */
 
@@ -223,6 +224,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DE3889062D666A4900E565C1 /* Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

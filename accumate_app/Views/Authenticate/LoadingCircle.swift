@@ -40,6 +40,9 @@ struct LoadingCircle: View {
 }
 
 struct PlaidLinkPageBackground: View {
+    @EnvironmentObject var navManager: NavigationPathManager
+    @EnvironmentObject var sessionManager: UserSessionManager
+    @EnvironmentObject var linkManager: PlaidLinkManager
     @Binding var isPresentingLink: Bool
     
     var body: some View {
@@ -66,11 +69,49 @@ struct PlaidLinkPageBackground: View {
                         .frame(width: 200, height: 70)
                 }
                 Spacer()
+                
+                Button {
+                    linkManager.requestCreatePlaidUser(sessionManager.accessToken)
+                } label: {
+                    Text("Retry or add accounts from another bank")
+                        .font(.subheadline)
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity, minHeight: 50)
+                        .background(.white.opacity(0.8))
+                        .cornerRadius(10)
+                }
+                .disabled(isPresentingLink)
+                Button {
+                    sessionManager.linkCompleted = true
+                    navManager.append(.home)
+                } label: {
+                    Text("Continue")
+                        .font(.headline)
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity, minHeight: 50)
+                        .background(.white)
+                        .cornerRadius(10)
+                }
+                .disabled(isPresentingLink)
             }
             if !isPresentingLink {
                 LoadingCircle()
                     .background(.black.opacity(0.65))
             }
         }
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: {
+                    linkManager.reset(sessionManager: sessionManager)
+                    navManager.path.removeLast()
+                }) {
+                    Image(systemName: "chevron.left")
+                        .foregroundColor(.white)
+                        .font(.system(size: 20, weight: .medium))
+                        .frame(maxHeight: 30)
+                }
+            }
+        }
     }
+    
 }

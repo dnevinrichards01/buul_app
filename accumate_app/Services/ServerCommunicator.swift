@@ -45,6 +45,7 @@ class ServerCommunicator {
     init(baseURL: String = "http://10.0.0.100:8000/") { //"http://localhost:8000/"
         self.baseURL = baseURL
     }
+    
 
     func callMyServer<T: Decodable>(
         path: String,
@@ -54,7 +55,7 @@ class ServerCommunicator {
         responseType: T.Type,
         completion: @escaping (Result<T, NetworkError>) -> Void
     ) {
-        print(params)
+        print(params as Any)
         guard let url = URL(string: baseURL + path) else {
             completion(.failure(.invalidUrl))
             return

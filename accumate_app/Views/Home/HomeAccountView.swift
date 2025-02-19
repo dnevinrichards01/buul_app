@@ -8,8 +8,6 @@
 import SwiftUI
 
 struct HomeAccountView: View {
-    
-    private var name: String = "Nevin Richards"
     @EnvironmentObject var navManager: NavigationPathManager
     @EnvironmentObject var sessionManager: UserSessionManager
     @State private var selectedSetting: AccountSettings?
@@ -21,7 +19,7 @@ struct HomeAccountView: View {
         VStack {
             HStack {
                 Spacer()
-                Text(name + "'s Account")
+                Text(sessionManager.fullName ?? "User" + "'s Account")
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .foregroundStyle(.white)

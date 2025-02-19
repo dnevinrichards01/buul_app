@@ -23,6 +23,7 @@ enum NavigationPathViews: CaseIterable {
     case signUpRobinhood
     case signUpMfaRobinhood
     case login
+    case plaidInfo
     case link
     case passwordRecoveryOTP
     case passwordRecover

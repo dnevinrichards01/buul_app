@@ -50,6 +50,7 @@ struct LoadingScreen: View {
     @EnvironmentObject var sessionManager: UserSessionManager
     @State private var rotationAngle: Double = 0.0
     @State private var destinationPage: NavigationPathViews? = nil
+    @State private var useBiometrics: Bool = true
     
     var body: some View {
         NavigationStack(path: $navManager.path) {
@@ -68,18 +69,52 @@ struct LoadingScreen: View {
                         .foregroundColor(.gray)
                         .padding(.bottom, 30)
                     
-                    ZStack {
-                        Circle()
-                            .stroke(Color.gray.opacity(0.3), lineWidth: 5)
-                            .frame(width: 60)
-                        
-                        Circle()
-                            .trim(from: 0.2, to: 1.0)
-                            .stroke(Color.white, lineWidth: 5)
-                            .frame(width: 60)
-                            .rotationEffect(.degrees(rotationAngle))
+                    if useBiometrics {
+                        ZStack {
+                            Circle()
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 5)
+                                .frame(width: 60)
+                            
+                            Circle()
+                                .trim(from: 0.2, to: 1.0)
+                                .stroke(Color.white, lineWidth: 5)
+                                .frame(width: 60)
+                                .rotationEffect(.degrees(rotationAngle))
+                        }
+                        .frame(width: 100, height: 100)
+                    } else {
+                        VStack(spacing: 20) {
+                            Button {
+                                authenticate()
+                            } label: {
+                                Text("Unlock")
+                                    .font(.headline)
+                                    .foregroundColor(.black)
+                                    .frame(maxWidth: .infinity, minHeight: 50)
+                                    .background(Color.white)
+                                    .cornerRadius(10)
+                            }
+                            
+                            Button {
+                                Task {
+                                    _ = await sessionManager.reset()
+                                    navManager.append(NavigationPathViews.landing)
+                                }
+                            } label: {
+                                Text("Log Out")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity, minHeight: 50)
+                                    .background(.black)
+                                    .cornerRadius(10)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .stroke(.gray.opacity(0.6), lineWidth: 2)
+                                    )
+                            }
+                            
+                        }
                     }
-                    .frame(width: 100, height: 100)
                     
                     Spacer()
                 }
@@ -89,21 +124,19 @@ struct LoadingScreen: View {
                         rotationAngle = 360
                     }
                 }
+                .animation(.easeInOut, value: useBiometrics)
                 .task {
-                    await sessionManager.accessTokenSet(nil)
-                    await sessionManager.refreshTokenSet(nil)
-                    // TODO eventually need to check if they can log in with biometrics or not?
-                    _ = await sessionManager.loadSavedTokens()
-                    if !sessionManager.isLoggedIn {
-                        _ = await sessionManager.reset()
-                    } else {
-                        await sessionManager.loadSavedTokens()
-                    }
-                    
-                    destinationPage = sessionManager.signUpFlowPlacement()
+                    _ = await sessionManager.reset()
+                    authenticate()
                 }
                 .onChange(of: destinationPage) {
                     if let destinationPage = destinationPage {
+                        let path = sessionManager.signUpFlowPlacementPaths(destinationPage)
+                        navManager.extend(path)
+                    }
+                }
+                .onChange(of: useBiometrics) {
+                    if !useBiometrics {
                         let path = sessionManager.signUpFlowPlacementPaths(destinationPage)
                         navManager.extend(path)
                     }
@@ -141,6 +174,8 @@ struct LoadingScreen: View {
                     SignUpRobinhoodMFAView()
                 case .login:
                     LoginView()
+                case .plaidInfo:
+                    PlaidInfo()
                 case .link:
                     LinkView()
                 case .emailRecover:
@@ -224,6 +259,17 @@ struct LoadingScreen: View {
             }
         }
     }
+    
+    private func authenticate() {
+        sessionManager.authenticateUser() { accessToken, refreshToken in
+            if let accessToken = accessToken, let refreshToken = refreshToken {
+                destinationPage = sessionManager.signUpFlowPlacement()
+            } else {
+                useBiometrics = false
+            }
+        }
+    }
+    
 }
 
 #Preview {

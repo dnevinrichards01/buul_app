@@ -55,7 +55,7 @@ struct SignUpRobinhoodView: View {
                 sessionManager.rhMfaMethod = mfaMethod
                 if mfaMethod == .none {
                     if isSignUp {
-                        navManager.append(NavigationPathViews.link)
+                        navManager.append(NavigationPathViews.plaidInfo)
                     } else {
                         showAlert = true
                     }

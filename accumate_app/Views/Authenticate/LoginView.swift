@@ -286,8 +286,8 @@ struct LoginView: View {
 
 
 struct LoginResponse: Codable {
-    let access: String?
-    let refresh: String?
+    let access: String
+    let refresh: String
 }
 
 struct GetUserInfoResponse: Codable {
