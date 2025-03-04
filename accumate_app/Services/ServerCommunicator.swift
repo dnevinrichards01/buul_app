@@ -51,8 +51,9 @@ class ServerCommunicator {
         path: String,
         httpMethod: HTTPMethod,
         params: [String: Any]? = nil,
-        accessToken: String? = nil,
+        sessionManager: UserSessionManager? = nil,
         responseType: T.Type,
+        refreshRetries: Int = 2,
         completion: @escaping (Result<T, NetworkError>) -> Void
     ) {
         print(params as Any)
@@ -65,7 +66,7 @@ class ServerCommunicator {
         request.httpMethod = httpMethod.rawValue
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
-        if let accessToken = accessToken {
+        if let accessToken = sessionManager?.accessToken {
             request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         }
 //        maybe add the host field here, and make sure it matches server_name in nginx
@@ -82,7 +83,8 @@ class ServerCommunicator {
         }
 
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            DispatchQueue.main.async {
+//            DispatchQueue.main.async {
+            Task {
                 
                 if error != nil {
                     completion(.failure(.networkError))
@@ -95,7 +97,26 @@ class ServerCommunicator {
                 }
 
                 guard (200...299).contains(httpResponse.statusCode) else {
-                    completion(.failure(.statusCodeError(httpResponse.statusCode)))
+                    if let sessionManager = sessionManager, httpResponse.statusCode == 401 && refreshRetries > 0 {
+                        sessionManager.refreshTokens()
+                        if !sessionManager.refreshFailed {
+                            _ = await sessionManager.accessTokenSet(sessionManager.accessToken)
+                            _ = await sessionManager.refreshTokenSet(sessionManager.refreshToken)
+                        } else {
+                            self.callMyServer(
+                                path: path,
+                                httpMethod: httpMethod,
+                                params: params,
+                                sessionManager: sessionManager,
+                                responseType: responseType,
+                                refreshRetries: refreshRetries - 1,
+                                completion: completion
+                            )
+                        }
+                        return
+                    } else {
+                        completion(.failure(.statusCodeError(httpResponse.statusCode)))
+                    }
                     return
                 }
 

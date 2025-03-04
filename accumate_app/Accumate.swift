@@ -51,6 +51,8 @@ struct LoadingScreen: View {
     @State private var rotationAngle: Double = 0.0
     @State private var destinationPage: NavigationPathViews? = nil
     @State private var useBiometrics: Bool = true
+    @State private var showAlert: Bool = false
+    @State private var alertMessage: String = ""
     
     var body: some View {
         NavigationStack(path: $navManager.path) {
@@ -85,6 +87,7 @@ struct LoadingScreen: View {
                     } else {
                         VStack(spacing: 20) {
                             Button {
+                                useBiometrics = true
                                 authenticate()
                             } label: {
                                 Text("Unlock")
@@ -119,6 +122,18 @@ struct LoadingScreen: View {
                     Spacer()
                 }
                 .background(.black)
+                .alert(alertMessage, isPresented: $showAlert) {
+                    if showAlert {
+                        Button("OK", role: .cancel) { showAlert = false }
+                    }
+                }
+                .onChange(of: showAlert) { oldValue, newValue in
+                    if oldValue == true && newValue == false {
+                        showAlert = false
+                        alertMessage = ""
+                        
+                    }
+                }
                 .onAppear {
                     withAnimation(Animation.linear(duration: 3).repeatForever(autoreverses: false)) {
                         rotationAngle = 360
@@ -126,7 +141,6 @@ struct LoadingScreen: View {
                 }
                 .animation(.easeInOut, value: useBiometrics)
                 .task {
-                    _ = await sessionManager.reset()
                     authenticate()
                 }
                 .onChange(of: destinationPage) {
@@ -136,9 +150,8 @@ struct LoadingScreen: View {
                     }
                 }
                 .onChange(of: useBiometrics) {
-                    if !useBiometrics {
-                        let path = sessionManager.signUpFlowPlacementPaths(destinationPage)
-                        navManager.extend(path)
+                    if useBiometrics {
+                        authenticate()
                     }
                 }
             }
@@ -261,11 +274,22 @@ struct LoadingScreen: View {
     }
     
     private func authenticate() {
-        sessionManager.authenticateUser() { accessToken, refreshToken in
-            if let accessToken = accessToken, let refreshToken = refreshToken {
+        if !sessionManager.loadSavedTokens() {
+            destinationPage = .landing
+            useBiometrics = false
+            return
+        }
+        sessionManager.authenticateUser() { response in
+            switch response {
+            case .success:
                 destinationPage = sessionManager.signUpFlowPlacement()
-            } else {
-                useBiometrics = false
+            case .failure(let error):
+                if error == .failedAuthentication {
+                    useBiometrics = false
+                } else {
+                    showAlert = true
+                    alertMessage = "Face ID is not accessible. Please log in manually."
+                }   
             }
         }
     }

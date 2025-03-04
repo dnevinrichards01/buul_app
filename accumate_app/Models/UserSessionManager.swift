@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 import LocalAuthentication
 
-@MainActor
+//@MainActor
 class UserSessionManager: ObservableObject {
     //    @Published var brokerage: Brokerages?
     @Published var sharedKeychainReadContext: LAContext = LAContext()
@@ -64,25 +64,46 @@ class UserSessionManager: ObservableObject {
     }
     
     
-    // login
-    
-    func authenticateUser(completion: @escaping (String?, String?) -> Void) {
+//    @MainActor
+    func authenticateUser(completion: @escaping (Result<Bool, AuthenticationError>) -> Void) {
         let context = LAContext()
         var error: NSError?
-
+        
         if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
             context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: "Authenticate to access your saved credentials") { success, authenticationError in
                 if success {
-                    self.loadSavedTokens()
-                    self.isLoggedIn = true
-                    completion(self.accessToken, self.refreshToken)
+                    completion(.success(true))
                 } else {
-                    completion(nil, nil)
+                    completion(.failure(.failedAuthentication))
                 }
             }
         } else {
-            completion(nil, nil) // Face ID not available
+            if let laError = error as? LAError {
+                switch laError.code {
+                case .biometryNotAvailable:
+                    completion(.failure(.biometryNotAvailable))
+                case .biometryNotEnrolled:
+                    completion(.failure(.biometryNotEnrolled))
+                case .passcodeNotSet:
+                    completion(.failure(.passcodeNotSet))
+                default:
+                    completion(.failure(.unknownError))
+                }
+            } else {
+                completion(.failure(.unknownError))
+            }
         }
+    }
+    
+    
+    enum AuthenticationError: Error {
+        case biometryNotAvailable
+        case biometryNotEnrolled
+        case passcodeNotSet
+        case failedAuthentication
+        case userCancelled
+        case biometryLockout
+        case unknownError
     }
 
     func refreshTokens() {
@@ -123,31 +144,31 @@ class UserSessionManager: ObservableObject {
     }
     
     
-    func refreshTokens() async -> Bool {
-        if refreshToken == nil || accessToken == nil {
-            return false
-        }
-        // refresh
-        let newRefreshToken = "refresh"
-        let newAccessToken = "access"
-        refreshToken = newRefreshToken
-        accessToken = newAccessToken
-        let refreshTokenSaved = await refreshTokenSet(newRefreshToken)
-        let accessTokenSaved = await accessTokenSet(newAccessToken)
-        return refreshTokenSaved && accessTokenSaved
-    }
+//    func refreshTokens() async -> Bool {
+//        if refreshToken == nil || accessToken == nil {
+//            return false
+//        }
+//        // refresh
+//        let newRefreshToken = "refresh"
+//        let newAccessToken = "access"
+//        refreshToken = newRefreshToken
+//        accessToken = newAccessToken
+//        let refreshTokenSaved = await refreshTokenSet(newRefreshToken)
+//        let accessTokenSaved = await accessTokenSet(newAccessToken)
+//        return refreshTokenSaved && accessTokenSaved
+//    }
     
     
-    func loadSavedTokens() {
+    func loadSavedTokens() -> Bool {
         if self.accessToken == nil || self.refreshToken == nil {
             guard let refreshToken = refreshTokenGet(), let accessToken = accessTokenGet() else {
-                isLoggedIn = false
-                return
+                return false
             }
-            isLoggedIn = true
             self.accessToken = accessToken
             self.refreshToken = refreshToken
+            return true
         }
+        return false
     }
     
     

@@ -127,7 +127,7 @@ struct SignUpBrokerageView: View {
                 "brokerage" : sessionManager.brokerageName?.lowercased() as Any,
                 "symbol" : sessionManager.etfSymbol as Any
             ],
-            accessToken: sessionManager.accessToken,
+            sessionManager: sessionManager,
             responseType: SuccessErrorResponse.self
         ) { response in
             switch response {

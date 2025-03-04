@@ -43,11 +43,11 @@ class PlaidLinkManager: ObservableObject {
         sessionManager.linkCompleted = nil
     }
     
-    func requestCreatePlaidUser(_ accessToken: String?) {
+    func requestCreatePlaidUser(_ sessionManager: UserSessionManager?) {
         ServerCommunicator().callMyServer(
             path: "api/plaid/usercreate/",
             httpMethod: .post,
-            accessToken: accessToken,
+            sessionManager: sessionManager,
             responseType: SuccessErrorResponse.self
         ) { response in
             switch response {
@@ -60,11 +60,11 @@ class PlaidLinkManager: ObservableObject {
         }
     }
     
-    func verifyCreatePlaidUser(_ accessToken: String?) {
+    func verifyCreatePlaidUser(_ sessionManager: UserSessionManager?) {
         ServerCommunicator().callMyServer(
             path: "api/plaid/usercreate/",
             httpMethod: .get,
-            accessToken: accessToken,
+            sessionManager: sessionManager,
             responseType: SuccessErrorResponse.self
         ) { response in
             switch response {
@@ -86,11 +86,11 @@ class PlaidLinkManager: ObservableObject {
         }
     }
     
-    func requestLinkToken(_ accessToken: String?) {
+    func requestLinkToken(_ sessionManager: UserSessionManager?) {
         ServerCommunicator().callMyServer(
             path: "api/plaid/linktokencreate/",
             httpMethod: .post,
-            accessToken: accessToken,
+            sessionManager: sessionManager,
             responseType: SuccessErrorResponse.self
         ) { response in
             print("request closure")
@@ -104,11 +104,11 @@ class PlaidLinkManager: ObservableObject {
         }
     }
     
-    func fetchLinkToken(_ accessToken: String?) {
+    func fetchLinkToken(_ sessionManager: UserSessionManager?) {
         ServerCommunicator().callMyServer(
             path: "api/plaid/linktokencreate/",
             httpMethod: .get,
-            accessToken: accessToken,
+            sessionManager: sessionManager,
             responseType: SuccessErrorResponse.self
         ) { response in
             print("fetch closure")
@@ -130,12 +130,12 @@ class PlaidLinkManager: ObservableObject {
         }
     }
     
-    func requestExchangePublicToken(_ accessToken: String?) {
+    func requestExchangePublicToken(_ sessionManager: UserSessionManager?) {
         ServerCommunicator().callMyServer(
             path: "api/plaid/publictokenexchange/",
             httpMethod: .post,
             params: ["public_token" : self.publicToken],
-            accessToken: accessToken,
+            sessionManager: sessionManager,
             responseType: SuccessErrorResponse.self
         ) { response in
             switch response {
@@ -148,11 +148,11 @@ class PlaidLinkManager: ObservableObject {
         }
     }
     
-    func verifyExchangePublicToken(_ accessToken: String?) {
+    func verifyExchangePublicToken(_ sessionManager: UserSessionManager?) {
         ServerCommunicator().callMyServer(
             path: "api/plaid/publictokenexchange/",
             httpMethod: .get,
-            accessToken: accessToken,
+            sessionManager: sessionManager,
             responseType: SuccessErrorResponse.self
         ) { response in
             switch response {

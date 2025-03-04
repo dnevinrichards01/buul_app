@@ -36,8 +36,8 @@ struct LinkView: View {
             }
             .onChange(of: linkManager.showAlert) { oldValue, newValue in
                 if oldValue && !newValue {
-                    if linkManager.publicToken != "" && linkManager.exchangeRequested && !linkManager.exchangeSuccess {
-                        linkManager.verifyExchangePublicToken(sessionManager.accessToken)
+                    if linkManager.publicToken != "" && linkManager.exchangeRequested && !linkManager.exchangeSuccess{
+                        linkManager.verifyExchangePublicToken(sessionManager)
                     } else {
                         linkManager.reset(sessionManager: sessionManager)
                     }
@@ -45,21 +45,21 @@ struct LinkView: View {
             }
             .onAppear {
                 print("user create request")
-                linkManager.requestCreatePlaidUser(sessionManager.accessToken)
+                linkManager.requestCreatePlaidUser(sessionManager)
             }
             .onChange(of: linkManager.plaidUserRequested) {
                 Task {
                     if !linkManager.plaidUserRequested { return }
                     print("user create verify")
                     try? await Task.sleep(nanoseconds: 1_500_000_000)
-                    linkManager.verifyCreatePlaidUser(sessionManager.accessToken)
+                    linkManager.verifyCreatePlaidUser(sessionManager)
                 }
             }
             .onChange(of: linkManager.plaidUserCreated) {
                 Task {
                     if !linkManager.plaidUserCreated { return }
                     print("token request begin")
-                    linkManager.requestLinkToken(sessionManager.accessToken)
+                    linkManager.requestLinkToken(sessionManager)
                     print("token request complete")
                 }
             }
@@ -68,7 +68,7 @@ struct LinkView: View {
                     if !linkManager.linkTokenRequested { return }
                     print("token fetch begin")
                     try? await Task.sleep(nanoseconds: 1_500_000_000)
-                    linkManager.fetchLinkToken(sessionManager.accessToken)
+                    linkManager.fetchLinkToken(sessionManager)
                     print("token fetch complete")
                 }
             }
@@ -97,14 +97,14 @@ struct LinkView: View {
                 if !linkManager.linkSuccess { return }
                 print("link success and request exchange")
                 linkManager.isPresentingLink = false
-                linkManager.requestExchangePublicToken(sessionManager.accessToken)
+                linkManager.requestExchangePublicToken(sessionManager)
             }
             .onChange(of: linkManager.exchangeRequested) {
                 Task {
                     if !linkManager.exchangeRequested { return }
                     print("exchange verify")
                     try? await Task.sleep(nanoseconds: 1_500_000_000)
-                    linkManager.verifyExchangePublicToken(sessionManager.accessToken)
+                    linkManager.verifyExchangePublicToken(sessionManager)
                 }
             }
             .onChange(of: linkManager.exchangeSuccess) {

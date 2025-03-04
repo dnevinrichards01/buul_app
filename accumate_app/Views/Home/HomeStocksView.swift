@@ -8,26 +8,8 @@
 import SwiftUI
 
 
-let stockData1: [StockDataPoint] = [
-    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -6, to: Date())!, price: 120),
-    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -5, to: Date())!, price: 130),
-    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -4, to: Date())!, price: 125),
-    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -3, to: Date())!, price: 135),
-    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -2, to: Date())!, price: 128),
-    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -1, to: Date())!, price: 140),
-    StockDataPoint(date: Date(), price: 145)
-]
 
 
-let stockData2: [StockDataPoint] = [
-    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -6, to: Date())!, price: 100),
-    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -5, to: Date())!, price: 110),
-    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -4, to: Date())!, price: 120),
-    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -3, to: Date())!, price: 130),
-    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -2, to: Date())!, price: 140),
-    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -1, to: Date())!, price: 100),
-    StockDataPoint(date: Date(), price: 145)
-]
 
 
 struct HomeStocksView: View {
@@ -42,7 +24,8 @@ struct HomeStocksView: View {
         stockData1,
         stockData2,
         stockData1
-    ]
+    ] // maybe have default values for each one?
+    
     @State private var selectedPeriod: TimePeriods = .day
     @State private var color: Color = .gray
 //    private var currentData = [StockDataPoint(date: Date.now, price: 0.0), StockDataPoint(date: Date.now, price: 0.0)]
@@ -141,11 +124,67 @@ struct HomeStocksView: View {
             return .gray
         }
     }
+    
 }
+
+
+let stockData1: [StockDataPoint] = [
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -6, to: Date())!, price: 120),
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -5, to: Date())!, price: 130),
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -4, to: Date())!, price: 125),
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -3, to: Date())!, price: 135),
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -2, to: Date())!, price: 128),
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -1, to: Date())!, price: 140),
+    StockDataPoint(date: Date(), price: 145)
+]
+
+let stockData2: [StockDataPoint] = [
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -6, to: Date())!, price: 100),
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -5, to: Date())!, price: 110),
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -4, to: Date())!, price: 120),
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -3, to: Date())!, price: 130),
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -2, to: Date())!, price: 140),
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -1, to: Date())!, price: 100),
+    StockDataPoint(date: Date(), price: 145)
+]
+
+let defaultDays: [StockDataPoint] = [
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -1, to: Date())!, price: 0),
+    StockDataPoint(date: Date(), price: 0)
+]
+let defaultWeeks: [StockDataPoint] = [
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -7, to: Date())!, price: 0),
+    StockDataPoint(date: Date(), price: 0)
+]
+let defaultMonths: [StockDataPoint] = [
+    StockDataPoint(date: Calendar.current.date(byAdding: .month, value: -1, to: Date())!, price: 0),
+    StockDataPoint(date: Date(), price: 0)
+]
+let defaultYears: [StockDataPoint] = [
+    StockDataPoint(date: Calendar.current.date(byAdding: .year, value: -1, to: Date())!, price: 0),
+    StockDataPoint(date: Date(), price: 0)
+]
+let defaultFiveYears: [StockDataPoint] = [
+    StockDataPoint(date: Calendar.current.date(byAdding: .year, value: -5, to: Date())!, price: 0),
+    StockDataPoint(date: Date(), price: 0)
+]
+let defaultAll: [StockDataPoint] = defaultFiveYears
+
+
 
         
         
-//}
+struct StockDataPoint: Identifiable, Hashable, Codable {
+    let id = UUID()
+    let date: Date
+    let price: Double
+
+    enum CodingKeys: String, CodingKey {
+        case date, price
+    }
+}
+
+
 
 enum TimePeriods: CaseIterable {
     case day, week, month, year, ytd, fiveYears, all

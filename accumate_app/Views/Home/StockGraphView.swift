@@ -9,11 +9,7 @@ import SwiftUI
 import Charts
 import CoreGraphics
 
-struct StockDataPoint: Identifiable, Hashable {
-    let id = UUID()
-    let date: Date
-    let price: Double
-}
+
 
 struct StockGraphView: View {
     var graphHeight: Double = 300
@@ -71,7 +67,7 @@ struct StockGraphView: View {
                                 y: .value("Price", point.price)
                             )
                             .foregroundStyle(color)
-                            .interpolationMethod(.catmullRom)
+//                            .interpolationMethod(.catmullRom)
                         }
                     }
                     .chartXAxis(.hidden)  // Hides X-axis

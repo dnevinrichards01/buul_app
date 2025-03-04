@@ -259,7 +259,7 @@ struct LoginView: View {
         ServerCommunicator().callMyServer(
             path: "api/user/userinfo/",
             httpMethod: .get,
-            accessToken: sessionManager.accessToken,
+            sessionManager: sessionManager,
             responseType: GetUserInfoResponse.self
         ) { response in
             // extract errorMessages and network error from the Result<T, NetworkError> object
@@ -273,10 +273,20 @@ struct LoginView: View {
                 sessionManager.isLoggedIn = true
                 buttonDisabled = false
                 self.submitted = true
-            case .failure(let error):
-                print("user ingo failuree")
-                self.alertMessage = error.errorMessage
-                self.showAlert = true
+            case .failure(let networkError):
+                switch networkError {
+                case .statusCodeError(let status):
+                    if status == 401 {
+                        self.alertMessage = "Your session has expired. To retrieve updated information, please logout then sign in."
+                        self.showAlert = true
+                    } else {
+                        self.alertMessage = networkError.errorMessage
+                        self.showAlert = true
+                    }
+                default:
+                    self.alertMessage = networkError.errorMessage
+                    self.showAlert = true
+                }
                 self.buttonDisabled = false
                 self.userInfoNotRecieved = true
             }

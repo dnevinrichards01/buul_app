@@ -7,8 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		DE3889062D666A4900E565C1 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = DECD96AA2D59DA5400FF38A9 /* Info.plist */; };
-		DECD96AE2D59DE2D00FF38A9 /* LinkKit in Frameworks */ = {isa = PBXBuildFile; productRef = DECD96AD2D59DE2D00FF38A9 /* LinkKit */; };
+		DEB012052D77BEEE002A2917 /* LinkKit in Frameworks */ = {isa = PBXBuildFile; productRef = DEB012042D77BEEE002A2917 /* LinkKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -29,10 +28,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		DE23A0D62D66B62D006A9C4E /* Info-Accumate.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-Accumate.plist"; sourceTree = "<group>"; };
 		DE7346812CFDB0C700A01EFF /* accumate_app.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = accumate_app.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DE7346922CFDB0CA00A01EFF /* accumate_appTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = accumate_appTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		DE73469C2CFDB0CA00A01EFF /* accumate_appUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = accumate_appUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		DECD96AA2D59DA5400FF38A9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -58,7 +57,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DECD96AE2D59DE2D00FF38A9 /* LinkKit in Frameworks */,
+				DEB012052D77BEEE002A2917 /* LinkKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -79,13 +78,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		DE23A0D92D66B8F1006A9C4E /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		DE7346782CFDB0C700A01EFF = {
 			isa = PBXGroup;
 			children = (
-				DECD96AA2D59DA5400FF38A9 /* Info.plist */,
+				DE23A0D62D66B62D006A9C4E /* Info-Accumate.plist */,
 				DE7346832CFDB0C700A01EFF /* accumate_app */,
 				DE7346952CFDB0CA00A01EFF /* accumate_appTests */,
 				DE73469F2CFDB0CA00A01EFF /* accumate_appUITests */,
+				DE23A0D92D66B8F1006A9C4E /* Frameworks */,
 				DE7346822CFDB0C700A01EFF /* Products */,
 			);
 			sourceTree = "<group>";
@@ -120,7 +127,7 @@
 			);
 			name = accumate_app;
 			packageProductDependencies = (
-				DECD96AD2D59DE2D00FF38A9 /* LinkKit */,
+				DEB012042D77BEEE002A2917 /* LinkKit */,
 			);
 			productName = accumate_app;
 			productReference = DE7346812CFDB0C700A01EFF /* accumate_app.app */;
@@ -205,7 +212,7 @@
 			mainGroup = DE7346782CFDB0C700A01EFF;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				DECD96AC2D59DE2D00FF38A9 /* XCRemoteSwiftPackageReference "plaid-link-ios-spm" */,
+				DEB012032D77BEEE002A2917 /* XCRemoteSwiftPackageReference "plaid-link-ios-spm" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = DE7346822CFDB0C700A01EFF /* Products */;
@@ -224,7 +231,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DE3889062D666A4900E565C1 /* Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -334,7 +340,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = "$(SRCROOT)/accumate_app/Info.plist";
+				INFOPLIST_FILE = "$(SRCROOT)/Info-Accumate.plist";
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -390,7 +396,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = "$(SRCROOT)/accumate_app/Info.plist";
+				INFOPLIST_FILE = "$(SRCROOT)/Info-Accumate.plist";
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -409,8 +415,8 @@
 				DEVELOPMENT_ASSET_PATHS = "\"accumate_app/Preview Content\"";
 				DEVELOPMENT_TEAM = 7PT842CPK6;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "$(SRCROOT)/Info-Accumate.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Accumate;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -426,14 +432,15 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.1;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "www.accumatewealth.com.accumate-app";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TARGETED_DEVICE_FAMILY = 1;
 				XROS_DEPLOYMENT_TARGET = 2.1;
 			};
 			name = Debug;
@@ -449,8 +456,8 @@
 				DEVELOPMENT_ASSET_PATHS = "\"accumate_app/Preview Content\"";
 				DEVELOPMENT_TEAM = 7PT842CPK6;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "$(SRCROOT)/Info-Accumate.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Accumate;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -466,14 +473,15 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.1;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "www.accumatewealth.com.accumate-app";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TARGETED_DEVICE_FAMILY = 1;
 				XROS_DEPLOYMENT_TARGET = 2.1;
 			};
 			name = Release;
@@ -484,7 +492,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
 				MACOSX_DEPLOYMENT_TARGET = 15.1;
 				MARKETING_VERSION = 1.0;
@@ -506,7 +514,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
 				MACOSX_DEPLOYMENT_TARGET = 15.1;
 				MARKETING_VERSION = 1.0;
@@ -527,7 +535,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
 				MACOSX_DEPLOYMENT_TARGET = 15.1;
 				MARKETING_VERSION = 1.0;
@@ -548,7 +556,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
 				MACOSX_DEPLOYMENT_TARGET = 15.1;
 				MARKETING_VERSION = 1.0;
@@ -606,7 +614,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		DECD96AC2D59DE2D00FF38A9 /* XCRemoteSwiftPackageReference "plaid-link-ios-spm" */ = {
+		DEB012032D77BEEE002A2917 /* XCRemoteSwiftPackageReference "plaid-link-ios-spm" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/plaid/plaid-link-ios-spm.git";
 			requirement = {
@@ -617,9 +625,9 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		DECD96AD2D59DE2D00FF38A9 /* LinkKit */ = {
+		DEB012042D77BEEE002A2917 /* LinkKit */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = DECD96AC2D59DE2D00FF38A9 /* XCRemoteSwiftPackageReference "plaid-link-ios-spm" */;
+			package = DEB012032D77BEEE002A2917 /* XCRemoteSwiftPackageReference "plaid-link-ios-spm" */;
 			productName = LinkKit;
 		};
 /* End XCSwiftPackageProductDependency section */

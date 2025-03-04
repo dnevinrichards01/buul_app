@@ -71,7 +71,7 @@ struct PlaidLinkPageBackground: View {
                 Spacer()
                 
                 Button {
-                    linkManager.requestCreatePlaidUser(sessionManager.accessToken)
+                    linkManager.requestCreatePlaidUser(sessionManager)
                 } label: {
                     Text("Retry or add accounts from another bank")
                         .font(.subheadline)
