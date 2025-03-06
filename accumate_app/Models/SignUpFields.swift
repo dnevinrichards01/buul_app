@@ -14,6 +14,13 @@ enum SignUpFields: String, CaseIterable {
     case password2
     case fullName
     case phoneNumber
+    case verificationEmail
+    case verificationPhoneNumber
+    case symbol
+    case brokerage
+    case deleteAccount
+    case field
+    case code
     
     
     var instruction: String {
@@ -28,6 +35,8 @@ enum SignUpFields: String, CaseIterable {
             return "Enter your phone number"
         case .email:
             return "Enter your email"
+        default:
+            return "Error: This field should not be displayed"
         }
     }
     
@@ -43,6 +52,8 @@ enum SignUpFields: String, CaseIterable {
             return "Enter your phone number"
         case .email:
             return "Enter your email"
+        default:
+            return "Error: This field should not be displayed"
         }
     }
         
@@ -58,6 +69,12 @@ enum SignUpFields: String, CaseIterable {
             return "Enter your new phone number"
         case .email:
             return "Enter your new email"
+        case .verificationPhoneNumber:
+            return "Enter the phone number for your account"
+        case .verificationEmail:
+            return "Enter the email for your account"
+        default:
+            return "Error: This field should not be displayed"
         }
     }
     
@@ -73,6 +90,12 @@ enum SignUpFields: String, CaseIterable {
             return "(555) 123-4567"
         case .email:
             return "you@example.com"
+        case .verificationPhoneNumber:
+            return "(555) 123-4567"
+        case .verificationEmail:
+            return "you@example.com"
+        default:
+            return "Error: This field should not be displayed"
         }
     }
     
@@ -88,6 +111,12 @@ enum SignUpFields: String, CaseIterable {
             return .phonePad
         case .email:
             return .emailAddress
+        case .verificationPhoneNumber:
+            return .phonePad
+        case .verificationEmail:
+            return .emailAddress
+        default:
+            return .default
         }
     }
 }

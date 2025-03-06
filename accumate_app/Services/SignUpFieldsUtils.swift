@@ -11,10 +11,13 @@ import SwiftUI
 
 class SignUpFieldsUtils {
     
-    static func validateInputs(password: String? = nil, password2: String? = nil, fullName: String? = nil,
-                               phoneNumber: String? = nil, email: String? = nil) -> [SignUpFields : String?] {
+    static func validateInputs(
+        signUpFields: [SignUpFields], password: String? = nil, password2: String? = nil,
+        fullName: String? = nil, phoneNumber: String? = nil, email: String? = nil,
+        verificationPhoneNumber: String? = nil, verificationEmail: String? = nil
+    ) -> [SignUpFields : String?] {
         var errorMessagesDict: [SignUpFields : String?] = [:]
-        for signUpField in SignUpFields.allCases {
+        for signUpField in signUpFields {
             var errorMessage: String? = nil
             switch signUpField {
             case .password:
@@ -37,16 +40,21 @@ class SignUpFieldsUtils {
                 if let email = email {
                     errorMessage = validateEmail(email)
                 }
+            case .verificationPhoneNumber:
+                if let verificationPhoneNumber = verificationPhoneNumber {
+                    errorMessage = validatePhoneNumber(verificationPhoneNumber)
+                }
+            case .verificationEmail:
+                if let verificationEmail = verificationEmail {
+                    errorMessage = validateEmail(verificationEmail)
+                }
+            default:
+                continue
             }
             errorMessagesDict[signUpField] = errorMessage
         }
         
         return errorMessagesDict
-    }
-    
-    static func validateInputsBackend(password: String? = nil, password2: String? = nil, fullName: String? = nil,
-                                      phoneNumber: String? = nil, email: String? = nil) async -> [SignUpFields : String?] {
-        return [:]
     }
     
     static func keysStringToSignUpFields(_ errorMessages: any Codable) throws -> [SignUpFields : String?] {
@@ -64,11 +72,10 @@ class SignUpFieldsUtils {
         }
     }
     
-    static func parseErrorMessages(_ errorMessagesDict: [SignUpFields : String?]) -> [String?]? {
+    static func parseErrorMessages(_ signUpFields: [SignUpFields],_ errorMessagesDict: [SignUpFields : String?]) -> [String?]? {
         var errorMessagesList: [String?] = []
         var isError = false
-        for index in SignUpFields.allCases.indices {
-            let signUpField = SignUpFields.allCases[index]
+        for signUpField in signUpFields {
             if let errorMessage = errorMessagesDict[signUpField] {
                 if errorMessage != nil {
                     isError = true

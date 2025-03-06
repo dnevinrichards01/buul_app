@@ -11,7 +11,6 @@ import LocalAuthentication
 
 //@MainActor
 class UserSessionManager: ObservableObject {
-    //    @Published var brokerage: Brokerages?
     @Published var sharedKeychainReadContext: LAContext = LAContext()
     @Published var otp: String?
     @Published var rhMfaMethod: RobinhoodMFAMethod?
@@ -23,6 +22,11 @@ class UserSessionManager: ObservableObject {
     @Published var doRefresh: Bool = false
     @Published var refreshFailed: Bool = false
     @Published var refreshFailedMessage: String = ""
+    
+    var verificationEmail: String?
+    var verificationPhoneNumber: String?
+    var stringToVerify: String?
+    var boolToVerify: Bool?
     
     // page?
     @AppStorage("accumate.user.isLoggedIn") var isLoggedIn: Bool = false
@@ -58,6 +62,10 @@ class UserSessionManager: ObservableObject {
             refreshToken = nil
             password = nil
             password2 = nil
+            verificationEmail = nil
+            verificationPhoneNumber = nil
+            stringToVerify = nil
+            boolToVerify = nil
             return true
         }
         return false
@@ -257,6 +265,8 @@ class UserSessionManager: ObservableObject {
                 if let email = email {
                     self.email = email
                 }
+            default:
+                return
             }
         }
     }

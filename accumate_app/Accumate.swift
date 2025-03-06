@@ -163,11 +163,29 @@ struct LoadingScreen: View {
                     HomeView()
                     
                 case .signUpPhone:
-                    SignUpPhoneView()
+                    FieldsRequestOTPView(
+                        signUpFields: [.phoneNumber],
+                        nextPage: .signUpEmail,
+                        OTPField: .phoneNumber,
+                        authenticate: false
+                    )
                 case .signUpEmail:
-                    SignUpEmailView()
+                    FieldsRequestOTPView(
+                        signUpFields: [.email],
+                        nextPage: .signUpEmailVerify,
+                        OTPField: .email,
+                        authenticate: false
+                    )
                 case .signUpEmailVerify:
-                    SignUpEmailVerifyView()
+                    OTPView(
+                        title: "Verify Your Email",
+                        subtitle: "Enter the code sent to your email address",
+                        goBackNPagesToRedoEntries: 1,
+                        goBackNPagesIfCompleted: 0,
+                        nextPage: .signUpFullName,
+                        OTPField: .email,
+                        authenticate: false
+                    )
                 case .signUpFullName:
                     SignUpFullNameView()
                 case .signUpPassword:
@@ -184,6 +202,7 @@ struct LoadingScreen: View {
                 case .signUpRobinhood:
                     SignUpRobinhoodView()
                 case .signUpMfaRobinhood:
+                    // OTP
                     SignUpRobinhoodMFAView()
                 case .login:
                     LoginView()
@@ -194,15 +213,24 @@ struct LoadingScreen: View {
                 case .emailRecover:
                     EmailRecoverView()
                 case .passwordRecoverInitiate:
-                    PasswordRecoverInitiateView()
+                    FieldsRequestOTPView(
+                        signUpFields: [.verificationEmail, .password, .password2],
+                        title: "Forgot your password?",
+                        subtitle: "We will send you a code if we have an account associated with this email.",
+                        nextPage: .passwordRecoveryOTP,
+                        OTPField: .password,
+                        authenticate: false
+                    )
                 case .passwordRecoveryOTP:
                     OTPView(
                         title: "Reset Password",
                         subtitle: "Enter the code sent to your email",
-                        nextPage: NavigationPathViews.passwordRecover
+                        goBackNPagesToRedoEntries: 1,
+                        goBackNPagesIfCompleted: 2,
+                        nextPage: nil,
+                        OTPField: .password,
+                        authenticate: false
                     )
-                case .passwordRecover:
-                    ChangeAccountInfoView(title: "Reset Password", signUpFields: [.password, .password2])
                 case .accountInfo:
                     SettingsAccountInfoView()
                 case .bank:
@@ -213,7 +241,11 @@ struct LoadingScreen: View {
                     OTPView(
                         title: "Delete Account",
                         subtitle: "Enter the code sent to your email to proceed. You cannot undo this action and all data will be lost.",
-                        nextPage: NavigationPathViews.delete
+                        goBackNPagesToRedoEntries: 1,
+                        goBackNPagesIfCompleted: 0,
+                        nextPage: .delete,
+                        OTPField: .deleteAccount,
+                        authenticate: true
                     )
                 case .delete:
                     SettingsDeleteView()
@@ -221,7 +253,11 @@ struct LoadingScreen: View {
                     OTPView(
                         title: "Reset Password",
                         subtitle: "Enter the code sent to your email to verify your identity before we proceed.",
-                        nextPage: NavigationPathViews.changePassword
+                        goBackNPagesToRedoEntries: 1,
+                        goBackNPagesIfCompleted: 2,
+                        nextPage: nil,
+                        OTPField: .password,
+                        authenticate: true
                     )
                 case .changePassword:
                     ChangeAccountInfoView(title: "Reset Password", signUpFields: [.password, .password2])
@@ -229,7 +265,11 @@ struct LoadingScreen: View {
                     OTPView(
                         title: "Change Email Address",
                         subtitle: "Enter the code sent to your email to verify your identity before we proceed.",
-                        nextPage: NavigationPathViews.changeEmail
+                        goBackNPagesToRedoEntries: 1,
+                        goBackNPagesIfCompleted: 2,
+                        nextPage: nil,
+                        OTPField: .email,
+                        authenticate: true
                     )
                 case .changeEmail:
                     ChangeAccountInfoView(title: "Change Email Address", signUpFields: [SignUpFields.email])
@@ -237,7 +277,11 @@ struct LoadingScreen: View {
                     OTPView(
                         title: "Change Phone Number",
                         subtitle: "Enter the code sent to your email to verify your identity before we proceed.",
-                        nextPage: NavigationPathViews.changePhone
+                        goBackNPagesToRedoEntries: 1,
+                        goBackNPagesIfCompleted: 2,
+                        nextPage: nil,
+                        OTPField: .phoneNumber,
+                        authenticate: true
                     )
                 case .changePhone:
                     ChangeAccountInfoView(title: "Change Phone Number", signUpFields: [SignUpFields.phoneNumber])
@@ -245,7 +289,11 @@ struct LoadingScreen: View {
                     OTPView(
                         title: "Change Name",
                         subtitle: "Enter the code sent to your email to verify your identity before we proceed.",
-                        nextPage: NavigationPathViews.changeName
+                        goBackNPagesToRedoEntries: 1,
+                        goBackNPagesIfCompleted: 2,
+                        nextPage: nil,
+                        OTPField: .fullName,
+                        authenticate: true
                     )
                 case .changeName:
                     ChangeAccountInfoView(title: "Change Name", signUpFields: [SignUpFields.fullName])
@@ -261,7 +309,11 @@ struct LoadingScreen: View {
                     OTPView(
                         title: "Change Your Investment",
                         subtitle: "Enter the code sent to your email to verify your identity before we proceed.",
-                        nextPage: NavigationPathViews.changeETF
+                        goBackNPagesToRedoEntries: 1,
+                        goBackNPagesIfCompleted: 2,
+                        nextPage: nil,
+                        OTPField: .etf,
+                        authenticate: true
                     )
                 case .changeETF:
                     SignUpETFsView(isSignUp: false)

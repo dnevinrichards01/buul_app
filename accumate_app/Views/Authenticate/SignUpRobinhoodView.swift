@@ -40,7 +40,8 @@ struct SignUpRobinhoodView: View {
                         placeholder: option.placeholder,
                         inputValue: binding,
                         keyboard: option.keyboardType,
-                        displayErrorMessage: false
+                        displayErrorMessage: false,
+                        signUpField: .email // placeholder, instead extend signupfields to have a robinhood switch statment
                     )
                     .focused($focusedField, equals: index)
                     .id(index)

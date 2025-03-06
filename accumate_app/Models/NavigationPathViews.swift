@@ -26,7 +26,6 @@ enum NavigationPathViews: CaseIterable {
     case plaidInfo
     case link
     case passwordRecoveryOTP
-    case passwordRecover
     case emailRecover
     case passwordRecoverInitiate
         

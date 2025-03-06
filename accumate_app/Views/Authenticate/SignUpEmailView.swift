@@ -28,50 +28,51 @@ struct SignUpEmailView: View {
                 placeholder: SignUpFields.email.placeholder,
                 inputValue: $email,
                 keyboard: SignUpFields.email.keyboardType,
-                errorMessage: errorMessage
+                errorMessage: errorMessage,
+                signUpField: .email
             )
             Spacer()
             
             // Continue Button
             VStack() {
                 Button {
-                    Task {
-                        await MainActor.run {
-                            buttonDisabled = true
-                            submitted = false
-                        }
-                        // validate inputs
-                        if let _errorMessage = SignUpFieldsUtils.validateEmail(email) {
-                            await MainActor.run {
-                                sessionManager.email = nil
-                                sessionManager.unverifiedEmail = nil
-                                errorMessage = _errorMessage
-                                buttonDisabled = false
-                            }
-                            return
-                        }
-                        
-                        // if passes, validate inputs in backend, create user / login if relevant
-                        let errorMessagesDict = await SignUpFieldsUtils.validateInputsBackend(
-                            email: email
-                        )
-                        if let errorMessagesList = SignUpFieldsUtils.parseErrorMessages(errorMessagesDict) {
-                            await MainActor.run {
-                                sessionManager.email = nil
-                                sessionManager.unverifiedEmail = nil
-                                errorMessage = errorMessagesList[0]
-                                buttonDisabled = false
-                            }
-                            return
-                        }
-                        
-                        // update state
-                        sessionManager.unverifiedEmail = email
-                        await MainActor.run {
-                            submitted = true
-                            errorMessage = nil
-                        }
-                    }
+//                    Task {
+//                        await MainActor.run {
+//                            buttonDisabled = true
+//                            submitted = false
+//                        }
+//                        // validate inputs
+//                        if let _errorMessage = SignUpFieldsUtils.validateEmail(email) {
+//                            await MainActor.run {
+//                                sessionManager.email = nil
+//                                sessionManager.unverifiedEmail = nil
+//                                errorMessage = _errorMessage
+//                                buttonDisabled = false
+//                            }
+//                            return
+//                        }
+//                        
+//                        // if passes, validate inputs in backend, create user / login if relevant
+//                        let errorMessagesDict = await SignUpFieldsUtils.validateInputsBackend(
+//                            email: email
+//                        )
+//                        if let errorMessagesList = SignUpFieldsUtils.parseErrorMessages(errorMessagesDict) {
+//                            await MainActor.run {
+//                                sessionManager.email = nil
+//                                sessionManager.unverifiedEmail = nil
+//                                errorMessage = errorMessagesList[0]
+//                                buttonDisabled = false
+//                            }
+//                            return
+//                        }
+//                        
+//                        // update state
+//                        sessionManager.unverifiedEmail = email
+//                        await MainActor.run {
+//                            submitted = true
+//                            errorMessage = nil
+//                        }
+//                    }
                 } label: {
                     Text("Continue")
                         .font(.headline)

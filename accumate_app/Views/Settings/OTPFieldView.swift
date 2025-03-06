@@ -37,7 +37,7 @@ struct OTPFieldView: View {
             HStack {
                 ForEach(0...5, id: \.self) { index in
                     VStack {
-                        Text(getIndex(text: otp, index: index))
+                        Text(Utils.getIndex(text: otp, index: index))
                             .font(.title)
                             .fontWeight(.bold)
                             .foregroundColor(.white)
@@ -52,28 +52,12 @@ struct OTPFieldView: View {
                 }
             }
             .onChange(of: otp) {
-                otp = truncateTo6Digits(text: otp)
+                otp = Utils.truncateTo6Digits(text: otp)
             }
         }
         .background(.black)
     }
     
-    func truncateTo6Digits(text: String) -> String {
-        let digitsOnly = text.filter { $0.isNumber }
-        if digitsOnly.count <= 6 {
-            return digitsOnly
-        } else {
-            return String(digitsOnly.prefix(6))
-        }
-        
-    }
     
-    func getIndex(text: String, index: Int) -> String {
-        if let indexObject = text.index(text.startIndex, offsetBy: index, limitedBy: text.endIndex),
-           text.count - 1 >= index {
-            return String(text[indexObject])
-        }
-        return ""
-    }
 }
 

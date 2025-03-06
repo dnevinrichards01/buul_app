@@ -17,6 +17,7 @@ class ServerCommunicator {
     enum HTTPMethod: String {
         case get = "GET"
         case post = "POST"
+        case put = "PUT"
     }
 
     enum NetworkError: LocalizedError {
@@ -33,9 +34,9 @@ class ServerCommunicator {
             case .invalidUrl: return "Invalid URL. Please try again or contact Accumate"
             case .networkError: return "Network Error. Please try again later, check your internet connection, or contact Accumate"
             case .statusCodeError(let status): return "Internal server error \(status). Please try again or contact Accumate"
-            case .invalidResponseError: return "Network Error. Please try again later, check your internet connection, or contact Accumate"
+            case .invalidResponseError: return "Invalid server response. Please try again later, check your internet connection, or contact Accumate"
             case .encodingError: return "We couldn't encode your web request. Please check your inputs or contact Accumate"
-            case .decodingError: return "Invalid server response. Please try again or contact Accumate"
+            case .decodingError: return "Invalid server response format. Please try again or contact Accumate"
             case .nilData: return "Server returned no data. Please try again or contact Accumate"
             }
         }
@@ -72,7 +73,7 @@ class ServerCommunicator {
 //        maybe add the host field here, and make sure it matches server_name in nginx
         request.timeoutInterval = 3
 
-        if httpMethod == .post, let params = params {
+        if let params = params {
             do {
                 let jsonData = try JSONSerialization.data(withJSONObject: params, options: [])
                 request.httpBody = jsonData
@@ -86,7 +87,12 @@ class ServerCommunicator {
 //            DispatchQueue.main.async {
             Task {
                 
+                if let data = data, let body = String(data: data, encoding: .utf8) {
+                    print(body)
+                }
+                
                 if error != nil {
+                    print(error?.localizedDescription as Any)
                     completion(.failure(.networkError))
                     return
                 }

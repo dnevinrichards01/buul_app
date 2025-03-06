@@ -54,7 +54,8 @@ struct ChangeAccountInfoView: View {
                         placeholder: signUpField.placeholder,
                         inputValue: binding,
                         keyboard: signUpField.keyboardType,
-                        errorMessage: errorMessages?[index]
+                        errorMessage: errorMessages?[index],
+                        signUpField: signUpField
                     )
                     .focused($focusedField, equals: index)
                 }
@@ -64,7 +65,14 @@ struct ChangeAccountInfoView: View {
             
             VStack() {
                 Button {
-                    let errorMessagesDict = validateFields()
+                    let errorMessagesDict = SignUpFieldsUtils.validateInputs(
+                        signUpFields: signUpFields,
+                        password: password,
+                        password2: password2,
+                        fullName: fullName,
+                        phoneNumber: phoneNumber,
+                        email: email
+                    )
                     var errorMessagesList: [String?] = []
                     var isError = false
                     for index in SignUpFields.allCases.indices {
@@ -150,28 +158,6 @@ struct ChangeAccountInfoView: View {
     
     private func dismissKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-    }
-    
-    
-    private func validateFields() -> [SignUpFields : String?] {
-        var errorMessagesDict: [SignUpFields : String?] = [:]
-        for signUpField in fieldBindings.keys {
-            let errorMessage: String?
-            switch signUpField {
-            case .password:
-                errorMessage = validatePassword()
-            case .password2:
-                errorMessage = validatePassword2()
-            case .fullName:
-                errorMessage = validateFullname()
-            case .phoneNumber:
-                errorMessage = validatePhoneNumber()
-            case .email:
-                errorMessage = validateEmail()
-            }
-            errorMessagesDict[signUpField] = errorMessage
-        }
-        return errorMessagesDict
     }
     
     private func validateEmail() -> String? {

@@ -16,7 +16,11 @@ class NavigationPathManager: ObservableObject {
         pathArray.append(view)
         path.append(view)
     }
-
+    
+    func removeLast(_ numPages: Int) {
+        pathArray.removeLast(numPages)
+        path.removeLast(numPages)
+    }
     
     func reset(views: [NavigationPathViews] = []) {
         pathArray = views

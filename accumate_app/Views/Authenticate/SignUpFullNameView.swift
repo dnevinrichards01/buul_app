@@ -28,50 +28,51 @@ struct SignUpFullNameView: View {
                 placeholder: SignUpFields.fullName.placeholder,
                 inputValue: $fullName,
                 keyboard: SignUpFields.fullName.keyboardType,
-                errorMessage: errorMessage
+                errorMessage: errorMessage,
+                signUpField: .fullName
             )
             Spacer()
             
             // Continue Button
             VStack() {
                 Button {
-                    Task {
-                        await MainActor.run {
-                            buttonDisabled = true
-                            submitted = false
-                        }
-                        // validate inputs
-                        if let _errorMessage = SignUpFieldsUtils.validateFullname(fullName) {
-                            await MainActor.run {
-                                sessionManager.fullName = nil
-                                errorMessage = _errorMessage
-                                buttonDisabled = false
-                            }
-                            return
-                        }
-                        
-                        // if passes, validate inputs in backend, create user / login if relevant
-                        let errorMessagesDict = await SignUpFieldsUtils.validateInputsBackend(
-                            fullName: fullName
-                        )
-                        if let errorMessagesList = SignUpFieldsUtils.parseErrorMessages(errorMessagesDict) {
-                            await MainActor.run {
-                                sessionManager.fullName = nil
-                                errorMessage = errorMessagesList[0]
-                                buttonDisabled = false
-                            }
-                            return
-                        }
-                        
-                        // update state
-                        sessionManager.updateSignUpFieldsState(
-                            fullName: fullName
-                        )
-                        await MainActor.run {
-                            submitted = true
-                            errorMessage = nil
-                        }
-                    }
+//                    Task {
+//                        await MainActor.run {
+//                            buttonDisabled = true
+//                            submitted = false
+//                        }
+//                        // validate inputs
+//                        if let _errorMessage = SignUpFieldsUtils.validateFullname(fullName) {
+//                            await MainActor.run {
+//                                sessionManager.fullName = nil
+//                                errorMessage = _errorMessage
+//                                buttonDisabled = false
+//                            }
+//                            return
+//                        }
+//                        
+//                        // if passes, validate inputs in backend, create user / login if relevant
+//                        let errorMessagesDict = await SignUpFieldsUtils.validateInputsBackend(
+//                            fullName: fullName
+//                        )
+//                        if let errorMessagesList = SignUpFieldsUtils.parseErrorMessages(errorMessagesDict) {
+//                            await MainActor.run {
+//                                sessionManager.fullName = nil
+//                                errorMessage = errorMessagesList[0]
+//                                buttonDisabled = false
+//                            }
+//                            return
+//                        }
+//                        
+//                        // update state
+//                        sessionManager.updateSignUpFieldsState(
+//                            fullName: fullName
+//                        )
+//                        await MainActor.run {
+//                            submitted = true
+//                            errorMessage = nil
+//                        }
+//                    }
                 } label: {
                     Text("Continue")
                         .font(.headline)

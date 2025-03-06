@@ -44,7 +44,8 @@ struct LoginView: View {
                         placeholder: signUpField.placeholder,
                         inputValue: binding,
                         keyboard: signUpField.keyboardType,
-                        errorMessage: errorMessages?[index]
+                        errorMessage: errorMessages?[index],
+                        signUpField: signUpField
                     )
                     .focused($focusedField, equals: index)
                 }
@@ -100,10 +101,11 @@ struct LoginView: View {
             if !buttonDisabled { return }
             
             let errorMessagesDictLocal = SignUpFieldsUtils.validateInputs(
+                signUpFields: signUpFields,
                 password: password,
                 email: email
             )
-            if let errorMessagesList = SignUpFieldsUtils.parseErrorMessages(errorMessagesDictLocal) {
+            if let errorMessagesList = SignUpFieldsUtils.parseErrorMessages(signUpFields, errorMessagesDictLocal) {
                 errorMessages = errorMessagesList
                 buttonDisabled = false
             } else {
@@ -225,6 +227,7 @@ struct LoginView: View {
                 case .statusCodeError(let status):
                     if status == 401 {
                         errorMessages = SignUpFieldsUtils.parseErrorMessages(
+                            [.password],
                             [.password : "We could not find an account with these credentials."]
                         )
                         self.buttonDisabled = false

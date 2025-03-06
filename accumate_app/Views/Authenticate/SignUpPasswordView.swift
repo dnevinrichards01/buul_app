@@ -47,7 +47,8 @@ struct SignUpPasswordView: View {
                         placeholder: signUpField.placeholder,
                         inputValue: binding,
                         keyboard: signUpField.keyboardType,
-                        errorMessage: errorMessages?[index]
+                        errorMessage: errorMessages?[index],
+                        signUpField: signUpField
                     )
                     .focused($focusedField, equals: index)
                 }
@@ -96,10 +97,11 @@ struct SignUpPasswordView: View {
             if !buttonDisabled { return }
             
             let errorMessagesDictLocal = SignUpFieldsUtils.validateInputs(
+                signUpFields: signUpFields,
                 password: password,
                 password2: password2
             )
-            if let errorMessagesList = SignUpFieldsUtils.parseErrorMessages(errorMessagesDictLocal) {
+            if let errorMessagesList = SignUpFieldsUtils.parseErrorMessages(signUpFields, errorMessagesDictLocal) {
                 errorMessages = errorMessagesList
                 buttonDisabled = false
             } else {
@@ -206,12 +208,10 @@ struct SignUpPasswordView: View {
             
             // process response
             if let errorMessages = errorMessages {
-                print(errorMessages)
                 do {
                     // process errors into a list
                     let errorMessagesDictBackend = try SignUpFieldsUtils.keysStringToSignUpFields(errorMessages)
-                    print(errorMessagesDictBackend)
-                    if let errorMessagesList = SignUpFieldsUtils.parseErrorMessages(errorMessagesDictBackend) {
+                    if let errorMessagesList = SignUpFieldsUtils.parseErrorMessages(signUpFields, errorMessagesDictBackend) {
                         // if an earlier field is messed up, error and send them back to it
                         if errorMessagesDictBackend[.password] == nil {
                             if let _ = errorMessagesDictBackend[.phoneNumber] {
@@ -240,7 +240,7 @@ struct SignUpPasswordView: View {
                 }
             // if no error messages, set error messages to nil
             } else {
-                self.errorMessages = Array(repeating: nil, count: SignUpFields.allCases.count) // can just make it nil
+                self.errorMessages = nil
                 self.buttonDisabled = false
                 self.userCreated = true
             }

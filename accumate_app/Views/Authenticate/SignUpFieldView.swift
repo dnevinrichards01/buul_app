@@ -42,6 +42,10 @@ struct SignUpFieldView: View {
     var keyboard : UIKeyboardType
     var errorMessage : String?
     var displayErrorMessage : Bool = true
+    var signUpField: SignUpFields
+    
+    @EnvironmentObject var navManager: NavigationPathManager
+    @EnvironmentObject var sessionManager: UserSessionManager
     
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
@@ -64,13 +68,30 @@ struct SignUpFieldView: View {
                         .background(.black)
                         .cornerRadius(10)
                         .padding(.bottom, 10)
+                        .fixedSize(horizontal: false, vertical: true)
                 } else {
                     Spacer()
                         .frame(height: 20)
                 }
             }
         }
+        .onChange(of: inputValue) {
+            if signUpField == .phoneNumber {
+                inputValue = SignUpFieldsUtils.formatPhoneNumber(inputValue)
+            }
+        }
+        .onAppear {
+            if signUpField == .phoneNumber {
+                if let _phoneNumber = sessionManager.phoneNumber {
+                    inputValue = !sessionManager.isLoggedIn ? _phoneNumber : "+1"
+                } else {
+                    inputValue = "+1"
+                }
+            }
+        }
     }
+    
+    
 }
 
 #Preview {
@@ -79,7 +100,10 @@ struct SignUpFieldView: View {
         placeholder: "value like this",
         inputValue: .constant(""),
         keyboard: UIKeyboardType.phonePad,
-        errorMessage: nil
+        errorMessage: nil,
+        signUpField: .password
     )
+    .environmentObject(UserSessionManager())
+    .environmentObject(NavigationPathManager())
     .background(.black)
 }

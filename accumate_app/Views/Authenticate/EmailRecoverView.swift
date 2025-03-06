@@ -9,8 +9,14 @@ import SwiftUI
 
 struct EmailRecoverView: View {
     @State private var email: String = ""
+    @State private var showAlert: Bool = false
+    @State private var alertMessage: String = ""
+    @State private var buttonDisabled: Bool = false
+    @State private var errorMessage: String?
+    
     
     @EnvironmentObject var navManager: NavigationPathManager
+    @EnvironmentObject var sessionManager: UserSessionManager
     
     var body: some View {
         VStack {
@@ -25,6 +31,7 @@ struct EmailRecoverView: View {
                     .font(.headline)
                     .foregroundStyle(.white.opacity(0.8))
                     .multilineTextAlignment(.leading)
+                    .frame(height: 50)
             }
             .frame(maxWidth: .infinity)
             .padding()
@@ -33,14 +40,16 @@ struct EmailRecoverView: View {
                 instruction: SignUpFields.email.instruction,
                 placeholder: SignUpFields.email.placeholder,
                 inputValue: $email,
-                keyboard: SignUpFields.phoneNumber.keyboardType
+                keyboard: SignUpFields.email.keyboardType,
+                errorMessage: errorMessage,
+                signUpField: .email
             )
             .padding()
             
             Spacer()
             
             Button {
-                sendEmail()
+                buttonDisabled = true
             } label: {
                 Text("Send")
                     .font(.headline)
@@ -52,6 +61,16 @@ struct EmailRecoverView: View {
             .padding(20)
             
         }
+        .alert(alertMessage, isPresented: $showAlert) {
+            if showAlert {
+                Button("OK", role: .cancel) { showAlert = false }
+            }
+        }
+        .onChange(of: buttonDisabled) {
+            if !buttonDisabled { return }
+            sendEmail()
+        }
+        .animation(.easeInOut(duration: 0.5), value: errorMessage)
         .background(.black)
         .navigationBarBackButtonHidden(true)
         .navigationBarTitleDisplayMode(.inline)
@@ -66,15 +85,60 @@ struct EmailRecoverView: View {
                         .frame(maxHeight: 30)
                 }
             }
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    Utils.dismissKeyboard()
+                }
+                .foregroundColor(.blue) // Customize the button appearance
+            }
         }
     }
     
     private func sendEmail() {
-        return
+        ServerCommunicator().callMyServer(
+            path: "api/user/sendemail/",
+            httpMethod: .post,
+            params: [
+                "email": email
+            ],
+            sessionManager: sessionManager,
+            responseType: SuccessErrorResponse.self
+        ) { response in
+            // extract errorMessages and network error from the Result<T, NetworkError> object
+            switch response {
+            case .success(let responseData):
+                if let error = responseData.error, responseData.success == nil {
+                    self.errorMessage = error
+                    self.buttonDisabled = false
+                } else if let _ = responseData.success, responseData.error == nil {
+                    self.alertMessage = "Your request was recieved. Please check your email."
+                    self.showAlert = true
+                    self.errorMessage = nil
+                    self.buttonDisabled = false
+                } else if let _ = responseData.error, let _ = responseData.success {
+                    self.alertMessage = ServerCommunicator.NetworkError.decodingError.errorMessage
+                    self.errorMessage = nil
+                    self.showAlert = true
+                    self.buttonDisabled = false
+                } else {
+                    self.alertMessage = ServerCommunicator.NetworkError.decodingError.errorMessage
+                    self.errorMessage = nil
+                    self.showAlert = true
+                    self.buttonDisabled = false
+                }
+            case .failure(let networkError):
+                self.alertMessage = networkError.errorMessage
+                self.showAlert = true
+                self.errorMessage = nil
+                self.buttonDisabled = false
+            }
+        }
     }
 }
 
 #Preview {
     EmailRecoverView()
         .environmentObject(NavigationPathManager())
+        .environmentObject(UserSessionManager())
 }

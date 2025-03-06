@@ -47,51 +47,52 @@ struct SignUpPhoneView: View {
                 placeholder: SignUpFields.phoneNumber.placeholder,
                 inputValue: $phoneNumber,
                 keyboard: SignUpFields.phoneNumber.keyboardType,
-                errorMessage: errorMessage
+                errorMessage: errorMessage,
+                signUpField: .phoneNumber
             )
             
             Spacer()
             
             VStack() {
                 Button {
-                    Task {
-                        await MainActor.run {
-                            buttonDisabled = true
-                            submitted = false
-                        }
-                        // validate inputs
-                        if let _errorMessage = SignUpFieldsUtils.validatePhoneNumber(phoneNumber) {
-                            await MainActor.run {
-                                sessionManager.phoneNumber = nil
-                                errorMessage = _errorMessage
-                                buttonDisabled = false
-                            }
-                            return
-                        }
-                        
-                        // if passes, validate inputs in backend, create user / login if relevant
-                        let errorMessagesDict = await SignUpFieldsUtils.validateInputsBackend(
-                            phoneNumber: phoneNumber
-                        )
-                        if let errorMessagesList = SignUpFieldsUtils.parseErrorMessages(errorMessagesDict) {
-                            await MainActor.run {
-                                sessionManager.phoneNumber = nil
-                                errorMessage = errorMessagesList[0]
-                                buttonDisabled = false
-                            }
-                            return
-                        }
-                        
-                        // update state
-                        sessionManager.updateSignUpFieldsState(
-                            phoneNumber: phoneNumber
-                        )
-                        await MainActor.run {
-                            submitted = true
-                            errorMessage = nil
-                        }
-                        
-                    }
+//                    Task {
+//                        await MainActor.run {
+//                            buttonDisabled = true
+//                            submitted = false
+//                        }
+//                        // validate inputs
+//                        if let _errorMessage = SignUpFieldsUtils.validatePhoneNumber(phoneNumber) {
+//                            await MainActor.run {
+//                                sessionManager.phoneNumber = nil
+//                                errorMessage = _errorMessage
+//                                buttonDisabled = false
+//                            }
+//                            return
+//                        }
+//                        
+//                        // if passes, validate inputs in backend, create user / login if relevant
+//                        let errorMessagesDict = await SignUpFieldsUtils.validateInputsBackend(
+//                            phoneNumber: phoneNumber
+//                        )
+//                        if let errorMessagesList = SignUpFieldsUtils.parseErrorMessages(errorMessagesDict) {
+//                            await MainActor.run {
+//                                sessionManager.phoneNumber = nil
+//                                errorMessage = errorMessagesList[0]
+//                                buttonDisabled = false
+//                            }
+//                            return
+//                        }
+//                        
+//                        // update state
+//                        sessionManager.updateSignUpFieldsState(
+//                            phoneNumber: phoneNumber
+//                        )
+//                        await MainActor.run {
+//                            submitted = true
+//                            errorMessage = nil
+//                        }
+//                        
+//                    }
                 } label: {
                     Text("Continue")
                         .font(.headline)
@@ -115,6 +116,14 @@ struct SignUpPhoneView: View {
         .onChange(of: phoneNumber) {
             phoneNumber = SignUpFieldsUtils.formatPhoneNumber(phoneNumber)
         }
+        .onAppear {
+            if let _phoneNumber = sessionManager.phoneNumber {
+                phoneNumber = !sessionManager.isLoggedIn ? _phoneNumber : "+1"
+            } else {
+                phoneNumber = "+1"
+            }
+            
+        }
         .onChange(of: submitted) {
             if !submitted { return }
             buttonDisabled = false
@@ -124,14 +133,7 @@ struct SignUpPhoneView: View {
         .background(Color.black)
         .navigationBarBackButtonHidden(true)
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear {
-            if let _phoneNumber = sessionManager.phoneNumber { 
-                phoneNumber = !sessionManager.isLoggedIn ? _phoneNumber : "+1"
-            } else {
-                phoneNumber = "+1"
-            }
-            
-        }
+        
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button {
