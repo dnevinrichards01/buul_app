@@ -11,22 +11,25 @@ import LocalAuthentication
 
 //@MainActor
 class UserSessionManager: ObservableObject {
-    @Published var sharedKeychainReadContext: LAContext = LAContext()
     @Published var otp: String?
-    @Published var rhMfaMethod: RobinhoodMFAMethod?
     @Published var accessToken: String?
     @Published var refreshToken: String?
     @Published var password: String?
     @Published var password2: String?
     
-    @Published var doRefresh: Bool = false
     @Published var refreshFailed: Bool = false
     @Published var refreshFailedMessage: String = ""
+    
+    var sharedKeychainReadContext: LAContext = LAContext()
     
     var verificationEmail: String?
     var verificationPhoneNumber: String?
     var stringToVerify: String?
     var boolToVerify: Bool?
+    
+    var brokerageEmail: String?
+    var brokeragePassword: String?
+    var robinhoodMFAType: RobinhoodMFAMethod?
     
     // page?
     @AppStorage("accumate.user.isLoggedIn") var isLoggedIn: Bool = false
@@ -36,15 +39,40 @@ class UserSessionManager: ObservableObject {
     @AppStorage("accumate.user.fullName") var fullName: String?
     @AppStorage("accumate.user.brokerageName") var brokerageName: String?
     @AppStorage("accumate.user.etfSymbol") var etfSymbol: String?
-    @AppStorage("accumate.user.brokerageCompleted") var brokerageCompleted: String?
-    @AppStorage("accumate.user.link") var linkCompleted: Bool?
+    @AppStorage("accumate.user.brokerageCompleted") var brokerageCompleted: Bool = false
+    @AppStorage("accumate.user.link") var linkCompleted: Bool = false
     // alter the back buttons on sign up page to let a user go backwards even if they were dropped in there with no navigationpath / history
     
     init() {
         sharedKeychainReadContext.localizedReason = "Authenticate to access your saved credentials"
     }
     
-    func reset() async -> Bool {
+    func reset() -> Bool {
+        phoneNumber = nil
+        email = nil
+        unverifiedEmail = nil
+        fullName = nil
+        brokerageName = nil
+        linkCompleted = false
+        etfSymbol = nil
+        otp = nil
+        isLoggedIn = false
+        accessToken = nil
+        refreshToken = nil
+        password = nil
+        password2 = nil
+        verificationEmail = nil
+        verificationPhoneNumber = nil
+        stringToVerify = nil
+        boolToVerify = nil
+        brokerageEmail = nil
+        brokeragePassword = nil
+        robinhoodMFAType = nil
+        return true
+    }
+    
+    @MainActor
+    func resetComplete() async -> Bool {
         let accessDeleted = await accessTokenSet(nil)
         let refreshDeleted = await refreshTokenSet(nil)
         if accessDeleted && refreshDeleted {
@@ -53,10 +81,9 @@ class UserSessionManager: ObservableObject {
             unverifiedEmail = nil
             fullName = nil
             brokerageName = nil
-            linkCompleted = nil
+            linkCompleted = false
             etfSymbol = nil
             otp = nil
-            rhMfaMethod = nil
             isLoggedIn = false
             accessToken = nil
             refreshToken = nil
@@ -66,6 +93,9 @@ class UserSessionManager: ObservableObject {
             verificationPhoneNumber = nil
             stringToVerify = nil
             boolToVerify = nil
+            brokerageEmail = nil
+            brokeragePassword = nil
+            robinhoodMFAType = nil
             return true
         }
         return false
@@ -75,11 +105,13 @@ class UserSessionManager: ObservableObject {
 //    @MainActor
     func authenticateUser(completion: @escaping (Result<Bool, AuthenticationError>) -> Void) {
         let context = LAContext()
+//        context.invalidate() 
         var error: NSError?
         
-        if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
-            context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: "Authenticate to access your saved credentials") { success, authenticationError in
+        if context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) {
+            context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "Authenticate to access your saved credentials") { success, authenticationError in
                 if success {
+                    print("success")
                     completion(.success(true))
                 } else {
                     completion(.failure(.failedAuthentication))
@@ -113,30 +145,6 @@ class UserSessionManager: ObservableObject {
         case biometryLockout
         case unknownError
     }
-
-    func refreshTokens() {
-        ServerCommunicator().callMyServer(
-            path: "api/token/",
-            httpMethod: .post,
-            params: [
-                "refresh" : self.refreshToken as Any,
-            ],
-            responseType: LoginResponse.self
-        ) { response in
-            switch response {
-            case .success(let responseData):
-                self.accessToken = responseData.access
-                self.refreshToken = responseData.refresh
-                self.doRefresh = false
-                self.refreshFailed = false
-                self.refreshFailedMessage = ""
-            case .failure(let error):
-                self.refreshFailed = true
-                self.refreshFailedMessage = error.errorMessage
-                self.doRefresh = false
-            }
-        }
-    }
         
     func refreshTokenGet() -> String? {
         return KeychainHelper.shared.get("accumate.user.refreshToken")
@@ -151,24 +159,10 @@ class UserSessionManager: ObservableObject {
         return await KeychainHelper.shared.set(value, forKey: "accumate.user.accessToken")
     }
     
-    
-//    func refreshTokens() async -> Bool {
-//        if refreshToken == nil || accessToken == nil {
-//            return false
-//        }
-//        // refresh
-//        let newRefreshToken = "refresh"
-//        let newAccessToken = "access"
-//        refreshToken = newRefreshToken
-//        accessToken = newAccessToken
-//        let refreshTokenSaved = await refreshTokenSet(newRefreshToken)
-//        let accessTokenSaved = await accessTokenSet(newAccessToken)
-//        return refreshTokenSaved && accessTokenSaved
-//    }
-    
-    
     func loadSavedTokens() -> Bool {
-        if self.accessToken == nil || self.refreshToken == nil {
+        if self.accessToken != nil && self.refreshToken != nil {
+            return true
+        } else {
             guard let refreshToken = refreshTokenGet(), let accessToken = accessTokenGet() else {
                 return false
             }
@@ -176,7 +170,6 @@ class UserSessionManager: ObservableObject {
             self.refreshToken = refreshToken
             return true
         }
-        return false
     }
     
     
@@ -184,9 +177,9 @@ class UserSessionManager: ObservableObject {
     func signUpFlowPlacement() -> NavigationPathViews? {
 //        print(phoneNumber, email, fullName, etfSymbol, brokerageName, isLoggedIn)
         if isLoggedIn == true {
-            if let _ = phoneNumber, let _ = email, let _ = fullName, let _ = etfSymbol, let _ = brokerageName, let _ = brokerageCompleted, let _ = linkCompleted {
+            if let _ = phoneNumber, let _ = email, let _ = fullName, let _ = etfSymbol, let _ = brokerageName, brokerageCompleted, linkCompleted {
                 return .home
-            } else if let _ = phoneNumber, let _ = email, let _ = fullName, let _ = etfSymbol, let _ = brokerageName, let _ = brokerageCompleted {
+            } else if let _ = phoneNumber, let _ = email, let _ = fullName, let _ = etfSymbol, let _ = brokerageName, brokerageCompleted {
                 return .plaidInfo
             } else if let _ = phoneNumber, let _ = email, let _ = fullName, let _ = etfSymbol, let _ = brokerageName {
                 return .signUpRobinhoodSecurityInfo
@@ -195,7 +188,7 @@ class UserSessionManager: ObservableObject {
             } else if let _ = phoneNumber, let _ = email, let _ = fullName {
                 return .signUpETFs
             } else {
-                return nil
+                return .landing
             }
         } else {
             if let _ = phoneNumber, let _ = email, let _ = fullName {
@@ -240,38 +233,6 @@ class UserSessionManager: ObservableObject {
             return [.landing]
         }
     }
-    
-    func updateSignUpFieldsState(password: String? = nil, password2: String? = nil,
-                                 fullName: String? = nil, phoneNumber: String? = nil, email: String? = nil) {
-        for signUpField in SignUpFields.allCases {
-            switch signUpField {
-            case .password:
-                if let password = password {
-                    self.password = password
-                }
-            case .password2:
-                if let password2 = password2 {
-                    self.password2 = password2
-                }
-            case .fullName:
-                if let fullName = fullName {
-                    self.fullName = fullName
-                }
-            case .phoneNumber:
-                if let phoneNumber = phoneNumber {
-                    self.phoneNumber = phoneNumber
-                }
-            case .email:
-                if let email = email {
-                    self.email = email
-                }
-            default:
-                return
-            }
-        }
-    }
-    
-    
     
     // robinhood
     

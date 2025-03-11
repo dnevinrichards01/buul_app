@@ -27,6 +27,9 @@ struct SignUpPasswordView: View {
     
     
     var signUpFields: [SignUpFields] = [.password, .password2]
+    var signUpField: SignUpFields = .password
+    var authenticate: Bool = false
+    
     private var fieldBindings: [SignUpFields: Binding<String>] {
         [
             .password: $password,
@@ -38,47 +41,23 @@ struct SignUpPasswordView: View {
     @EnvironmentObject var sessionManager: UserSessionManager
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            ForEach(SignUpFields.allCases.indices, id: \.self) { index in
-                let signUpField = SignUpFields.allCases[index]
-                if let binding = fieldBindings[signUpField], signUpFields.contains(signUpField) {
-                    SignUpFieldView(
-                        instruction: signUpField.instruction,
-                        placeholder: signUpField.placeholder,
-                        inputValue: binding,
-                        keyboard: signUpField.keyboardType,
-                        errorMessage: errorMessages?[index],
-                        signUpField: signUpField
-                    )
-                    .focused($focusedField, equals: index)
-                }
-            }
-            
-            Spacer()
-            
-            Button {
-                buttonDisabled = true
-                userCreated = false
-            } label: {
-                Text("Create Account")
-                    .font(.headline)
-                    .foregroundColor(.black)
-                    .frame(maxWidth: .infinity, minHeight: 50)
-                    .background(.white)
-                    .cornerRadius(10)
-            }
-            .disabled(buttonDisabled)
-        }
-        .alert(alertMessage, isPresented: $showAlert) {
-            if showAlert {
-                Button("OK", role: .cancel) { showAlert = false }
-            }
-        }
+        FieldsEntryView(
+            title: nil,
+            subtitle: nil,
+            signUpFields: signUpFields,
+            fieldBindings: fieldBindings,
+            suggestLogIn: signUpField == .phoneNumber && !authenticate,
+            isSignUp: true,
+            buttonText: "Create Account",
+            alertMessage: $alertMessage,
+            showAlert: $showAlert,
+            errorMessages: $errorMessages,
+            buttonDisabled: $buttonDisabled,
+            focusedField: $focusedField
+        )
         .onChange(of: showAlert) { oldValue, newValue in
             if oldValue == true && newValue == false {
-                if userCreated && !tokensRecieved {
-                    login()
-                }
+                guard let _ = reEnterField else { return }
                 if reEnterField == .email {
                     reEnterField = nil
                     navManager.path.removeLast(3)
@@ -93,8 +72,13 @@ struct SignUpPasswordView: View {
                 }
             }
         }
-        .onChange(of: buttonDisabled) {
+        .onChange(of: buttonDisabled) { oldValue, newValue in
             if !buttonDisabled { return }
+            
+            if userCreated && !tokensRecieved {
+                login()
+                return
+            }
             
             let errorMessagesDictLocal = SignUpFieldsUtils.validateInputs(
                 signUpFields: signUpFields,
@@ -118,7 +102,7 @@ struct SignUpPasswordView: View {
                 let accessSaved = await sessionManager.accessTokenSet(sessionManager.accessToken)
                 let refreshSaved = await sessionManager.refreshTokenSet(sessionManager.refreshToken)
                 if !accessSaved || !refreshSaved {
-                    alertMessage = "Your account has been created but an internal error is preventing you from logging in. Click ok to retry."
+                    alertMessage = "Your account has been created but an internal error is preventing you from logging in. Press 'Create Account' to retry login."
                     showAlert = true
                     return
                 }
@@ -149,35 +133,12 @@ struct SignUpPasswordView: View {
                     .font(.system(size: 24, weight: .semibold))
                     .frame(maxHeight: 30)
             }
-            ToolbarItemGroup(placement: .keyboard) {
-                Button {
-                    if let _focusedField = focusedField {
-                        focusedField = max(_focusedField - 1, 0)
-                    }
-                } label: {
-                    Image(systemName: "chevron.left")
-                        .foregroundColor(.blue)
-                }
-                Button {
-                    if let _focusedField = focusedField {
-                        focusedField = min(_focusedField + 1, signUpFields.count - 1)
-                    }
-                } label: {
-                    Image(systemName: "chevron.right")
-                        .foregroundColor(.blue)
-                }
-                Spacer()
-                Button("Done") {
-                    Utils.dismissKeyboard()
-                }
-                .foregroundColor(.blue) // Customize the button appearance
-            }
         }
     }
     
     private func createUser() {
         ServerCommunicator().callMyServer(
-            path: "api/user/register/",
+            path: "api/user/createuser/",
             httpMethod: .post,
             params: [
                 "password" : password as Any,
@@ -200,8 +161,10 @@ struct SignUpPasswordView: View {
             
             // error if network error
             if let networkError = networkError {
-                self.alertMessage = networkError.errorMessage
-                self.showAlert = true
+//                if !sessionManager.refreshFailed {
+                    self.alertMessage = networkError.errorMessage
+                    self.showAlert = true
+//                }
                 self.buttonDisabled = false
                 return
             }
@@ -216,32 +179,37 @@ struct SignUpPasswordView: View {
                         if errorMessagesDictBackend[.password] == nil {
                             if let _ = errorMessagesDictBackend[.phoneNumber] {
                                 self.sessionManager.phoneNumber = nil
-                                self.alertMessage = alertMessagePhoneNumber
-                                self.showAlert = true
+//                                if !sessionManager.refreshFailed {
+                                    self.alertMessage = alertMessagePhoneNumber
+                                    self.showAlert = true
+//                                }
                                 self.reEnterField = .phoneNumber
                             } else if let _ = errorMessagesDictBackend[.email] {
                                 self.sessionManager.email = nil
-                                self.alertMessage = alertMessageEmail
-                                self.showAlert = true
+//                                if !sessionManager.refreshFailed {
+                                    self.alertMessage = alertMessageEmail
+                                    self.showAlert = true
+//                                }
                                 self.reEnterField = .email
                             }
                         }
                         // apply the error messages
-                        self.errorMessages = errorMessagesList
+                        self.errorMessages = errorMessagesList // maybe upgrade this with sessionManager
                         self.buttonDisabled = false
                         return
                     } // if code ends up here it indicates error with username field
                 } catch {
                     // error (Decoding error) if difficulty parsing the response
-                    self.alertMessage = ServerCommunicator.NetworkError.decodingError.errorMessage
-                    self.showAlert = true
+//                    if !sessionManager.refreshFailed {
+                        self.alertMessage = ServerCommunicator.NetworkError.decodingError.errorMessage
+                        self.showAlert = true
+//                    }
                     self.buttonDisabled = false
                     return
                 }
             // if no error messages, set error messages to nil
             } else {
                 self.errorMessages = nil
-                self.buttonDisabled = false
                 self.userCreated = true
             }
         }
@@ -272,8 +240,10 @@ struct SignUpPasswordView: View {
             
             // error if network error
             if let networkError = networkError {
-                self.alertMessage = networkError.errorMessage
-                self.showAlert = true
+//                if !sessionManager.refreshFailed {
+                    self.alertMessage = "Your account was created but we ran into trouble loggin you in." + networkError.errorMessage + "Press 'Create Account' to retry login."
+                    self.showAlert = true
+//                }
                 self.buttonDisabled = false
                 return
             }
@@ -283,8 +253,10 @@ struct SignUpPasswordView: View {
                 sessionManager.accessToken = accessToken
                 self.tokensRecieved = true
             } else {
-                self.alertMessage = ServerCommunicator.NetworkError.nilData.errorMessage
-                self.showAlert = true
+//                if !sessionManager.refreshFailed {
+                    self.alertMessage = "Your account was created but we ran into trouble loggin you in." + ServerCommunicator.NetworkError.nilData.errorMessage + "Press 'Create Account' to retry login."
+                    self.showAlert = true
+//                }
                 self.buttonDisabled = false
             }
         }

@@ -10,15 +10,19 @@ import SwiftUI
 struct PlaidInfo: View {
     @EnvironmentObject var navManager: NavigationPathManager
     
+    var nextPage: NavigationPathViews
+    var isSignUp: Bool
+    
     var body: some View {
         VStack {
-            VStack {
+            VStack (spacing: 10) {
                 HStack {
                     Text("Connect your bank account with Plaid")
                         .font(.system(size: 30, weight: .bold))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
                 }
+                .padding(.top, 50)
                 HStack {
                     Image("AccumateLogoText")
                         .resizable()
@@ -43,7 +47,7 @@ struct PlaidInfo: View {
                 Spacer()
                 
                 Button {
-                    navManager.append(.link)
+                    navManager.append(nextPage)
                 } label: {
                     Text("Connect")
                         .font(.headline)
@@ -58,13 +62,32 @@ struct PlaidInfo: View {
             
         }
         .padding()
+        .navigationBarBackButtonHidden()
         .background(.black)
         .ignoresSafeArea()
+        .toolbar {
+            if !isSignUp {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button(action: {
+                        navManager.path.removeLast()
+                    }) {
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(.white)
+                            .font(.system(size: 20, weight: .medium))
+                            .frame(maxHeight: 30)
+                    }
+                }
+            }
+        }
     }
 }
 
 #Preview {
-    PlaidInfo()
-        .environmentObject(NavigationPathManager())
+    PlaidInfo(
+        nextPage: .home,
+        isSignUp: true
+    )
+    .environmentObject(NavigationPathManager())
 }
+
 

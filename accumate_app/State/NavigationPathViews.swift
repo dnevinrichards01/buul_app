@@ -43,11 +43,15 @@ enum NavigationPathViews: CaseIterable {
     case changeNameOTP
     case changeName
     case changeBrokerage
+    case changeBrokerageOTP
     case robinhoodSecurityInfo
     case connectRobinhood
     case mfaRobinhood
     case changeETFOTP
     case changeETF
+    case plaidInfoAdd
+    case linkAdd
+    case plaidSettingsHelp
     case plaidSettings
 }
 

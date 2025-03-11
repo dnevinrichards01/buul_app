@@ -30,12 +30,21 @@ enum Brokerages: CaseIterable {
         }
     }
     
-    var connectPage: NavigationPathViews {
+    var signUpConnectPage: NavigationPathViews {
         switch self {
         case .robinhood:
-            return NavigationPathViews.signUpRobinhood
+            return .signUpRobinhoodSecurityInfo
         case .webull:
-            return NavigationPathViews.signUpRobinhood
+            return .signUpRobinhoodSecurityInfo
+        }
+    }
+    
+    var changeConnectPage: NavigationPathViews {
+        switch self {
+        case .robinhood:
+            return .robinhoodSecurityInfo
+        case .webull:
+            return .robinhoodSecurityInfo
         }
     }
     

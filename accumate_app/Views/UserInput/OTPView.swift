@@ -20,13 +20,14 @@ struct OTPView: View {
     @State private var resendCodeDisabled: Bool = false
     @State private var submitted: Bool = false
     @State private var reEnterInfo: Bool = false
+    @State private var deleteSessionData: Bool = false
     
-    var title: String
-    var subtitle: String
+    var title: String?
+    var subtitle: String?
     var goBackNPagesToRedoEntries: Int
     var goBackNPagesIfCompleted: Int
-    var nextPage: NavigationPathViews?
-    var OTPField: OTPFields
+    @State var nextPage: NavigationPathViews?
+    var signUpField: SignUpFields
     var authenticate: Bool
     
     @EnvironmentObject var navManager: NavigationPathManager
@@ -35,16 +36,20 @@ struct OTPView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack (alignment: .center) {
-                Text(title)
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .foregroundStyle(.white)
-                    .multilineTextAlignment(.center)
-                    .padding(.bottom, 20)
-                Text(subtitle)
-                    .font(.headline)
-                    .foregroundStyle(.white.opacity(0.8))
-                    .multilineTextAlignment(.leading)
+                if let title = title {
+                    Text(title)
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.white)
+                        .multilineTextAlignment(.center)
+                        .padding(.bottom, 20)
+                }
+                if let subtitle = subtitle {
+                    Text(subtitle)
+                        .font(.headline)
+                        .foregroundStyle(.white.opacity(0.8))
+                        .multilineTextAlignment(.leading)
+                }
             }
             .frame(maxWidth: .infinity)
             
@@ -93,29 +98,68 @@ struct OTPView: View {
         }
         .alert(alertMessage, isPresented: $showAlert) {
             if showAlert {
-                Button("OK", role: .cancel) { showAlert = false }
+                Button("OK", role: .cancel) {
+                    showAlert = false
+                }
+            }
+            if sessionManager.refreshFailed {
+                Button("Log Out", role: .destructive) {
+                    Task {
+                        showAlert = false
+                        
+                        sessionManager.refreshFailed = false
+                        _ = await sessionManager.resetComplete()
+                        navManager.reset(views: [.landing])
+                    }
+                }
             }
         }
+//        .alert(sessionManager.refreshFailedMessage, isPresented: $sessionManager.refreshFailed) {
+//            Button("OK", role: .cancel) {
+//                showAlert = false
+//                sessionManager.refreshFailed = false
+//            }
+//            Button("Log Out", role: .destructive) {
+//                Task {
+//                    showAlert = false
+//                    
+//                    sessionManager.refreshFailed = false
+//                    _ = await sessionManager.resetComplete()
+//                    navManager.reset(views: [.landing])
+//                }
+//            }
+//        }
         .onChange(of: showAlert) { oldValue, newValue in
             if oldValue && !newValue {
-                if reEnterInfo == submitted { return }
+//                if reEnterInfo == submitted { return }
                 
-                sessionManager.verificationEmail = nil
-                sessionManager.verificationPhoneNumber = nil
-                sessionManager.stringToVerify = nil
-                sessionManager.boolToVerify = nil
+                if signUpField == .brokerage {
+                    for brokerage in Brokerages.allCases {
+                        if sessionManager.stringToVerify == brokerage.displayName.lowercased() {
+                            nextPage = brokerage.changeConnectPage
+                        }
+                    }
+                }
                 
+                guard reEnterInfo || submitted else { return }
                 if reEnterInfo {
                     reEnterInfo = false
+                    print("redo?")
                     navManager.removeLast(goBackNPagesToRedoEntries)
                 } else if submitted {
                     submitted = false
                     if let nextPage = nextPage {
+                        print("append")
                         navManager.append(nextPage)
                     } else {
+                        print("correct path")
                         navManager.removeLast(goBackNPagesIfCompleted)
                     }
                 }
+                sessionManager.verificationEmail = nil
+                sessionManager.verificationPhoneNumber = nil
+                sessionManager.stringToVerify = nil
+                sessionManager.boolToVerify = nil
             }
         }
         .onChange(of: buttonDisabled) {
@@ -133,12 +177,69 @@ struct OTPView: View {
             resendOTP()
         }
         .onChange(of: submitted) {
-            guard submitted && isSignUpFlowEmailPhoneVerification() else { return }
-            if let nextPage = nextPage {
-                navManager.append(nextPage)
+            if !submitted { return }
+            
+            if signUpField == .deleteAccount {
+                Task {
+                    let logoutSuccess: Bool = await sessionManager.resetComplete() //await
+                    
+                    if !logoutSuccess {
+                        alertMessage = successMessage() + " But session data on this device could not be removed. Please try again or contact Accumate"
+                    } else {
+                        alertMessage = successMessage()
+                    }
+                    buttonDisabled = false
+                    showAlert = true
+                }
+            } else if isSignUpFlowEmailPhoneVerification() {
+                // save updated information
+                if signUpField == .phoneNumber {
+                    sessionManager.phoneNumber = sessionManager.stringToVerify
+                } else if signUpField == .email {
+                    sessionManager.email = sessionManager.stringToVerify
+                } else {
+                    alertMessage = successMessage() + " But an error prevented us from saving this change to your device. Please log out and log back in to get updated account information."
+                    showAlert = true
+                    buttonDisabled = false
+                    return
+                }
+                // change pages upon completion
+                buttonDisabled = false
+                sessionManager.verificationEmail = nil
+                sessionManager.verificationPhoneNumber = nil
+                sessionManager.stringToVerify = nil
+                sessionManager.boolToVerify = nil
+                if let nextPage = nextPage {
+                    print("append signup")
+                    navManager.append(nextPage)
+                } else {
+                    print("incorrect path")
+                    navManager.removeLast(goBackNPagesIfCompleted)
+                }
             } else {
-                navManager.removeLast(goBackNPagesIfCompleted)
+                alertMessage = successMessage()
+                switch signUpField {
+                case .email:
+                    sessionManager.email = sessionManager.stringToVerify
+                case .password:
+                    break
+                case .fullName:
+                    sessionManager.fullName = sessionManager.stringToVerify
+                case .phoneNumber:
+                    sessionManager.phoneNumber = sessionManager.stringToVerify
+                case .symbol:
+                    sessionManager.etfSymbol = sessionManager.stringToVerify
+                case .brokerage:
+                    sessionManager.brokerageName = sessionManager.stringToVerify
+                default:
+                    alertMessage = successMessage() + " But an error prevented us from saving this change to your device. Please log out and log back in to get updated account information."
+                }
+                showAlert = true
+                buttonDisabled = false
             }
+            
+            // if not sign up process email / phone verification, delay action till user responds to alert
+            
         }
         .animation(.easeInOut(duration: 0.5), value: errorMessage)
         .padding(30)
@@ -154,6 +255,7 @@ struct OTPView: View {
                     sessionManager.boolToVerify = nil
                     submitted = false
                     reEnterInfo = false
+                    print("toolbar")
                     navManager.path.removeLast()
                 }) {
                     Image(systemName: "chevron.left")
@@ -173,24 +275,26 @@ struct OTPView: View {
     }
     
     private func isSignUpFlowEmailPhoneVerification() -> Bool {
-        return !authenticate && OTPField == .phoneNumber || OTPField == .email
+        return !authenticate && (signUpField == .phoneNumber || signUpField == .email)
     }
     
     private func successMessage() -> String {
-        let fieldString = Utils.camelCaseToSnakeCase(OTPField.rawValue)
+        let fieldString = Utils.camelCaseToSnakeCase(signUpField.rawValue)
         
-        if OTPField == .deleteAccount {
+        if signUpField == .deleteAccount {
             return "Your account has been deleted."
+        } else if signUpField == .brokerage {
+            return "Your \(fieldString) choice been updated."
         } else {
             return "Your \(fieldString) has been updated."
         }
     }
     
     private func generateOTPParams(isRequestOTP: Bool) -> [String : Any] {
-        let fieldString = Utils.camelCaseToSnakeCase(OTPField.rawValue)
+        let fieldString = Utils.camelCaseToSnakeCase(signUpField.rawValue)
         
         var fieldValue: Any = sessionManager.stringToVerify as Any
-        if OTPField == .deleteAccount {
+        if signUpField == .deleteAccount {
             fieldValue = sessionManager.boolToVerify as Any
         }
         
@@ -200,14 +304,14 @@ struct OTPView: View {
         ]
         
         if isRequestOTP {
-            if OTPField == .password {
+            if signUpField == .password {
                 params["password2"] = sessionManager.stringToVerify as Any
             }
         } else {
             params["code"] = otp as Any
         }
         
-        if OTPField == .phoneNumber && !authenticate {
+        if signUpField == .phoneNumber && !authenticate {
             params["verification_phone_number"] = sessionManager.verificationPhoneNumber as Any
         } else {
             params["verification_email"] = sessionManager.verificationEmail as Any
@@ -218,7 +322,7 @@ struct OTPView: View {
     
     private func submitOTP() {
         ServerCommunicator().callMyServer(
-            path: Utils.getOTPEndpoint(OTPField, authenticate),
+            path: Utils.getOTPEndpoint(signUpField, authenticate),
             httpMethod: .post,
             params: generateOTPParams(isRequestOTP: false),
             sessionManager: authenticate ? sessionManager : nil,
@@ -237,46 +341,51 @@ struct OTPView: View {
                                 self.buttonDisabled = false
                                 return
                             } else {
-                                
-                                self.alertMessage = "We spotted an error on the previous page. Please fill out the fields again."
+//                                if !sessionManager.refreshFailed {
+                                    self.showAlert = true
+                                    self.alertMessage = "We spotted an error on the previous page. Please fill out the fields again."
+//                                }
                                 self.reEnterInfo = true
-                                self.showAlert = true
                                 self.buttonDisabled = false
                                 return
                             }
                         } // if code ends up here it indicates error with username field
                     } catch {
                         // error (Decoding error) if difficulty parsing the response
-                        self.alertMessage = ServerCommunicator.NetworkError.decodingError.errorMessage
-                        self.showAlert = true
+//                        if !sessionManager.refreshFailed {
+                            self.alertMessage = ServerCommunicator.NetworkError.decodingError.errorMessage
+                            self.showAlert = true
+//                        }
                         self.buttonDisabled = false
                         return
                     }
                 } else if let _ = responseData.success, responseData.error == nil {
-                    if !isSignUpFlowEmailPhoneVerification() {
-                        self.alertMessage = successMessage()
-                        self.showAlert = true
-                    } else {
-                        if self.OTPField == .phoneNumber {
-                            self.sessionManager.phoneNumber = self.sessionManager.stringToVerify
-                        } else if self.OTPField == .email {
-                            self.sessionManager.email = self.sessionManager.stringToVerify
-                        }
-                    }
-                    self.buttonDisabled = false
                     self.submitted = true
                 } else if let _ = responseData.error, let _ = responseData.success {
-                    self.alertMessage = ServerCommunicator.NetworkError.decodingError.errorMessage
-                    self.showAlert = true
+//                    if !sessionManager.refreshFailed {
+                        self.alertMessage = ServerCommunicator.NetworkError.decodingError.errorMessage
+                        self.showAlert = true
+//                    }
                     self.buttonDisabled = false
                 } else {
-                    self.alertMessage = ServerCommunicator.NetworkError.decodingError.errorMessage
-                    self.showAlert = true
+//                    if !sessionManager.refreshFailed {
+                        self.alertMessage = ServerCommunicator.NetworkError.decodingError.errorMessage
+                        self.showAlert = true
+//                    }
                     self.buttonDisabled = false
                 }
             case .failure(let networkError):
-                self.alertMessage = networkError.errorMessage
-                self.showAlert = true
+//                if !sessionManager.refreshFailed {
+                    self.showAlert = true
+                    self.alertMessage = networkError.errorMessage
+//                }
+                switch networkError {
+                case .statusCodeError(let status):
+                    if status == 401 {
+                        self.alertMessage = "Your session has expired. To retrieve updated information, please logout then sign in."
+                    }
+                default: break
+                }
                 self.buttonDisabled = false
             }
         }
@@ -284,7 +393,7 @@ struct OTPView: View {
     
     private func resendOTP() {
         ServerCommunicator().callMyServer(
-            path: Utils.getOTPEndpoint(OTPField, authenticate),
+            path: Utils.getOTPEndpoint(signUpField, authenticate),
             httpMethod: .put,
             params: generateOTPParams(isRequestOTP: true),
             sessionManager: authenticate ? sessionManager : nil,
@@ -293,25 +402,41 @@ struct OTPView: View {
             switch response {
             case .success(let responseData):
                 if let _ = responseData.error, responseData.success == nil {
-                    self.alertMessage = "We spotted an error on the previous page. Please fill out the fields again."
+//                    if !sessionManager.refreshFailed {
+                        self.showAlert = true
+                        self.alertMessage = "We spotted an error on the previous page. Please fill out the fields again."
+//                    }
                     self.reEnterInfo = true
-                    self.showAlert = true
+                   
                     self.resendCodeDisabled = false
                     return
                 } else if let _ = responseData.success, responseData.error == nil {
                     self.resendCodeDisabled = false
                 } else if let _ = responseData.error, let _ = responseData.success {
-                    self.alertMessage = ServerCommunicator.NetworkError.decodingError.errorMessage
-                    self.showAlert = true
+//                    if !sessionManager.refreshFailed {
+                        self.alertMessage = ServerCommunicator.NetworkError.decodingError.errorMessage
+                        self.showAlert = true
+//                    }
                     self.resendCodeDisabled = false
                 } else {
-                    self.alertMessage = ServerCommunicator.NetworkError.decodingError.errorMessage
-                    self.showAlert = true
+//                    if !sessionManager.refreshFailed {
+                        self.alertMessage = ServerCommunicator.NetworkError.decodingError.errorMessage
+                        self.showAlert = true
+//                    }
                     self.resendCodeDisabled = false
                 }
             case .failure(let networkError):
-                self.alertMessage = networkError.errorMessage
-                self.showAlert = true
+//                if !sessionManager.refreshFailed {
+                    self.showAlert = true
+                    self.alertMessage = networkError.errorMessage
+//                }
+                switch networkError {
+                case .statusCodeError(let status):
+                    if status == 401 {
+                        self.alertMessage = "Your session has expired. To retrieve updated information, please logout then sign in."
+                    }
+                default: break
+                }
                 self.resendCodeDisabled = false
             }
         }
@@ -336,16 +461,16 @@ struct OTPRequestErrors: Codable {
     let field: String?
     let code: String?
 }
-
-enum OTPFields: String, CaseIterable {
-    case email
-    case phoneNumber
-    case fullName
-    case brokerage
-    case etf
-    case password
-    case deleteAccount
-}
+//
+//enum OTPFields: String, CaseIterable {
+//    case email
+//    case phoneNumber
+//    case fullName
+//    case brokerage
+//    case symbol
+//    case password
+//    case deleteAccount
+//}
 
 #Preview {
     OTPView(
@@ -354,7 +479,7 @@ enum OTPFields: String, CaseIterable {
         goBackNPagesToRedoEntries: 1,
         goBackNPagesIfCompleted: 0,
         nextPage: .changeEmail,
-        OTPField: .email,
+        signUpField: .email,
         authenticate: false
     )
     .environmentObject(NavigationPathManager())

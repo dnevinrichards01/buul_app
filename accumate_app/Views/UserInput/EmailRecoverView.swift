@@ -63,9 +63,37 @@ struct EmailRecoverView: View {
         }
         .alert(alertMessage, isPresented: $showAlert) {
             if showAlert {
-                Button("OK", role: .cancel) { showAlert = false }
+                Button("OK", role: .cancel) {
+                    showAlert = false
+                }
+            }
+            if sessionManager.refreshFailed {
+                Button("Log Out", role: .destructive) {
+                    Task {
+                        showAlert = false
+                        
+                        sessionManager.refreshFailed = false
+                        _ = await sessionManager.resetComplete()
+                        navManager.reset(views: [.landing])
+                    }
+                }
             }
         }
+//        .alert(sessionManager.refreshFailedMessage, isPresented: $sessionManager.refreshFailed) {
+//            Button("OK", role: .cancel) {
+//                showAlert = false
+//                sessionManager.refreshFailed = false
+//            }
+//            Button("Log Out", role: .destructive) {
+//                Task {
+//                    showAlert = false
+//                    
+//                    sessionManager.refreshFailed = false
+//                    _ = await sessionManager.resetComplete()
+//                    navManager.reset(views: [.landing])
+//                }
+//            }
+//        }
         .onChange(of: buttonDisabled) {
             if !buttonDisabled { return }
             sendEmail()
@@ -112,24 +140,32 @@ struct EmailRecoverView: View {
                     self.errorMessage = error
                     self.buttonDisabled = false
                 } else if let _ = responseData.success, responseData.error == nil {
-                    self.alertMessage = "Your request was recieved. Please check your email."
-                    self.showAlert = true
+//                    if !sessionManager.refreshFailed {
+                        self.alertMessage = "Your request was recieved. Please check your email."
+                        self.showAlert = true
+//                    }
                     self.errorMessage = nil
                     self.buttonDisabled = false
                 } else if let _ = responseData.error, let _ = responseData.success {
-                    self.alertMessage = ServerCommunicator.NetworkError.decodingError.errorMessage
+//                    if !sessionManager.refreshFailed {
+                        self.alertMessage = ServerCommunicator.NetworkError.decodingError.errorMessage
+                        self.showAlert = true
+//                    }
                     self.errorMessage = nil
-                    self.showAlert = true
                     self.buttonDisabled = false
                 } else {
-                    self.alertMessage = ServerCommunicator.NetworkError.decodingError.errorMessage
+//                    if !sessionManager.refreshFailed {
+                        self.alertMessage = ServerCommunicator.NetworkError.decodingError.errorMessage
+                        self.showAlert = true
+//                    }
                     self.errorMessage = nil
-                    self.showAlert = true
                     self.buttonDisabled = false
                 }
             case .failure(let networkError):
-                self.alertMessage = networkError.errorMessage
-                self.showAlert = true
+//                if !sessionManager.refreshFailed {
+                    self.alertMessage = networkError.errorMessage
+                    self.showAlert = true
+//                }
                 self.errorMessage = nil
                 self.buttonDisabled = false
             }

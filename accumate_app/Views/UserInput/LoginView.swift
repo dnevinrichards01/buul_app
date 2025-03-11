@@ -18,11 +18,13 @@ struct LoginView: View {
     @State private var alertMessage: String = ""
     @State private var buttonDisabled: Bool = false
     @State private var tokensRecieved: Bool = false
+    @State private var accessToken: String?
+    @State private var refreshToken: String?
     @State private var tokensSaved: Bool = false
-    @State private var userInfoNotRecieved: Bool = false
     
-    var signUpFields: [SignUpFields] = [.password, .email]
+    var signUpFields: [SignUpFields] = [.email, .password]
     
+    var authenticate = false
     
     private var fieldBindings: [SignUpFields: Binding<String>] {
         [
@@ -35,68 +37,21 @@ struct LoginView: View {
     @EnvironmentObject var sessionManager: UserSessionManager
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            ForEach(SignUpFields.allCases.indices, id: \.self) { index in
-                let signUpField = SignUpFields.allCases[index]
-                if let binding = fieldBindings[signUpField], signUpFields.contains(signUpField) {
-                    SignUpFieldView(
-                        instruction: signUpField.loginInstruction,
-                        placeholder: signUpField.placeholder,
-                        inputValue: binding,
-                        keyboard: signUpField.keyboardType,
-                        errorMessage: errorMessages?[index],
-                        signUpField: signUpField
-                    )
-                    .focused($focusedField, equals: index)
-                }
-            }
-            
-            HStack (alignment: .firstTextBaseline) {
-                Spacer()
-                Text("Forgot your")
-                    .foregroundColor(.white.opacity(0.9))
-                    .font(.system(size: 15))
-                Button {
-                    navManager.append(NavigationPathViews.emailRecover)
-                } label: {
-                    Text("email")
-                        .foregroundColor(.blue)
-                        .font(.system(size: 15))
-                }
-                Text("or")
-                    .foregroundColor(.white.opacity(0.9))
-                    .font(.system(size: 15))
-                Button {
-                    navManager.append(NavigationPathViews.passwordRecoverInitiate)
-                } label: {
-                    Text("password?")
-                        .foregroundColor(.blue)
-                        .font(.system(size: 15))
-                }
-            }
-            .padding()
-            
-            Spacer()
-            
-            Button {
-                buttonDisabled = true
-                submitted = false
-            } label: {
-                Text("Continue")
-                    .font(.headline)
-                    .foregroundColor(.black)
-                    .frame(maxWidth: .infinity, minHeight: 50)
-                    .background(.white)
-                    .cornerRadius(10)
-            }
-            .disabled(buttonDisabled)
-        }
-        .padding()
-        .alert(alertMessage, isPresented: $showAlert) {
-            if showAlert {
-                Button("OK", role: .cancel) { showAlert = false }
-            }
-        }
+        FieldsEntryView(
+            title: nil,
+            subtitle: nil,
+            signUpFields: signUpFields,
+            fieldBindings: fieldBindings,
+            suggestLogIn: false,
+            isLogin: true,
+            isSignUp: false,
+            buttonText: "Continue",
+            alertMessage: $alertMessage,
+            showAlert: $showAlert,
+            errorMessages: $errorMessages,
+            buttonDisabled: $buttonDisabled,
+            focusedField: $focusedField
+        )
         .onChange(of: buttonDisabled) {
             if !buttonDisabled { return }
             
@@ -116,12 +71,11 @@ struct LoginView: View {
             Task {
                 if !tokensRecieved { return }
                 // save tokens
-                if let refreshToken = sessionManager.refreshToken, let accessToken = sessionManager.accessToken {
+                if let refreshToken = refreshToken, let accessToken = accessToken {
                     let refreshTokenSaved: Bool = await sessionManager.refreshTokenSet(refreshToken)
                     let accessTokenSaved: Bool = await sessionManager.accessTokenSet(accessToken)
                     if refreshTokenSaved && accessTokenSaved {
                         print("saved")
-                        print(refreshToken, accessToken)
                         self.tokensSaved = true
                         return
                     }
@@ -129,16 +83,21 @@ struct LoginView: View {
                 // tokens failed to save
                 self.tokensRecieved = false
                 self.buttonDisabled = false
-                _ = await sessionManager.reset()
-                self.alertMessage = ServerCommunicator.NetworkError.decodingError.errorMessage
-                self.showAlert = true
+                _ = await sessionManager.resetComplete() // await
+//                if !sessionManager.refreshFailed {
+                    self.alertMessage = ServerCommunicator.NetworkError.decodingError.errorMessage
+                    self.showAlert = true
+//                }
             }
         }
         .onChange(of: tokensSaved) {
+            print(tokensSaved)
+            if !tokensSaved { return }
             getUserInfo()
         }
         .onChange(of: submitted) {
             if !submitted { return }
+            self.buttonDisabled = false
             if let destination: NavigationPathViews = sessionManager.signUpFlowPlacement() {
                 let destinationPath: [NavigationPathViews] = sessionManager.signUpFlowPlacementPaths(destination)
                 navManager.extend(destinationPath)
@@ -146,12 +105,7 @@ struct LoginView: View {
                 navManager.append(.home)
             }
         }
-        .onChange(of: userInfoNotRecieved) {
-            Task {
-                if !userInfoNotRecieved { return }
-                _ = await sessionManager.reset()
-            }
-        }
+        .padding()
         .animation(.easeInOut(duration: 0.5), value: errorMessages)
         .background(Color.black.ignoresSafeArea())
         .navigationBarBackButtonHidden(true)
@@ -159,6 +113,8 @@ struct LoginView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: {
+                    sessionManager.accessToken = nil
+                    sessionManager.refreshToken = nil
                     navManager.path.removeLast()
                 }) {
                     Image(systemName: "chevron.left")
@@ -166,35 +122,6 @@ struct LoginView: View {
                         .font(.system(size: 20, weight: .medium))
                         .frame(maxHeight: 30)
                 }
-            }
-            ToolbarItem(placement: .principal) {
-                Text("Login")
-                    .foregroundColor(.white)
-                    .font(.system(size: 24, weight: .semibold))
-                    .frame(maxHeight: 30)
-            }
-            ToolbarItemGroup(placement: .keyboard) {
-                Button {
-                    if let _focusedField = focusedField {
-                        focusedField = max(_focusedField - 1, 0)
-                    }
-                } label: {
-                    Image(systemName: "chevron.left")
-                        .foregroundColor(.blue)
-                }
-                Button {
-                    if let _focusedField = focusedField {
-                        focusedField = min(_focusedField + 1, signUpFields.count - 1)
-                    }
-                } label: {
-                    Image(systemName: "chevron.right")
-                        .foregroundColor(.blue)
-                }
-                Spacer()
-                Button("Done") {
-                    Utils.dismissKeyboard()
-                }
-                .foregroundColor(.blue) // Customize the button appearance
             }
         }
     }
@@ -227,32 +154,36 @@ struct LoginView: View {
                 case .statusCodeError(let status):
                     if status == 401 {
                         errorMessages = SignUpFieldsUtils.parseErrorMessages(
-                            [.password],
+                            signUpFields,
                             [.password : "We could not find an account with these credentials."]
                         )
                         self.buttonDisabled = false
                         return
                     }
-                default:
+                default: break
+                }
+//                if !sessionManager.refreshFailed {
                     self.alertMessage = networkError.errorMessage
                     self.showAlert = true
-                    self.buttonDisabled = false
-                    return
-                }
-                self.alertMessage = networkError.errorMessage
-                self.showAlert = true
+//                }
                 self.buttonDisabled = false
                 return
             }
             
             // process response
             if let accessToken = accessToken, let refreshToken = refreshToken {
-                sessionManager.refreshToken = refreshToken
-                sessionManager.accessToken = accessToken
+                self.errorMessages = nil
+                self.refreshToken = refreshToken
+                self.accessToken = accessToken
+                self.sessionManager.refreshToken = refreshToken
+                self.sessionManager.accessToken = accessToken
                 self.tokensRecieved = true
             } else {
-                self.alertMessage = ServerCommunicator.NetworkError.nilData.errorMessage
-                self.showAlert = true
+                self.errorMessages = nil
+//                if !sessionManager.refreshFailed {
+                    self.alertMessage = ServerCommunicator.NetworkError.nilData.errorMessage
+                    self.showAlert = true
+//                }
                 self.buttonDisabled = false
             }
         }
@@ -260,7 +191,7 @@ struct LoginView: View {
     
     private func getUserInfo() {
         ServerCommunicator().callMyServer(
-            path: "api/user/userinfo/",
+            path: "api/user/getuserinfo/",
             httpMethod: .get,
             sessionManager: sessionManager,
             responseType: GetUserInfoResponse.self
@@ -268,30 +199,38 @@ struct LoginView: View {
             // extract errorMessages and network error from the Result<T, NetworkError> object
             switch response {
             case .success(let responseData):
-                sessionManager.phoneNumber = responseData.phoneNumber
-                sessionManager.email = responseData.email
-                sessionManager.fullName = responseData.fullName
-                sessionManager.etfSymbol = responseData.etf
-                sessionManager.brokerageName = responseData.brokerage?.capitalized
-                sessionManager.isLoggedIn = true
-                buttonDisabled = false
+                self.sessionManager.phoneNumber = responseData.phoneNumber
+                self.sessionManager.email = responseData.email
+                self.sessionManager.fullName = responseData.fullName
+                self.sessionManager.etfSymbol = responseData.etf
+                self.sessionManager.brokerageName = responseData.brokerage
+                self.sessionManager.brokerageCompleted = responseData.brokerageCompleted
+                self.sessionManager.linkCompleted = responseData.linkCompleted
+                self.sessionManager.isLoggedIn = true
                 self.submitted = true
             case .failure(let networkError):
+//                if !sessionManager.refreshFailed {
+                    self.alertMessage = networkError.errorMessage
+                    self.showAlert = true
+//                }
                 switch networkError {
                 case .statusCodeError(let status):
                     if status == 401 {
-                        self.alertMessage = "Your session has expired. To retrieve updated information, please logout then sign in."
-                        self.showAlert = true
-                    } else {
-                        self.alertMessage = networkError.errorMessage
-                        self.showAlert = true
+                        self.alertMessage = "We were unable to log you into your account. Please try again or contact Accumate."
                     }
+                    print("status code", status)
                 default:
-                    self.alertMessage = networkError.errorMessage
-                    self.showAlert = true
+                    break
                 }
+                print("re-initializing")
+                self.accessToken = nil
+                self.refreshToken = nil
+                self.sessionManager.accessToken = nil
+                self.sessionManager.refreshToken = nil
+                self.tokensRecieved = false
+                self.tokensSaved = false
+                
                 self.buttonDisabled = false
-                self.userInfoNotRecieved = true
             }
         }
     }
@@ -308,7 +247,9 @@ struct GetUserInfoResponse: Codable {
     let email: String?
     let phoneNumber: String?
     let brokerage: String?
+    let brokerageCompleted: Bool
     let etf: String?
+    let linkCompleted: Bool
 }
 
 #Preview {

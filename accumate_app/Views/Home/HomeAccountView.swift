@@ -58,13 +58,42 @@ struct HomeAccountView: View {
                     .padding(.vertical, 5)
             }
             .alert(alertMessage, isPresented: $showAlert) {
-                Button("OK", role: .cancel) { showAlert = false}
+                Button("OK", role: .cancel) {
+                    showAlert = false
+                }
+                if sessionManager.refreshFailed {
+                    Button("Log Out", role: .destructive) {
+                        Task {
+                            showAlert = false
+                            sessionManager.refreshFailed = false
+                            _ = await sessionManager.resetComplete()
+                            navManager.reset(views: [.landing])
+                        }
+                    }
+                }
             }
+//            .alert(sessionManager.refreshFailedMessage, isPresented: $sessionManager.refreshFailed) {
+//                Button("OK", role: .cancel) {
+//                    showAlert = false
+//                    sessionManager.refreshFailed = false
+//                }
+//                Button("Log Out", role: .destructive) {
+//                    Task {
+//                        showAlert = false
+//                        
+//                        sessionManager.refreshFailed = false
+//                        _ = await sessionManager.resetComplete()
+//                        navManager.reset(views: [.landing])
+//                    }
+//                }
+//            }
             .onChange(of: showAlert) { oldValue, newValue in
-                if oldValue == true && newValue == false {
-                    if logout {
-                        sessionManager.isLoggedIn = false
-                        navManager.reset(views: [.landing])
+                Task {
+                    if oldValue == true && newValue == false {
+                        if logout {
+                            _ = await sessionManager.resetComplete()
+                            navManager.reset(views: [.landing])
+                        }
                     }
                 }
             }
@@ -78,7 +107,7 @@ struct HomeAccountView: View {
                     case .help:
                         navManager.append(NavigationPathViews.help)
                     case .delete:
-                        navManager.append(NavigationPathViews.deleteOTP)
+                        navManager.append(NavigationPathViews.delete)
                     case .logout:
                         logout = true
                     }
@@ -87,9 +116,11 @@ struct HomeAccountView: View {
             Spacer()
         }
         .onChange(of: logout) {
+            if !logout { return }
             Task {
-                let logoutSuccess: Bool = await sessionManager.reset()
+                let logoutSuccess: Bool = await sessionManager.resetComplete() // await
                 if !logoutSuccess {
+                    logout = false
                     alertMessage = "Your session data could not be removed. Please try again or contact Accumate"
                 } else {
                     alertMessage = "You have been logged out."

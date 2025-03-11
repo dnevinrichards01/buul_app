@@ -43,13 +43,21 @@ class Utils {
         return snakeCase.lowercased()
     }
     
-    static func getOTPEndpoint(_ OTPField: OTPFields, _ authenticate: Bool) -> String {
-        if OTPField == .password && !authenticate {
+    static func getOTPEndpoint(_ signUpField: SignUpFields, _ authenticate: Bool) -> String {
+        if !authenticate && signUpField == .password {
             return "api/user/resetpassword/"
-        } else if OTPField == .email || OTPField == .phoneNumber && !authenticate {
+        } else if !authenticate && (signUpField == .email || signUpField == .phoneNumber) {
             return "api/user/emailphonesignupvalidation/"
         } else {
             return "api/user/requestverificationcode/"
+        }
+    }
+    
+    static func getSignUpFieldsValidateEndpoint(_ signUpField: SignUpFields) -> String {
+        if [.brokerage, .symbol].contains(signUpField) {
+            return "api/user/setbrokerageinvestment/"
+        } else  {
+            return "api/user/namepasswordvalidation/"
         }
     }
     

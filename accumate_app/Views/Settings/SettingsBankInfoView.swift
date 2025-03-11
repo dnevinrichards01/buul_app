@@ -74,7 +74,7 @@ struct SettingsBankInfoView: View {
                 case .changeBrokerage:
                     navManager.append(NavigationPathViews.changeBrokerage)
                 case .changeInvestment:
-                    navManager.append(NavigationPathViews.changeETFOTP)
+                    navManager.append(NavigationPathViews.changeETF)
                 }
             }
         }

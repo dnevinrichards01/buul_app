@@ -2,98 +2,122 @@
 //  SettingsPlaidView.swift
 //  accumate_app
 //
-//  Created by Nevin Richards on 2/3/25.
+//  Created by Nevin Richards on 1/31/25.
 //
 
 import SwiftUI
 
 struct SettingsPlaidView: View {
-    
-    private var email: String = "accumate-verify@accumatewealth.com"
-    private var plaidLink: String = "https://my.plaid.com"
-    @State private var selectedHelpSetting: HelpSettings?
-    
     @EnvironmentObject var navManager: NavigationPathManager
     @EnvironmentObject var sessionManager: UserSessionManager
+    @State private var selectedSetting: PlaidSettings?
+    @State private var showAlert: Bool = false
+    @State private var alertMessage: String = ""
     
     var body: some View {
-        VStack() {
-            VStack {
-                Text("Manage your data with Plaid")
+        VStack {
+            HStack {
+                Spacer()
+                Text("Plaid Settings")
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
-                    .padding(.bottom, 50)
-                
-                VStack {
-                    Text("Use Plaid to add or remove Accumate's access to your cards, bank accounts, or categories of data.")
-                        .font(.headline)
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.bottom, 30)
-                    
-                    Text("Sign up for Plaid at the link below with the phone number you gave Plaid when signing up for Accumate, or sign in if you already have an account.")
-                        .font(.headline)
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.bottom, 30)
-                    
-                    Button {
-                        if let url = URL(string: plaidLink) {
-                            UIApplication.shared.open(url)
-                        }
-                    } label: {
-                        Text(plaidLink)
+                    .padding(.top, 30)
+                Spacer()
+            }
+            .padding(.bottom, 50)
+            
+            ForEach(PlaidSettings.allCases, id: \.self) { setting in
+                Button {
+                    selectedSetting = setting
+                } label: {
+                    HStack {
+                        Text(setting.displayName)
                             .font(.headline)
-                            .foregroundColor(.blue)
-                            .lineLimit(nil)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .lineSpacing(1)
+                            .foregroundStyle(.white)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 20, height: 20)
+                            .foregroundStyle(.white.opacity(0.8))
+                            .padding(.trailing, 20)
                     }
-                    .padding(.bottom, 30)
-                    
-                    Text("If you encounter issues or have concerns please reach out to us at the following email address")
-                        .font(.headline)
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.bottom, 30)
-                    
-                    Text(email)
-                        .font(.headline)
-                        .foregroundColor(.blue)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .contextMenu {
-                            Button(action: {
-                                UIPasteboard.general.string = email
-                            }) {
-                                Label("Copy Email", systemImage: "doc.on.doc")
-                            }
-                        }
                 }
+                Divider()
+                    .frame(height: 1)
+                    .background(.white.opacity(0.8))
+                    .padding(.vertical, 5)
             }
             Spacer()
         }
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: {
-                    navManager.path.removeLast()
-                }) {
-                    Image(systemName: "chevron.left")
-                        .foregroundColor(.white)
-                        .font(.system(size: 20, weight: .medium))
-                        .frame(maxHeight: 30)
+        .padding()
+        .alert(alertMessage, isPresented: $showAlert) {
+            Button("OK", role: .cancel) {
+                showAlert = false
+            }
+            if sessionManager.refreshFailed {
+                Button("Log Out", role: .destructive) {
+                    Task {
+                        showAlert = false
+                        
+                        sessionManager.refreshFailed = false
+                        _ = await sessionManager.resetComplete()
+                        navManager.reset(views: [.landing])
+                    }
                 }
             }
         }
-        .navigationBarBackButtonHidden(true)
+//            .alert(sessionManager.refreshFailedMessage, isPresented: $sessionManager.refreshFailed) {
+//                Button("OK", role: .cancel) {
+//                    showAlert = false
+//                    sessionManager.refreshFailed = false
+//                }
+//                Button("Log Out", role: .destructive) {
+//                    Task {
+//                        showAlert = false
+//
+//                        sessionManager.refreshFailed = false
+//                        _ = await sessionManager.resetComplete()
+//                        navManager.reset(views: [.landing])
+//                    }
+//                }
+//            }
+        .onChange(of: selectedSetting) { newSetting, oldSetting in
+            if let selectedSetting = selectedSetting {
+                switch selectedSetting {
+                case .addItem:
+                    navManager.append(.plaidInfoAdd)
+                case .updateItem:
+                    navManager.append(.plaidSettingsHelp)
+                }
+            }
+        }
         .navigationBarTitleDisplayMode(.inline)
-        .padding()
+        .navigationBarBackButtonHidden()
         .background(.black)
-        
-        
+        .onAppear() {
+            selectedSetting = nil
+        }
     }
 }
+
+
+enum PlaidSettings: CaseIterable {
+    case addItem
+    case updateItem
+//    case help
+
+    var displayName: String {
+        switch self {
+        case .addItem: return "Link more accounts and cards"
+        case .updateItem: return "Update permission to bank account data"
+//        case .help: return "Change your monthly investment"
+        }
+    }
+}
+
 
 #Preview {
     SettingsPlaidView()
