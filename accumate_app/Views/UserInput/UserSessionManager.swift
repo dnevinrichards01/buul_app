@@ -67,6 +67,7 @@ class UserSessionManager: ObservableObject {
         boolToVerify = nil
         brokerageEmail = nil
         brokeragePassword = nil
+        brokerageCompleted = false
         robinhoodMFAType = nil
         return true
     }

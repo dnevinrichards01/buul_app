@@ -178,7 +178,10 @@ struct FieldsRequestOTPView: View {
         let fieldString = Utils.camelCaseToSnakeCase(signUpField.rawValue)
         
         var verificationEmail = isSignUp ? email : sessionManager.email
-        var verificationPhoneNumber = isSignUp ? phoneNumber : sessionManager.phoneNumber
+        if !isSignUp && !authenticate {
+            verificationEmail = self.verificationEmail
+        }
+        let verificationPhoneNumber = isSignUp ? phoneNumber : sessionManager.phoneNumber
         
         var fieldValue: Any
         switch signUpField {

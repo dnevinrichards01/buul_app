@@ -91,6 +91,7 @@ struct SignUpRobinhoodView: View {
             if mfaMethod == nil {
                 if isSignUp {
                     recieved = false
+                    print("recieved mfa issignup")
                     sessionManager.brokerageCompleted = true
                     navManager.append(.plaidInfo)
                 } else {
@@ -220,6 +221,7 @@ struct SignUpRobinhoodView: View {
                 if let errors = responseData.error, responseData.success == nil {
                     // alert if error with username field or with processing error messages
                     if let challengeType = errors.challengeType {
+//                        challengeType = "sms" // "app"
                         for mfaMethod in RobinhoodMFAMethod.allCases {
                             if Utils.camelCaseToSnakeCase(mfaMethod.rawValue) == challengeType {
                                 self.sessionManager.robinhoodMFAType = mfaMethod

@@ -223,6 +223,7 @@ struct SignUpRobinhoodMFAView: View {
 //            }
             
             if isSignUp {
+                print("recieved issignup")
                 sessionManager.brokerageCompleted = true
                 navManager.append(.plaidInfo)
             } else {

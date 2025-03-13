@@ -11,14 +11,23 @@ struct HomeStocksView: View {
     @EnvironmentObject var navManager: NavigationPathManager
     @State private var selected: Int?
     private var buttons: [String] = ["1D", "1W", "1M", "1Y", "YTD", "5Y", "All"]
+//    private var allData: [[StockDataPoint]] = [
+//        defaultDays,
+//        defaultWeeks,
+//        defaultMonths,
+//        defaultThreeMonths,
+//        defaultYTD,
+//        defaultYears,
+//        defaultAll,
+//    ]
     private var allData: [[StockDataPoint]] = [
-        defaultDays,
-        defaultWeeks,
-        defaultMonths,
-        defaultThreeMonths,
-        defaultYTD,
-        defaultYears,
-        defaultAll,
+        stockData1,
+        stockData2,
+        stockData1,
+        stockData2,
+        stockData1,
+        stockData2,
+        stockData1
     ]
     
     @State private var selectedPeriod: TimePeriods = .day
@@ -29,19 +38,19 @@ struct HomeStocksView: View {
         VStack {
             switch selectedPeriod {
             case .day:
-                StockGraphView(stockData: defaultDays, color: color).frame(height: 500)
+                StockGraphView(stockData: allData[0], color: color).frame(height: 500)
             case .week:
-                StockGraphView(stockData: defaultWeeks, color: color).frame(height: 500)
+                StockGraphView(stockData: allData[1], color: color).frame(height: 500)
             case .month:
-                StockGraphView(stockData: defaultMonths, color: color).frame(height: 500)
+                StockGraphView(stockData: allData[2], color: color).frame(height: 500)
             case .threeMonths:
-                StockGraphView(stockData: defaultThreeMonths, color: color).frame(height: 500)
+                StockGraphView(stockData: allData[3], color: color).frame(height: 500)
             case .year:
-                StockGraphView(stockData: defaultYTD, color: color).frame(height: 500)
+                StockGraphView(stockData: allData[4], color: color).frame(height: 500)
             case .ytd:
-                StockGraphView(stockData: defaultYears, color: color).frame(height: 500)
+                StockGraphView(stockData: allData[5], color: color).frame(height: 500)
             case .fiveYears:
-                StockGraphView(stockData: defaultFiveYears, color: color).frame(height: 500)
+                StockGraphView(stockData: allData[6], color: color).frame(height: 500)
             case .all:
                 StockGraphView(stockData: defaultAll, color: color).frame(height: 500)
             }
@@ -124,25 +133,29 @@ struct HomeStocksView: View {
 }
 
 
-//let stockData1: [StockDataPoint] = [
-//    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -6, to: Date())!, price: 120),
-//    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -5, to: Date())!, price: 130),
-//    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -4, to: Date())!, price: 125),
-//    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -3, to: Date())!, price: 135),
-//    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -2, to: Date())!, price: 128),
-//    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -1, to: Date())!, price: 140),
-//    StockDataPoint(date: Date(), price: 145)
-//]
-//
-//let stockData2: [StockDataPoint] = [
-//    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -6, to: Date())!, price: 100),
-//    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -5, to: Date())!, price: 110),
-//    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -4, to: Date())!, price: 120),
-//    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -3, to: Date())!, price: 130),
-//    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -2, to: Date())!, price: 140),
-//    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -1, to: Date())!, price: 100),
-//    StockDataPoint(date: Date(), price: 145)
-//]
+let stockData1: [StockDataPoint] = [
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -10, to: Date())!, price: 120.87),
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -9, to: Date())!, price: 122.55),
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -8, to: Date())!, price: 121.30),
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -7, to: Date())!, price: 121.34),
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -6, to: Date())!, price: 121.34),
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -5, to: Date())!, price: 125.74),
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -4, to: Date())!, price: 125.65),
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -3, to: Date())!, price: 135.55),
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -2, to: Date())!, price: 128.26),
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -1, to: Date())!, price: 140.04),
+    StockDataPoint(date: Date(), price: 145.21)
+]
+
+let stockData2: [StockDataPoint] = [
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -6, to: Date())!, price: 100),
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -5, to: Date())!, price: 110),
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -4, to: Date())!, price: 120),
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -3, to: Date())!, price: 130),
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -2, to: Date())!, price: 140),
+    StockDataPoint(date: Calendar.current.date(byAdding: .day, value: -1, to: Date())!, price: 100),
+    StockDataPoint(date: Date(), price: 145)
+]
 
 let calendar = Calendar.current
 

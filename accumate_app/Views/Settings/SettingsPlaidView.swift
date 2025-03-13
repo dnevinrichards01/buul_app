@@ -100,6 +100,18 @@ struct SettingsPlaidView: View {
         .onAppear() {
             selectedSetting = nil
         }
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: {
+                    navManager.path.removeLast()
+                }) {
+                    Image(systemName: "chevron.left")
+                        .foregroundColor(.white)
+                        .font(.system(size: 20, weight: .medium))
+                        .frame(maxHeight: 30)
+                }
+            }
+        }
     }
 }
 
