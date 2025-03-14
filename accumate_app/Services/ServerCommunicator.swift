@@ -45,7 +45,7 @@ class ServerCommunicator {
     }
 
 
-    init(baseURL: String = "http://10.0.0.52:8000/") { //"http://localhost:8000/", "https://accumate-backend-load-balancer.link/"
+    init(baseURL: String = "https://accumate-backend-load-balancer.link/") { //"http://localhost:8000/", "http://10.0.0.52:8000/"
         self.baseURL = baseURL
     }
     
@@ -111,18 +111,23 @@ class ServerCommunicator {
                 }
 
                 guard (200...299).contains(httpResponse.statusCode) else {
-                    if let sessionManager = sessionManager, tryRefresh && httpResponse.statusCode == 401 {
-                        print("refresh")
-                        self.refresh(
-                            sessionManager: sessionManager,
-                            path: path,
-                            httpMethod: httpMethod,
-                            params: params,
-                            responseType: responseType,
-                            tryRefresh: false,
-                            completion: completion
-                        )
-                        return
+                    if let sessionManager = sessionManager, httpResponse.statusCode == 401 {
+                        if tryRefresh {
+                            print("refresh")
+                            self.refresh(
+                                sessionManager: sessionManager,
+                                path: path,
+                                httpMethod: httpMethod,
+                                params: params,
+                                responseType: responseType,
+                                tryRefresh: false,
+                                completion: completion
+                            )
+                            return
+                        } else {
+                            sessionManager.refreshFailedMessage = "Your session has timed out. To update or get new information, please log out and sign back in."
+                            sessionManager.refreshFailed = true
+                        }
                     }
                     DispatchQueue.main.async {
                         completion(.failure(.statusCodeError(httpResponse.statusCode)))
