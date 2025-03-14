@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		DE9DF0992D7E00260093F11B /* LinkKit in Frameworks */ = {isa = PBXBuildFile; productRef = DE9DF0982D7E00260093F11B /* LinkKit */; };
+		DEC0440F2D830A5B00FFB6E3 /* LinkKit in Frameworks */ = {isa = PBXBuildFile; productRef = DEC0440E2D830A5B00FFB6E3 /* LinkKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,7 +57,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DE9DF0992D7E00260093F11B /* LinkKit in Frameworks */,
+				DEC0440F2D830A5B00FFB6E3 /* LinkKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -127,7 +127,7 @@
 			);
 			name = accumate_app;
 			packageProductDependencies = (
-				DE9DF0982D7E00260093F11B /* LinkKit */,
+				DEC0440E2D830A5B00FFB6E3 /* LinkKit */,
 			);
 			productName = accumate_app;
 			productReference = DE7346812CFDB0C700A01EFF /* accumate_app.app */;
@@ -212,7 +212,7 @@
 			mainGroup = DE7346782CFDB0C700A01EFF;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				DE9DF0972D7E00260093F11B /* XCRemoteSwiftPackageReference "plaid-link-ios-spm" */,
+				DEC0440D2D830A5B00FFB6E3 /* XCRemoteSwiftPackageReference "plaid-link-ios-spm" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = DE7346822CFDB0C700A01EFF /* Products */;
@@ -614,7 +614,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		DE9DF0972D7E00260093F11B /* XCRemoteSwiftPackageReference "plaid-link-ios-spm" */ = {
+		DEC0440D2D830A5B00FFB6E3 /* XCRemoteSwiftPackageReference "plaid-link-ios-spm" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/plaid/plaid-link-ios-spm.git";
 			requirement = {
@@ -625,9 +625,9 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		DE9DF0982D7E00260093F11B /* LinkKit */ = {
+		DEC0440E2D830A5B00FFB6E3 /* LinkKit */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = DE9DF0972D7E00260093F11B /* XCRemoteSwiftPackageReference "plaid-link-ios-spm" */;
+			package = DEC0440D2D830A5B00FFB6E3 /* XCRemoteSwiftPackageReference "plaid-link-ios-spm" */;
 			productName = LinkKit;
 		};
 /* End XCSwiftPackageProductDependency section */

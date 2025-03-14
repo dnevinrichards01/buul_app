@@ -43,6 +43,13 @@ class Utils {
         return snakeCase.lowercased()
     }
     
+    static func snakeCaseToCamelCase(_ input: String) -> String {
+        let words = input.split(separator: "_")
+        let firstWord = words.first?.lowercased() ?? ""
+        let capitalizedWords = words.dropFirst().map { $0.capitalized }
+        return ([firstWord] + capitalizedWords).joined()
+    }
+    
     static func getOTPEndpoint(_ signUpField: SignUpFields, _ authenticate: Bool) -> String {
         if !authenticate && signUpField == .password {
             return "api/user/resetpassword/"
@@ -76,5 +83,16 @@ class Utils {
             return String(text[indexObject])
         }
         return ""
+    }
+    
+    static func getBrokerage(sessionManager: UserSessionManager, brokerageString: String? = nil) -> Brokerages? {
+        let brokerageName: String? = brokerageString ?? sessionManager.brokerageName
+        for brokerage in Brokerages.allCases {
+            print(brokerage.rawValue, brokerageName)
+            if brokerage.rawValue == brokerageName {
+                return brokerage
+            }
+        }
+        return nil
     }
 }

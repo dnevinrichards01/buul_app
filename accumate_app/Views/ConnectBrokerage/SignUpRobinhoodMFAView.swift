@@ -112,35 +112,33 @@ struct SignUpRobinhoodMFAView: View {
             Spacer()
             
             VStack() {
-                VStack() {
+                Button {
+                    buttonDisabled = true
+                    resendCode = false
+                } label: {
+                    Text("Continue")
+                        .font(.headline)
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity, minHeight: 50)
+                        .background(.white)
+                        .cornerRadius(10)
+                }
+                .disabled(buttonDisabled)
+                .padding([.top, .bottom], 20)
+                
+                if mfaMethod == .sms {
                     Button {
                         buttonDisabled = true
-                        resendCode = false
+                        resendCode = true
                     } label: {
-                        Text("Continue")
-                            .font(.headline)
-                            .foregroundColor(.black)
-                            .frame(maxWidth: .infinity, minHeight: 50)
-                            .background(.white)
-                            .cornerRadius(10)
+                        Text("Click here to resend code")
+                            .foregroundColor(.white)
+                            .font(.system(size: 14))
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: .infinity)
+                            .bold()
                     }
                     .disabled(buttonDisabled)
-                    .padding([.top, .bottom], 20)
-                    
-                    if mfaMethod == .sms {
-                        Button {
-                            buttonDisabled = true
-                            resendCode = true
-                        } label: {
-                            Text("Click here to resend code")
-                                .foregroundColor(.white)
-                                .font(.system(size: 14))
-                                .multilineTextAlignment(.center)
-                                .frame(maxWidth: .infinity)
-                                .bold()
-                        }
-                        .disabled(buttonDisabled)
-                    }
                 }
             }
         }
@@ -263,7 +261,7 @@ struct SignUpRobinhoodMFAView: View {
         case .app:
             return "Enter the code in your authenticator app associated with your Robinhood account"
         case .prompt:
-            return "Open Robinhood on your device and click approve. \nThen return to Accumate and click continue"
+            return "\nOpen Robinhood on your device and click approve. \n\nThen return to Accumate and click continue"
         }
     }
     

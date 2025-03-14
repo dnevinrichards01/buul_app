@@ -142,19 +142,16 @@ struct FieldsRequestOTPView: View {
         .onChange(of: submitted) {
             if !submitted { return }
             submitted = false
-            if isSignUp && signUpField == .brokerage {
+            
+            if signUpField == .brokerage && isSignUp {
                 for brokerage in Brokerages.allCases {
-                    if self.brokerage == brokerage.displayName.lowercased() {
-                        navManager.append(brokerage.signUpConnectPage)
+                    if self.brokerage == brokerage.rawValue {
+                        navManager.append(brokerage.signUpSecurityInfo)
                     }
                 }
             } else {
                 navManager.append(nextPage)
             }
-            
-            if !submitted { return }
-            submitted = false
-            navManager.append(nextPage)
         }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
@@ -194,7 +191,7 @@ struct FieldsRequestOTPView: View {
         case .password:
             fieldValue = password
         case .brokerage:
-            fieldValue = brokerage
+            fieldValue = Utils.camelCaseToSnakeCase(brokerage)
         case .symbol:
             fieldValue = symbol
         case .deleteAccount:

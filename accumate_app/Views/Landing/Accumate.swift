@@ -211,8 +211,8 @@ struct LoadingScreen: View {
                     NoOTPFieldsView(
                         signUpFields: [.brokerage],
                         signUpField: .brokerage,
-                        title: "Select your brokerage",
-                        subtitle: nil,
+                        title: "Select a brokerage",
+                        subtitle: "Choose the brokerage you want to use with Accumate.",
                         nextPage: .signUpBrokerage,
                         authenticate: true
                     )
@@ -226,6 +226,8 @@ struct LoadingScreen: View {
                     )
                 case .signUpMfaRobinhood:
                     SignUpRobinhoodMFAView(isSignUp: true)
+                case .signUpConnectBrokerageLater:
+                    ConnectBrokerageLaterView(isSignUp: true)
                     
                 case .plaidInfo:
                     PlaidInfo(
@@ -407,8 +409,8 @@ struct LoadingScreen: View {
                 case .changeBrokerage:
                     FieldsRequestOTPView(
                         signUpFields: [.brokerage],
-                        title: "Select your brokerage",
-                        subtitle: nil,
+                        title: "Select a brokerage",
+                        subtitle: "Choose the brokerage you want to use with Accumate.",
                         nextPage: .changeBrokerageOTP,
                         signUpField: .brokerage,
                         authenticate: true,
@@ -424,7 +426,6 @@ struct LoadingScreen: View {
                         signUpField: .brokerage,
                         authenticate: true
                     )
-                    
                 case .robinhoodSecurityInfo:
                     RobinhoodSecurityInfoView(isSignUp: false)
                 case .connectRobinhood:
@@ -434,6 +435,8 @@ struct LoadingScreen: View {
                     )
                 case .mfaRobinhood:
                     SignUpRobinhoodMFAView(isSignUp: false)
+                case .connectBrokerageLater:
+                    ConnectBrokerageLaterView(isSignUp: false)
                     
                 case .plaidInfoAdd:
                     PlaidInfo(

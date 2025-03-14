@@ -135,11 +135,12 @@ struct OTPView: View {
                 
                 if signUpField == .brokerage {
                     for brokerage in Brokerages.allCases {
-                        if sessionManager.stringToVerify == brokerage.displayName.lowercased() {
-                            nextPage = brokerage.changeConnectPage
+                        if sessionManager.stringToVerify == brokerage.rawValue {
+                            nextPage = brokerage.changeConnect
                         }
                     }
                 }
+                
                 
                 guard reEnterInfo || submitted else { return }
                 if reEnterInfo {

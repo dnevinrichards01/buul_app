@@ -28,7 +28,7 @@ struct RobinhoodFieldsEntryView: View {
     var body: some View {
         VStack {
             VStack (alignment: .center) {
-                Image("RobinhoodLogo")
+                Image("RobinhoodLeafLogo")
                     .resizable()
                     .frame(width: 150, height: 150)
             }

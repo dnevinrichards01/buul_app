@@ -95,11 +95,11 @@ struct SettingsBankInfoView: View {
     func getValue(bankingSetting: BankingSettings) -> String {
         switch bankingSetting {
         case .changeBrokerage:
-            return sessionManager.brokerageName ?? "Could not load or find brokerage"
+            return Utils.getBrokerage(sessionManager: sessionManager)?.displayName ?? "Could not load or find brokerage"
         case .changeInvestment:
             return sessionManager.etfSymbol ?? "Could not load or find ETF"
         case .accounts:
-            return "Could not find or load accounts"
+            return "Could not load or find accounts"
         }
     }
     

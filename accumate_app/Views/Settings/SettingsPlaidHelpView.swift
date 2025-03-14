@@ -28,12 +28,6 @@ struct SettingsPlaidHelpView: View {
                         .padding(.bottom, 50)
                     
                     VStack {
-                        Text("Use Plaid to add or remove Accumate's access to your cards, bank accounts, or categories of data.")
-                            .font(.headline)
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.bottom, 30)
-                        
                         Text("To connect a new account or card or increase permissions for already connected ones, go to 'Link more accounts and cards' under 'Banking Information'")
                             .font(.headline)
                             .foregroundStyle(.white)
@@ -44,13 +38,7 @@ struct SettingsPlaidHelpView: View {
                             .font(.headline)
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.bottom, 30)
-                        
-                        Text("Deleting your account will remove all of Accumate's access to your bank and card data.")
-                            .font(.headline)
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.bottom, 30)
+                            .padding(.bottom, 5)
                         
                         Button {
                             if let url = URL(string: plaidLink) {
@@ -66,11 +54,17 @@ struct SettingsPlaidHelpView: View {
                         }
                         .padding(.bottom, 30)
                         
-                        Text("If you encounter issues or have concerns please reach out to us at the following email address")
+                        Text("Deleting your account will remove all of Accumate's access to your bank and card data.")
                             .font(.headline)
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.bottom, 30)
+                        
+                        Text("If you encounter issues or have concerns please reach out to us at the following email address")
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.bottom, 5)
                         
                         Text(email)
                             .font(.headline)

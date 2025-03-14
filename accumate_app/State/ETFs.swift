@@ -8,7 +8,7 @@
 import SwiftUI
 
 
-var etfsList: [ETF] = [invesco, voo, voog, ishares]
+var etfsList: [ETF] = [invesco, voo, ishares] //[invesco, voo, voog, ishares]
 
 var invesco: ETF = ETF(
     imageName: "Invesco",

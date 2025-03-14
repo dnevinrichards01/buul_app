@@ -23,15 +23,13 @@ struct SelectOptionView: View {
 
     var body: some View {
         VStack {
-            VStack (alignment: .center) {
+            VStack (alignment: .leading, spacing: 10) {
                 if let title = title {
                     Text(title)
-                        .font(.largeTitle)
+                        .font(.title)
                         .fontWeight(.bold)
                         .foregroundStyle(.white)
-                        .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
-                        .padding(.bottom, 20)
                 }
                 if let subtitle = subtitle {
                     Text(subtitle)
@@ -41,25 +39,39 @@ struct SelectOptionView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            .padding(.bottom, 50)
+//            .padding(.bottom, 25)
             
             if signUpField == .brokerage {
                 ScrollView {
                     ForEach(Brokerages.allCases, id: \.self) { brokerage in
-                        switch brokerage {
-                        case .robinhood:
-                            BrokerageButtonView(
-                                brokerage: brokerage,
-                                buttonDisabled: $buttonDisabled,
-                                selectedBrokerage: $selectedBrokerage
-                            )
-                            EmptyView()
-                        default:
-                            Rectangle()
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                .foregroundStyle(.black)
-                        }
+                        BrokerageButtonView(
+                            brokerage: brokerage,
+                            buttonDisabled: $buttonDisabled,
+                            selectedBrokerage: $selectedBrokerage,
+                            alertMessage: $alertMessage,
+                            showAlert: $showAlert
+                        )
                     }
+                    VStack {
+                        HStack {
+                            Image(systemName: "plus")
+                                .resizable()
+                                .frame(width: 20, height: 20)
+                                .padding(.leading, 30)
+                            Text("Connect another broker")
+                                .font(.title2)
+                                .foregroundColor(.white)
+                            Spacer()
+                        }
+                        .frame(height: 80)
+                        .disabled(buttonDisabled)
+                        .background(.black)
+                        Divider()
+                            .frame(height: 1.5)
+                            .frame(maxWidth: .infinity)
+                            .background(.white.opacity(0.6))
+                    }
+                    .frame(height: 80)
                 }
             } else if signUpField == .symbol {
                 ScrollView {
@@ -86,12 +98,19 @@ struct SelectOptionView: View {
             Spacer()
         }
         .alert(alertMessage, isPresented: $showAlert) {
-            if showAlert {
+            
+            if selectedBrokerage != "" && selectedBrokerage != Brokerages.robinhood.rawValue {
+                Button("No", role: .cancel) {
+                    showAlert = false
+                }
+                Button("Select", role: .none) {
+                    showAlert = false
+                    buttonDisabled = true
+                }
+            } else if sessionManager.refreshFailed {
                 Button("OK", role: .cancel) {
                     showAlert = false
                 }
-            }
-            if sessionManager.refreshFailed {
                 Button("Log Out", role: .destructive) {
                     Task {
                         showAlert = false
@@ -101,24 +120,12 @@ struct SelectOptionView: View {
                         navManager.reset(views: [.landing])
                     }
                 }
+            } else {
+                Button("OK", role: .cancel) {
+                    showAlert = false
+                }
             }
         }
-//        .alert(sessionManager.refreshFailedMessage, isPresented: $sessionManager.refreshFailed) {
-//            Button("OK", role: .cancel) {
-//                showAlert = false
-////                sessionManager.refreshFailed = false
-//            }
-//            Button("Log Out", role: .destructive) {
-//                showAlert = false
-////                Task {
-////                    showAlert = false
-////                    
-////                    sessionManager.refreshFailed = false
-////                    _ = await sessionManager.resetComplete()
-////                    navManager.reset(views: [.landing])
-////                }
-//            }
-//        }
         .onAppear {
             print(selectedETF)
             buttonDisabled = false

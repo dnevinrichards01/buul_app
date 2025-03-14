@@ -115,8 +115,8 @@ struct NoOTPFieldsView: View {
             buttonDisabled = false
             if signUpField == .brokerage {
                 for brokerage in Brokerages.allCases {
-                    if self.brokerage == brokerage.displayName.lowercased() {
-                        navManager.append(brokerage.signUpConnectPage)
+                    if self.brokerage == brokerage.rawValue {
+                        navManager.append(brokerage.signUpSecurityInfo)
                     }
                 }
             } else {
@@ -144,7 +144,7 @@ struct NoOTPFieldsView: View {
         case .fullName:
             fieldValue = fullName as Any
         case .brokerage:
-            fieldValue = brokerage as Any
+            fieldValue = Utils.camelCaseToSnakeCase(brokerage) as Any
         case .symbol:
             fieldValue = symbol as Any
         default:

@@ -11,25 +11,28 @@ struct BrokerageButtonView: View {
     var brokerage: Brokerages
     @Binding var buttonDisabled: Bool
     @Binding var selectedBrokerage: String
+    @Binding var alertMessage: String
+    @Binding var showAlert: Bool
     
     var body: some View {
         Button {
-            buttonDisabled = true
-            selectedBrokerage = brokerage.displayName.lowercased()
+            if brokerage != .robinhood {
+                showAlert = true
+                alertMessage = "We can save this selection as your brokerage, but we are not yet able to connect with it. Do you want to select it anyways?"
+                selectedBrokerage = brokerage.rawValue
+            } else {
+                buttonDisabled = true
+                selectedBrokerage = brokerage.rawValue
+            }
         } label: {
             HStack {
                 Image(brokerage.imageName)
                     .resizable()
-                    .frame(width: 60, height: 60)
-                    .clipShape(Circle())
-                    .padding(.leading, 10)
-                Text(brokerage.displayName)
-                    .font(.headline)
-                    .foregroundStyle(.white)
-                    .padding(.leading, 10)
+                    .frame(width: brokerage.imageDim[0], height: brokerage.imageDim[1])
+                    .padding(.leading, 30)
                 Spacer()
             }
-            .padding(.vertical, 10)
+            .frame(height: 80)
             .disabled(buttonDisabled)
             .background(.black)
         }

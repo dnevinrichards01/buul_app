@@ -17,9 +17,6 @@ struct SignUpETFsButtonView: View {
     @Binding var selectedETF: String
     
     var body: some View {
-        Divider()
-            .frame(height: 2)
-            .background(.white.opacity(0.8))
         
         Button {
             buttonDisabled = true
@@ -74,6 +71,11 @@ struct SignUpETFsButtonView: View {
         .disabled(buttonDisabled)
         .id(etf.id)
         .background(.black) // Background color
+        
+        Divider()
+            .frame(height: 1.5)
+            .frame(maxWidth: .infinity)
+            .background(.white.opacity(0.6))
         
 //        Divider()
 //            .frame(height: 2)

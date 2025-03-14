@@ -203,7 +203,11 @@ struct LoginView: View {
                 self.sessionManager.email = responseData.email
                 self.sessionManager.fullName = responseData.fullName
                 self.sessionManager.etfSymbol = responseData.etf
-                self.sessionManager.brokerageName = responseData.brokerage
+                if let brokerage = responseData.brokerage {
+                    self.sessionManager.brokerageName = Utils.snakeCaseToCamelCase(brokerage)
+                } else {
+                    self.sessionManager.brokerageName = nil
+                }
                 self.sessionManager.brokerageCompleted = responseData.brokerageCompleted
                 self.sessionManager.linkCompleted = responseData.linkCompleted
                 self.sessionManager.isLoggedIn = true
