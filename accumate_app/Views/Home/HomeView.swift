@@ -30,6 +30,7 @@ struct HomeView: View {
             }
             Spacer()
         }
+        .background(Color.black.ignoresSafeArea())
         .navigationTitle("")
         .navigationBarBackButtonHidden(true)
         .navigationBarTitleDisplayMode(.inline)
@@ -52,7 +53,7 @@ struct HomeView: View {
                                 .resizable()
                                 .scaledToFit()
                                 .foregroundStyle(tabSelected == tab ? .white : .gray)
-                                .frame(width: tab == .account ? 40 : 50, height: 40)
+                                .frame(width: tab == .account ? 25 : 35, height: 25)
                         }
                         .padding(.horizontal, 25)
                         
@@ -60,7 +61,6 @@ struct HomeView: View {
                     Spacer()
                 }
                 .padding(.leading, -20)
-                //                .padding(.bottom, 5)
             }
         }
     }

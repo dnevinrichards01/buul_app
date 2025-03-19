@@ -61,7 +61,7 @@ struct HomeCardsView: View {
             .background(.black)
         }
         .padding(.bottom, 10)
-        .background(.black)
+        .background(Color.black.ignoresSafeArea())
     }
 }
 

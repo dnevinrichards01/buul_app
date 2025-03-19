@@ -96,7 +96,7 @@ struct SettingsPlaidView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden()
-        .background(.black)
+        .background(Color.black.ignoresSafeArea())
         .onAppear() {
             selectedSetting = nil
         }

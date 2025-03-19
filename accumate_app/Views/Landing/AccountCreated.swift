@@ -63,7 +63,7 @@ struct AccountCreated: View {
             // get refresh tokens / log in
             // block the buton maybe?
         }
-        .background(.black)
+        .background(Color.black.ignoresSafeArea())
         .navigationBarBackButtonHidden(true)
         .navigationBarTitleDisplayMode(.inline)
     }

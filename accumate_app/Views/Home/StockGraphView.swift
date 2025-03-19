@@ -169,7 +169,7 @@ struct StockGraphView: View {
                 }
             }
         }
-        .background(.black)
+        .background(Color.black.ignoresSafeArea())
     }
     
     // Helper function for change in price

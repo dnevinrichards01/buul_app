@@ -48,7 +48,7 @@ struct SettingsAccountInfoView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden()
-        .background(.black)
+        .background(Color.black.ignoresSafeArea())
         .onAppear() {
             selectedAccountInfo = nil
         }

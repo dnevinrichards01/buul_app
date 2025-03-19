@@ -93,7 +93,7 @@ struct HomeCardsButtonView: View {
 //                .background(.white.opacity(0.8))
         }
         .padding(.vertical, 15)
-        .background(.black)
+        .background(Color.black.ignoresSafeArea())
         
         
     }

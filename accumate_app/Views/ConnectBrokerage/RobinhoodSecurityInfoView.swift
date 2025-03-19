@@ -121,7 +121,7 @@ struct RobinhoodSecurityInfoView: View {
             }
             self.brokerage = brokerage
         }
-        .background(.black)
+        .background(Color.black.ignoresSafeArea())
         .navigationBarBackButtonHidden(true)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

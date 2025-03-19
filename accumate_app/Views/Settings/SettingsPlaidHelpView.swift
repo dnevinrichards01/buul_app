@@ -97,7 +97,7 @@ struct SettingsPlaidHelpView: View {
         .navigationBarBackButtonHidden(true)
         .navigationBarTitleDisplayMode(.inline)
         .padding()
-        .background(.black)
+        .background(Color.black.ignoresSafeArea())
         
         
     }

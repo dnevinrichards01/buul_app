@@ -108,6 +108,7 @@ struct FieldsRequestOTPView: View {
                 )
             }
         }
+        .background(Color.black.ignoresSafeArea())
         .padding()
         .onAppear {
             if let fieldValue = sessionManager.stringToVerify {

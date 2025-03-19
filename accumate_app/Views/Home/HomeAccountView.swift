@@ -128,7 +128,7 @@ struct HomeAccountView: View {
                 showAlert = true
             }
         }
-        .background(.black)
+        .background(Color.black.ignoresSafeArea())
         .onAppear() {
             selectedSetting = nil
         }

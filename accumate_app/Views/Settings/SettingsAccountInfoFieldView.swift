@@ -42,6 +42,7 @@ struct SettingsAccountInfoFieldView: View {
         }
         //        .frame()
         .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.black.ignoresSafeArea())
         
     }
     

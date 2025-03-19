@@ -10,11 +10,14 @@ import LinkKit
 
 struct LoadingCircle: View {
     @State private var rotationAngle: Double = 0.0
+    var spacers: Bool = true
     var body: some View {
         HStack {
             Spacer()
             VStack {
-                Spacer()
+                if spacers {
+                    Spacer()
+                }
                 ZStack {
                     Circle()
                         .stroke(Color.gray.opacity(0.3), lineWidth: 5)
@@ -27,10 +30,13 @@ struct LoadingCircle: View {
                         .rotationEffect(.degrees(rotationAngle))
                 }
                 .frame(width: 100, height: 100)
-                Spacer()
+                if spacers {
+                    Spacer()
+                }
             }
             Spacer()
         }
+        .background(Color.black.ignoresSafeArea())
         .onAppear {
             withAnimation(Animation.linear(duration: 3).repeatForever(autoreverses: false)) {
                 rotationAngle = 360
@@ -137,6 +143,7 @@ struct PlaidLinkPageBackground: View {
                 }
             }
         }
+        .background(Color.black.ignoresSafeArea())
     }
     
 }

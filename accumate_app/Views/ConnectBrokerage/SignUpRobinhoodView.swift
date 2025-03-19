@@ -115,6 +115,7 @@ struct SignUpRobinhoodView: View {
                 }
             }
         }
+        .background(Color.black.ignoresSafeArea())
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: {

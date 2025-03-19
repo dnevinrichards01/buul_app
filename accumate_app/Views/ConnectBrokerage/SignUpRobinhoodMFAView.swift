@@ -229,6 +229,7 @@ struct SignUpRobinhoodMFAView: View {
                 showAlert = true
             }
         }
+        .background(Color.black.ignoresSafeArea())
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: {

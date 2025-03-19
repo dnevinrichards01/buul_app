@@ -62,7 +62,7 @@ struct SettingsBankInfoView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden()
-        .background(.black)
+        .background(Color.black.ignoresSafeArea())
         .onAppear() {
             selectedBankingSetting = nil
         }

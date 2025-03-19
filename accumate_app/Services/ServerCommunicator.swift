@@ -45,7 +45,7 @@ class ServerCommunicator {
     }
 
 
-    init(baseURL: String = "https://accumate-backend-load-balancer.link/") { //"http://localhost:8000/", "http://10.0.0.52:8000/"
+    init(baseURL: String = "https://accumate-backend-load-balancer.link/" ) { //"http://localhost:8000/", "http://10.0.0.52:8000/"
         self.baseURL = baseURL
     }
     

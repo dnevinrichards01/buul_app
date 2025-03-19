@@ -77,6 +77,7 @@ struct HomeStocksView: View {
                     }
                 }
             }
+            .scrollIndicators(.hidden)
             
             VStack (alignment: .leading, spacing: 10) {
                 Divider()

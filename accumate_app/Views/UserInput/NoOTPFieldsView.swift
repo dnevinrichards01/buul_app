@@ -80,6 +80,7 @@ struct NoOTPFieldsView: View {
                 )
             }
         }
+        .background(Color.black.ignoresSafeArea())
         .padding()
         .onAppear() {
             fullName = sessionManager.fullName ?? ""

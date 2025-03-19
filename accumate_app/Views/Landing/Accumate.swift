@@ -59,6 +59,7 @@ struct LoadingScreen: View {
             ZStack {
                 VStack {
                     Spacer()
+                    if useBiometrics { Spacer() }
                     
                     VStack {
                         Image("AccumateLogoText")
@@ -102,21 +103,20 @@ struct LoadingScreen: View {
                             }
                         }
                         .padding()
+                    } else {
+                        LoadingCircle(spacers: false)
+                            .background(Color.black.ignoresSafeArea())
+                        Spacer()
+                            
                     }
                     Spacer()
                 }
                 
             }
-            .background(.black)
+            .background(Color.black.ignoresSafeArea())
             .alert(alertMessage, isPresented: $showAlert) {
                 Button("OK", role: .cancel) { showAlert = false }
             }
-//            .onChange(of: showAlert) { oldValue, newValue in
-//                if oldValue && !newValue {
-//                    showAlert = false
-//                    alertMessage = ""
-//                }
-//            }
             .onAppear {
                 withAnimation(Animation.linear(duration: 3).repeatForever(autoreverses: false)) {
                     rotationAngle = 360
@@ -124,11 +124,6 @@ struct LoadingScreen: View {
             }
             .animation(.easeInOut, value: useBiometrics)
             .task {
-//                if !sessionManager.isLoggedIn {
-//                    navManager.append(.landing)
-//                } else {
-//                    authenticate()
-//                }
                 authenticate()
                 
             }
@@ -469,8 +464,6 @@ struct LoadingScreen: View {
             case .failure(let error):
                 if error == .failedAuthentication {
                     useBiometrics = false
-//                    showAlert = true
-//                    alertMessage = "Face ID is not accessible. Please log in manually."
                 } else {
                     useBiometrics = false
                     showAlert = true

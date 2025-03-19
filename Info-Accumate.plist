@@ -20,5 +20,7 @@
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 	</array>
+    <key>UIStatusBarStyle</key>
+    <string>UIStatusBarStyleDarkContent</string>
 </dict>
 </plist>
