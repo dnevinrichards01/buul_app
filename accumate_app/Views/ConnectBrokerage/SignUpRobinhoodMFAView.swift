@@ -163,20 +163,7 @@ struct SignUpRobinhoodMFAView: View {
                 }
             }
         }
-//        .alert(sessionManager.refreshFailedMessage, isPresented: $sessionManager.refreshFailed) {
-//            Button("OK", role: .cancel) {
-//                showAlert = false
-//                sessionManager.refreshFailed = false
-//            }
-//            Button("Log Out", role: .destructive) {
-//                Task {
-//                    showAlert = false
-//                    sessionManager.refreshFailed = false
-//                    _ = await sessionManager.resetComplete()
-//                    navManager.reset(views: [.landing])
-//                }
-//            }
-//        }
+        .animation(.easeInOut, value: mfaMethod)
         .onChange(of: showAlert) { oldValue, newValue in
             if oldValue == true && newValue == false {
                 if mfaMethod == nil || reEnterFields {

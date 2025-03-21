@@ -108,6 +108,7 @@ struct SignUpRobinhoodView: View {
 //                showAlert = true
 //            }
             else if [.app, .sms, .prompt].contains(mfaMethod) { // remove .prompt
+                recieved = false
                 if isSignUp {
                     navManager.append(.signUpMfaRobinhood)
                 } else {

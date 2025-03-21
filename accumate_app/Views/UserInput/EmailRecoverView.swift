@@ -99,7 +99,7 @@ struct EmailRecoverView: View {
             sendEmail()
         }
         .animation(.easeInOut(duration: 0.5), value: errorMessage)
-        .background(.black)
+        .background(Color.black.ignoresSafeArea())
         .navigationBarBackButtonHidden(true)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

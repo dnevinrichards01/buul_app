@@ -165,7 +165,7 @@ struct FieldsEntryView: View {
             buttonDisabled = false
         }
         .animation(.easeInOut(duration: 0.5), value: errorMessages)
-        .background(.black)
+        .background(Color.black.ignoresSafeArea())
         .navigationBarBackButtonHidden(true)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

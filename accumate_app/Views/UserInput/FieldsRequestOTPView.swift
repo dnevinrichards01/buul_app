@@ -108,8 +108,8 @@ struct FieldsRequestOTPView: View {
                 )
             }
         }
-        .background(Color.black.ignoresSafeArea())
         .padding()
+        .background(Color.black.ignoresSafeArea())
         .onAppear {
             if let fieldValue = sessionManager.stringToVerify {
                 phoneNumber = fieldValue
