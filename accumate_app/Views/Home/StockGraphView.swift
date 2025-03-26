@@ -21,6 +21,9 @@ struct StockGraphView: View {
     @State private var exactDate: Date? = nil
     @State private var interpolatedY: CGFloat? = nil
     @State private var interpolatedPrice: Double? = nil
+    
+//    @State var domain: [Double]
+    var timePeriod: TimePeriods
     var color: Color
     
     
@@ -57,8 +60,7 @@ struct StockGraphView: View {
             GeometryReader { geometry in
                 ZStack {
                     let range: [Double] = getRange()
-                    let minX = stockData.first!.date
-                    let maxX = stockData.last!.date
+                    let domain: [Date] = getDomain()
                     
                     Chart {
                         ForEach(stockData) { point in
@@ -67,13 +69,14 @@ struct StockGraphView: View {
                                 y: .value("Price", point.price)
                             )
                             .foregroundStyle(color)
+                            .lineStyle(StrokeStyle(lineWidth: 1))
 //                            .interpolationMethod(.catmullRom)
                         }
                     }
                     .chartXAxis(.hidden)  // Hides X-axis
                     .chartYAxis(.hidden)  // Hides Y-axis
-                    .chartYScale(domain:range[0]...range[1])
-                    .chartXScale(domain: minX...maxX)
+                    .chartYScale(domain: range[0]...range[1])
+                    .chartXScale(domain: domain[0]...domain[1])
                     .chartPlotStyle { plotArea in
                         plotArea
                             .background(.clear) // Remove background grid
@@ -90,17 +93,29 @@ struct StockGraphView: View {
                                     .onChanged { value in
                                         let location = value.location
                                         if let date: Date = proxy.value(atX: location.x) {
-                                            exactDate = date
-                                            exactX = location.x
-                                            if let _interpolatedPrice = interpolatePrice(for: date) {
-                                                interpolatedPrice = _interpolatedPrice
-                                                interpolatedY = proxy.position(forY: _interpolatedPrice)
-                                                if let closestPoint = nearestPrice(for: date) {
-                                                    selectedPrice = closestPoint.price
-                                                    selectedDate = closestPoint.date
+                                            let lastDate = stockData.last!.date
+                                            let lastPrice = stockData.last!.price
+                                            if date >= stockData.last!.date && timePeriod == .day {
+                                                exactDate = lastDate
+                                                exactX = proxy.position(forX: lastDate)
+                                                interpolatedPrice = lastPrice
+                                                interpolatedY = proxy.position(forY: lastPrice)
+                                                selectedPrice = lastPrice
+                                                selectedDate = lastDate
+                                            } else {
+                                                exactDate = date
+                                                exactX = location.x
+                                                if let _interpolatedPrice = interpolatePrice(for: date) {
+                                                    interpolatedPrice = _interpolatedPrice
+                                                    interpolatedY = proxy.position(forY: _interpolatedPrice)
+                                                    if let closestPoint = nearestPrice(for: date) {
+                                                        selectedPrice = closestPoint.price
+                                                        selectedDate = closestPoint.date
+                                                    }
                                                 }
                                             }
                                         }
+                                        
                                     }
                                     .onEnded { _ in
                                         exactX = nil
@@ -118,53 +133,53 @@ struct StockGraphView: View {
                        let selectedDate = selectedDate,
                        let xPos = exactX,
                        let yPos = interpolatedY,
-                       let exactDate = exactDate, exactDate >= minX, exactDate <= maxX
+                       let exactDate = exactDate, exactDate >= domain[0], exactDate <= domain[1]
                         {
-                        Circle()
-                            .fill(color)
-                            .frame(width: 15, height: 15)
-                            .offset(
-                                x: xPos - graphWidth / 2,
-                                y: yPos - graphHeight / 2
-                            )
-                        VStack {
-                            Text(formatAsCurrency(selectedPrice))
-                                .font(.subheadline)
-                                .fontWeight(.bold)
-                                .padding(3)
-                                .foregroundColor(.white)
-                            Text(formatDate(selectedDate))
-                                .foregroundColor(color)
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                        }
-                        .offset(
-                            x: boundTooltipX(xPos - graphWidth / 2, width: graphWidth),
-                            y: yPos - graphHeight / 2 - 65
-                        )
-                        let rectHeight = min(graphHeight - yPos, graphHeight / 2)
-                        Rectangle()
-                            .fill(color) // Base color
-                            .frame(width: 2, height: rectHeight) // Line height
-                            .frame(maxWidth: .infinity)
-                            .offset(
-                                x: xPos - graphWidth / 2,
-                                y: yPos + rectHeight / 2 - graphHeight / 2
-                            ) // Position it correctly
-                            .mask( // Apply the fading gradient mask
-                                LinearGradient(
-                                    gradient: Gradient(stops: [
-                                        .init(color: color.opacity(1.0), location: 0.0), // Full color at start
-                                        .init(color: color.opacity(0.7), location: 0.5), // Quick fade
-                                        .init(color: color.opacity(0.55), location: 0.6), // Slower fade
-                                        .init(color: Color.clear, location: 1.0) // Fully transparent at the end
-                                    ]),
-                                    startPoint: .top,
-                                    endPoint: .bottom
+                            Circle()
+                                .fill(color)
+                                .frame(width: 15, height: 15)
+                                .offset(
+                                    x: xPos - graphWidth / 2,
+                                    y: yPos - graphHeight / 2
                                 )
-                                .frame(height: rectHeight)
-                                .offset(y: yPos + rectHeight / 2 - graphHeight / 2)
+                            VStack(alignment: .center) {
+                                Text(formatAsCurrency(selectedPrice))
+                                    .font(.subheadline)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
+                                Text(formatDate(selectedDate))
+                                    .foregroundColor(color)
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                            }
+                            .frame(width: 120, alignment: .center)
+                            .offset(
+                                x: boundTooltipX(xPos, width: graphWidth),
+                                y: 30 - graphHeight / 2 - 65
                             )
+                            let rectHeight = min(graphHeight - yPos, graphHeight / 2)
+                            Rectangle()
+                                .fill(color) // Base color
+                                .frame(width: 2, height: rectHeight) // Line height
+                                .frame(maxWidth: .infinity)
+                                .offset(
+                                    x: xPos - graphWidth / 2,
+                                    y: yPos + rectHeight / 2 - graphHeight / 2
+                                ) // Position it correctly
+                                .mask( // Apply the fading gradient mask
+                                    LinearGradient(
+                                        gradient: Gradient(stops: [
+                                            .init(color: color.opacity(1.0), location: 0.0), // Full color at start
+                                            .init(color: color.opacity(0.7), location: 0.5), // Quick fade
+                                            .init(color: color.opacity(0.55), location: 0.6), // Slower fade
+                                            .init(color: Color.clear, location: 1.0) // Fully transparent at the end
+                                        ]),
+                                        startPoint: .top,
+                                        endPoint: .bottom
+                                    )
+                                    .frame(height: rectHeight)
+                                    .offset(y: yPos + rectHeight / 2 - graphHeight / 2)
+                                )
                     }
                 }
             }
@@ -202,13 +217,15 @@ struct StockGraphView: View {
 
         let point1 = stockData[index - 1]  // Left neighbor
         let point2 = stockData[index]      // Right neighbor
+        
+        return point1
 
-        // Linear interpolation formula
-        if date.timeIntervalSince(point1.date) < -1 * date.timeIntervalSince(point2.date) {
-            return point1
-        } else {
-            return point2
-        }
+//        // Linear interpolation formula
+//        if date.timeIntervalSince(point1.date) < -1 * date.timeIntervalSince(point2.date) {
+//            return point1
+//        } else {
+//            return point2
+//        }
     }
     
     func interpolatePrice(for date: Date) -> Double? {
@@ -241,8 +258,18 @@ struct StockGraphView: View {
         let padding = (maxY - minY) * 0.15
         return [minY - padding, maxY + padding]
     }
-
     
+    func getDomain() -> [Date] {
+        let min = stockData.first!.date
+        var max = stockData.last!.date
+        if timePeriod == .day {
+            max = Calendar.current.dateInterval(of: .day, for: max)!.end
+//            print("max", max)
+        }
+//        print("domain", [min, max])
+        return [min, max]
+    }
+
     func formatAsCurrency(_ value: Double) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
@@ -252,20 +279,55 @@ struct StockGraphView: View {
     }
     
     func boundTooltipX(_ x: CGFloat, width: CGFloat) -> CGFloat {
-        let xPos = x + width / 2 // calculating position from the offset
-        if xPos < 50 {
-            return -1 * width / 2 + 50
-        } else if width - xPos < 50 {
-            return width / 2 - 50
+        let xPos = x - width / 2
+        var buffer: CGFloat = 50
+        if timePeriod == .week || timePeriod == .month {
+            buffer = 70
+        }
+        if xPos < (buffer - width / 2) {
+            return buffer - width / 2
+        } else if xPos > width / 2 - buffer {
+            return width / 2 - buffer
         } else {
-            return x
+            return xPos
         }
     }
     
     func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d, yyyy" // "Jan 31, 2025"
-        return formatter.string(from: date)
+        var dateToFormate = date
+        switch timePeriod {
+        case .day:
+            formatter.dateFormat = "h:mm a"
+        case .week:
+//            dateToFormate = Calendar.current.date(
+//                bySettingHour: Calendar.current.component(.hour, from: date),
+//                minute: 0,
+//                second: 0,
+//                of: date
+//            )!
+            formatter.dateFormat = "h a, MMM dd"
+        case .month:
+//            dateToFormate = Calendar.current.date(
+//                bySettingHour: Calendar.current.component(.hour, from: date),
+//                minute: 0,
+//                second: 0,
+//                of: date
+//            )!
+            formatter.dateFormat = "h a, MMM dd"
+        case .threeMonths:
+            formatter.dateFormat = "MMM d, yyyy"
+        case .year:
+            formatter.dateFormat = "MMM d, yyyy"
+        case .ytd:
+            formatter.dateFormat = "MMM d, yyyy"
+        case .fiveYears:
+            formatter.dateFormat = "MMM d, yyyy"
+        case .all:
+            formatter.dateFormat = "MMM, yyyy"
+        }
+        
+        return formatter.string(from: dateToFormate)
     }
     
     func changeText() -> String {
@@ -307,7 +369,7 @@ let stockData: [StockDataPoint] = [
 
 struct StockGraphView_Previews: PreviewProvider {
     static var previews: some View {
-        StockGraphView(stockData: stockData, color: changeColor(stockData: stockData) )
+        StockGraphView(stockData: stockData, timePeriod: .day, color: changeColor(stockData: stockData))
     }
 }
 

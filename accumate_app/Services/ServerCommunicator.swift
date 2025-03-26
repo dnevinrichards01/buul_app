@@ -45,7 +45,7 @@ class ServerCommunicator {
     }
 
 
-    init(baseURL: String = "http://10.0.0.52:8000/" ) { //"http://localhost:8000/", "http://10.0.0.52:8000/", "https://accumate-backend-load-balancer.link/"
+    init(baseURL: String = "http://10.0.0.206:8000/" ) { //"http://localhost:8000/", "http://10.0.0.206:8000/", "https://accumate-backend-load-balancer.link/"
         self.baseURL = baseURL
     }
     
@@ -59,7 +59,7 @@ class ServerCommunicator {
         tryRefresh: Bool = true,
         completion: @escaping (Result<T, NetworkError>) -> Void
     ) {
-        print(params as Any)
+        print("params", params as Any)
         guard let url = URL(string: baseURL + path) else {
             completion(.failure(.invalidUrl))
             return
@@ -91,7 +91,7 @@ class ServerCommunicator {
             Task {
                 
                 if let data = data, let body = String(data: data, encoding: .utf8) {
-                    print(body)
+                    print("unprocessed body", body)
                 }
                 // need to let users log out in sign up flow if errors happening befpre status code guard block
                 
@@ -145,7 +145,7 @@ class ServerCommunicator {
                     let decoder = JSONDecoder()
                     decoder.keyDecodingStrategy = .convertFromSnakeCase
                     let decodedResponse = try decoder.decode(T.self, from: data)
-                    print(decodedResponse)
+//                    print(decodedResponse)
                     DispatchQueue.main.async {
                         completion(.success(decodedResponse))
                     }

@@ -7,21 +7,27 @@
 
 import SwiftUI
 
+@MainActor
 struct HomeView: View {
     @EnvironmentObject var navManager: NavigationPathManager
     @EnvironmentObject var sessionManager: UserSessionManager
     @State private var tabSelected: HomeTabs = .stocks
-    @State private var date: String?
+    @State private var date: String
     @State private var alertMessage: String = ""
     @State private var showAlert: Bool = false
     @State private var retryGetGraphData: Bool = false
     @State private var retryRequestGraphData: Bool = false
     @State private var graphDataRequested: Bool = false
-    @State private var graphData: [RecieveStockDataPoint]?
     
+    @State private var graphData: [RecieveStockDataPoint]?
+    @State private var defaultData: [[StockDataPoint]]
+    @State private var processedData: [[StockDataPoint]]?
+    @State private var useDefaultData: Bool = true
+    @State private var graphDataRecieved: Bool = false
     
     init() {
-        self.date = getGraphParams()
+        self.date = Self.getGraphParams()
+        self.defaultData = Utils.processDefaultGraphData(graphData: Self.calculateDefaultData())
     }
     
     var body: some View {
@@ -32,7 +38,16 @@ struct HomeView: View {
             ScrollView {
                 switch tabSelected {
                 case .stocks:
-                    HomeStocksView(graphData: $graphData)
+                    if useDefaultData {
+                        HomeStocksView(processedData: $defaultData)
+                    } else {
+                        HomeStocksView(
+                            processedData: Binding<[[StockDataPoint]]>(
+                                get: { processedData ?? defaultData },
+                                set: { newValue in processedData = newValue }
+                            )
+                        )
+                    }
                 case .cards:
                     HomeCardsView()
                 case .account:
@@ -57,32 +72,57 @@ struct HomeView: View {
                 }
             }
         }
-//        @State private var retryGetGraphData: Bool = false
-//        @State private var retryRequestGraphData: Bool = false
-//        @State private var graphDataRequested: Bool = false
-//        @State private var graphData: [RecieveStockDataPoint]?
         .onAppear() {
-            print("on appear ")
             retryGetGraphData = false
             retryRequestGraphData = false
             graphDataRequested = false
+            useDefaultData = true
+            print("on appear ")
+            
+            DispatchQueue.global(qos: .userInitiated).async {
+                let processedData = CoreDataStockManager.shared.fetch()
+                if processedData != [] {
+                    DispatchQueue.main.async {
+                        self.processedData = processedData
+                        useDefaultData = false
+                    }
+                }
+            }
+            
             requestGraphData()
         }
         .onChange(of: retryGetGraphData) {
             guard retryGetGraphData else { return }
             print("retryGetGraphData")
-            requestGraphData()
+            Task {
+                try? await Task.sleep(nanoseconds: 5_000_000_000)
+                retryGetGraphData = false
+                requestGraphData()
+            }
+            
         }
         .onChange(of: graphDataRequested) {
             guard graphDataRequested else { return }
             print("graphDataRequested")
-            getGraphData()
+            Task {
+                try? await Task.sleep(nanoseconds: 5_000_000_000)
+                graphDataRequested = false
+                getGraphData()
+            }
+            
         }
         .onChange(of: graphData) {
             print("graphData")
             Task {
-                try? await Task.sleep(nanoseconds: 30_000_000_000)
-                requestGraphData()
+                guard let graphData = graphData, graphDataRecieved else { return }
+                let processedGraphData = Utils.processGraphData(graphData: graphData, defaultData: defaultData)
+                CoreDataStockManager.shared.save(dataPoints: processedGraphData)
+                print("processed")
+                self.useDefaultData = false
+                self.processedData = processedGraphData
+                print(processedData == defaultData)
+//                try? await Task.sleep(nanoseconds: 30_000_000_000)
+//                requestGraphData()
             }
         }
         .background(Color.black.ignoresSafeArea())
@@ -113,27 +153,66 @@ struct HomeView: View {
         }
     }
     
-    private func getGraphParams() -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-        let date = formatter.string(from: Date())
-        self.date = date
-        return date
+    static func calculateDefaultData() -> [RecieveStockDataPoint] {
+        let calendar = Calendar.current
+        let now = Date()
+        var data: [RecieveStockDataPoint] = []
+        
+        var currentTime = calendar.dateInterval(of: .minute, for: now)!.end
+        while currentTime > calendar.date(byAdding: .day, value: -1, to: now)! {
+            data.append(RecieveStockDataPoint(date: currentTime.ISO8601Format(), price: 0))
+            currentTime = calendar.date(byAdding: .minute, value: -1, to: currentTime)!
+        }
+
+        currentTime = calendar.date(byAdding: .day, value: -1, to: now)!
+        while currentTime > calendar.date(byAdding: .month, value: -1, to: now)! {
+            data.append(RecieveStockDataPoint(date: currentTime.ISO8601Format(), price: 0))
+            currentTime = calendar.date(byAdding: .hour, value: -1, to: currentTime)!
+        }
+        
+        currentTime = calendar.date(byAdding: .month, value: -1, to: now)!
+        while currentTime > calendar.date(byAdding: .year, value: -1, to: now)! {
+            data.append(RecieveStockDataPoint(date: currentTime.ISO8601Format(), price: 0))
+            currentTime = calendar.date(byAdding: .day, value: -1, to: currentTime)!
+        }
+        
+        currentTime = calendar.date(byAdding: .year, value: -1, to: now)!
+        while currentTime > calendar.date(byAdding: .year, value: -5, to: now)! {
+            data.append(RecieveStockDataPoint(date: currentTime.ISO8601Format(), price: 0))
+            currentTime = calendar.date(byAdding: .weekOfYear, value: -1, to: currentTime)!
+        }
+        
+        // to optimize we can calculate exact length of array (but it changes so that's hard), and use indices not reversed()
+        return data.reversed()
+    }
+    
+    private static func getGraphParams() -> String {
+//        let formatter = DateFormatter()
+//        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+
+        let fiveYearsAgo = Calendar.current.date(byAdding: .year, value: -5, to: Date())!
+//        let date = formatter.string(from: fiveYearsAgo)
+        
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.timeZone = TimeZone(abbreviation: "UTC")
+        isoFormatter.formatOptions = [.withInternetDateTime]  // = "yyyy-MM-dd'T'HH:mm:ssZ"
+
+        let isoString = isoFormatter.string(from: fiveYearsAgo)
+        return isoString
+        
+//        return date
     }
     
     private func requestGraphData() {
         ServerCommunicator().callMyServer(
             path: "api/user/getstockgraphdata/",
             httpMethod: .put,
-            params: [
-                "start_date" : getGraphParams() as Any
-            ],
             sessionManager: sessionManager,
             responseType: SuccessErrorResponse.self
         ) { response in
             switch response {
             case .success(let responseData):
-                if let _ = responseData.error, let _ = responseData.success {
+                if responseData.error == nil, let _ = responseData.success {
                     self.retryRequestGraphData = false
                     self.graphDataRequested = true
                 } else {
@@ -168,9 +247,12 @@ struct HomeView: View {
             sessionManager: sessionManager,
             responseType: StockDataPoints.self
         ) { response in
+            print("self.date", self.date)
             switch response {
             case .success(let responseData):
                 self.retryGetGraphData = false
+                self.useDefaultData = false
+                self.graphDataRecieved = true
                 self.graphData = responseData.data
             case .failure(let networkError):
                 switch networkError {

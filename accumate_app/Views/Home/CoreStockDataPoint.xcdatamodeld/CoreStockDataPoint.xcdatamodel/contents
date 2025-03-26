@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23507" systemVersion="24D81" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="YES" userDefinedModelVersionIdentifier="">
+    <entity name="CoreStockDataPoint" representedClassName="CoreStockDataPoint" syncable="YES" codeGenerationType="class">
+        <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="price" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <relationship name="series" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CoreStockSeries" inverseName="dataPoints" inverseEntity="CoreStockSeries"/>
+    </entity>
+    <entity name="CoreStockSeries" representedClassName="CoreStockSeries" syncable="YES" codeGenerationType="class">
+        <attribute name="i" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <relationship name="dataPoints" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="CoreStockDataPoint" inverseName="series" inverseEntity="CoreStockDataPoint"/>
+    </entity>
+</model>

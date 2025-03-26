@@ -58,6 +58,7 @@ struct SelectOptionView: View {
                                 .resizable()
                                 .frame(width: 20, height: 20)
                                 .padding(.leading, 30)
+                                .foregroundColor(.white)
                             Text("Connect another broker")
                                 .font(.title2)
                                 .foregroundColor(.white)

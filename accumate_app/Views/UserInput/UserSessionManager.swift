@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import LocalAuthentication
+import CoreData
 
 //@MainActor
 class UserSessionManager: ObservableObject {
@@ -69,6 +70,7 @@ class UserSessionManager: ObservableObject {
         brokeragePassword = nil
         brokerageCompleted = false
         robinhoodMFAType = nil
+        CoreDataStockManager.shared.clearAll()
         return true
     }
     
@@ -97,6 +99,7 @@ class UserSessionManager: ObservableObject {
             brokerageEmail = nil
             brokeragePassword = nil
             robinhoodMFAType = nil
+            CoreDataStockManager.shared.clearAll()
             return true
         }
         return false
@@ -340,5 +343,86 @@ class KeychainHelper {
         ]
         let status = SecItemDelete(query as CFDictionary)
         return  status == errSecSuccess || status == errSecItemNotFound
+    }
+}
+
+
+class CoreDataStockManager {
+    static let shared = CoreDataStockManager()
+
+    let container: NSPersistentContainer
+
+    private init() {
+        container = NSPersistentContainer(name: "CoreStockDataPoint") // your .xcdatamodeld name
+        container.loadPersistentStores { _, error in
+            if let error = error {
+                fatalError("Core Data failed: \(error.localizedDescription)")
+            }
+        }
+        container.viewContext.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
+    }
+
+    var context: NSManagedObjectContext {
+        container.viewContext
+    }
+
+    func save(series: [[StockDataPoint]]) {
+        print("core data save")
+
+        for i in series.indices {
+            let dataPoints = series[i]
+            let stockSeries = CoreStockSeries(context: context)
+            stockSeries.id = UUID()
+            stockSeries.i = Int16(i)
+
+            for point in dataPoints {
+                let stockPoint = CoreStockDataPoint(context: context)
+                stockPoint.date = point.date
+                stockPoint.price = point.price
+                stockPoint.series = stockSeries // link the point to the series
+            }
+        }
+
+        do {
+            try context.save()
+        } catch {
+            print("Failed to save: \(error)")
+        }
+    }
+
+    // MARK: - Load from Core Data
+    func fetchAllSeries() -> [[StockDataPoint]] {
+        let request: NSFetchRequest<CoreStockSeries> = CoreStockSeries.fetchRequest()
+        return []
+//        do {
+//            let seriesList = try context.fetch(request)
+//            return seriesList.sorted { $0.i < $1.i }
+//                .map { series in
+//                    let points = series.dataPoints as? Set<CoreStockDataPoint> ?? []
+//                    return points
+//                        .sorted { $0.date ?? Date() < $1.date ?? Date()}
+//                        .compactMap { point in
+//                            guard let date = point.date else { return nil }
+//                            return StockDataPoint(date: date, price: point.price)
+//                        }
+//            }
+//        } catch {
+//            print("Failed to fetch series: \(error)")
+//            return []
+//        }
+    }
+
+    // MARK: - Optional: Clear All
+    func clearAll() {
+        let request: NSFetchRequest<NSFetchRequestResult> = CoreStockSeries.fetchRequest()
+        let delete = NSBatchDeleteRequest(fetchRequest: request)
+
+        do {
+            try context.execute(delete)
+            try context.save()
+            print("All series and data points cleared.")
+        } catch {
+            print("Failed to clear: \(error)")
+        }
     }
 }
