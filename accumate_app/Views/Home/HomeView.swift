@@ -27,6 +27,7 @@ struct HomeView: View {
     
     init() {
         self.date = Self.getGraphParams()
+        // maybe have this recalculate onappear so that the default data updates too?
         self.defaultData = Utils.processDefaultGraphData(graphData: Self.calculateDefaultData())
     }
     
@@ -80,15 +81,17 @@ struct HomeView: View {
             print("on appear ")
             
             DispatchQueue.global(qos: .userInitiated).async {
-                let processedData = CoreDataStockManager.shared.fetch()
-                if processedData != [] {
+                let processedDataDict = CoreDataStockManager.shared.fetchAllSeries()
+                if processedDataDict != [:] {
+                    let processedDataList: [[StockDataPoint]] = processedDataDict
+                        .sorted(by: { $0.key < $1.key })
+                        .map { $0.value }
                     DispatchQueue.main.async {
-                        self.processedData = processedData
+                        self.processedData = processedDataList
                         useDefaultData = false
                     }
                 }
             }
-            
             requestGraphData()
         }
         .onChange(of: retryGetGraphData) {
@@ -116,7 +119,7 @@ struct HomeView: View {
             Task {
                 guard let graphData = graphData, graphDataRecieved else { return }
                 let processedGraphData = Utils.processGraphData(graphData: graphData, defaultData: defaultData)
-                CoreDataStockManager.shared.save(dataPoints: processedGraphData)
+                CoreDataStockManager.shared.save(series: processedGraphData)
                 print("processed")
                 self.useDefaultData = false
                 self.processedData = processedGraphData

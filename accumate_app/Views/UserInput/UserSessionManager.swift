@@ -391,25 +391,24 @@ class CoreDataStockManager {
     }
 
     // MARK: - Load from Core Data
-    func fetchAllSeries() -> [[StockDataPoint]] {
+    func fetchAllSeries() -> [Int : [StockDataPoint]] {
         let request: NSFetchRequest<CoreStockSeries> = CoreStockSeries.fetchRequest()
-        return []
-//        do {
-//            let seriesList = try context.fetch(request)
-//            return seriesList.sorted { $0.i < $1.i }
-//                .map { series in
-//                    let points = series.dataPoints as? Set<CoreStockDataPoint> ?? []
-//                    return points
-//                        .sorted { $0.date ?? Date() < $1.date ?? Date()}
-//                        .compactMap { point in
-//                            guard let date = point.date else { return nil }
-//                            return StockDataPoint(date: date, price: point.price)
-//                        }
-//            }
-//        } catch {
-//            print("Failed to fetch series: \(error)")
-//            return []
-//        }
+        do {
+            let seriesList = try context.fetch(request)
+            return seriesList.reduce(into: [:]) { dict, series in
+                let points: [CoreStockDataPoint] = Array(series.dataPoints as? Set<CoreStockDataPoint> ?? [])
+                let stockPoints: [StockDataPoint] = points
+                    .sorted { $0.date ?? Date() < $1.date ?? Date()}
+                    .compactMap { (point: CoreStockDataPoint) in
+                        guard let date = point.date else { return nil }
+                        return StockDataPoint(date: date, price: point.price)
+                    }
+                dict[Int(series.i)] = stockPoints
+            }
+        } catch {
+            print("Failed to fetch series: \(error)")
+            return [:]
+        }
     }
 
     // MARK: - Optional: Clear All
