@@ -68,7 +68,7 @@ struct RobinhoodFieldsEntryView: View {
                 .padding(.bottom, 20)
                 
                 Button {
-                    if let url = URL(string: "https://robinhood.com") {
+                    if let url = URL(string: "https://join.robinhood.com/teymurr") {
                         UIApplication.shared.open(url)
                     }
                 } label: {

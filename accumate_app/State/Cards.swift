@@ -41,7 +41,7 @@ var discoverIt = Card(
     name: "Discover It",// Credit Card",
     description: "Rotating Categories 5%\n3 Months Gas (5%)\n3 Months Groceries (5%)\n3 Months Restaurants (5%)",
     imageName: "DiscoverIt",
-    url: "https://refer.discover.com/s/jadalloul?advocate.partner_share_id=1940540044", //affiliate
+    url: "https://refer.discover.com/s/teymurrishani?advocate.partner_share_id=2836556850", //affiliate
     category: "dining",
     categoryPercentage: 22.54
 )
