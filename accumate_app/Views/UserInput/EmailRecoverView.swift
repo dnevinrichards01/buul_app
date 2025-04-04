@@ -79,21 +79,6 @@ struct EmailRecoverView: View {
                 }
             }
         }
-//        .alert(sessionManager.refreshFailedMessage, isPresented: $sessionManager.refreshFailed) {
-//            Button("OK", role: .cancel) {
-//                showAlert = false
-//                sessionManager.refreshFailed = false
-//            }
-//            Button("Log Out", role: .destructive) {
-//                Task {
-//                    showAlert = false
-//                    
-//                    sessionManager.refreshFailed = false
-//                    _ = await sessionManager.resetComplete()
-//                    navManager.reset(views: [.landing])
-//                }
-//            }
-//        }
         .onChange(of: buttonDisabled) {
             if !buttonDisabled { return }
             sendEmail()

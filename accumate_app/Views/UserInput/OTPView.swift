@@ -114,32 +114,10 @@ struct OTPView: View {
                 }
             }
         }
-//        .alert(sessionManager.refreshFailedMessage, isPresented: $sessionManager.refreshFailed) {
-//            Button("OK", role: .cancel) {
-//                showAlert = false
-//                sessionManager.refreshFailed = false
-//            }
-//            Button("Log Out", role: .destructive) {
-//                Task {
-//                    showAlert = false
-//                    
-//                    sessionManager.refreshFailed = false
-//                    _ = await sessionManager.resetComplete()
-//                    navManager.reset(views: [.landing])
-//                }
-//            }
-//        }
         .onChange(of: showAlert) { oldValue, newValue in
             if oldValue && !newValue {
-//                if reEnterInfo == submitted { return }
-                
-                if signUpField == .brokerage {
-                    for brokerage in Brokerages.allCases {
-                        if sessionManager.stringToVerify == brokerage.rawValue {
-                            nextPage = brokerage.changeConnect
-                        }
-                    }
-                }
+                let brokerage: Brokerages? = Utils.getBrokerage(sessionManager: sessionManager, brokerageString: sessionManager.stringToVerify)
+                nextPage = brokerage?.changeSecurityInfo
                 
                 
                 guard reEnterInfo || submitted else { return }
@@ -222,20 +200,28 @@ struct OTPView: View {
                 switch signUpField {
                 case .email:
                     sessionManager.email = sessionManager.stringToVerify
+                    showAlert = true
                 case .password:
-                    break
+                    showAlert = true
                 case .fullName:
                     sessionManager.fullName = sessionManager.stringToVerify
+                    showAlert = true
                 case .phoneNumber:
                     sessionManager.phoneNumber = sessionManager.stringToVerify
+                    showAlert = true
                 case .symbol:
                     sessionManager.etfSymbol = sessionManager.stringToVerify
+                    showAlert = true
                 case .brokerage:
                     sessionManager.brokerageName = sessionManager.stringToVerify
+                    let brokerage: Brokerages? = Utils.getBrokerage(sessionManager: sessionManager, brokerageString: sessionManager.stringToVerify)
+                    nextPage = brokerage?.changeSecurityInfo
+                    navManager.append(nextPage ?? .robinhoodSecurityInfo)
                 default:
                     alertMessage = successMessage() + " But an error prevented us from saving this change to your device. Please log out and log back in to get updated account information."
+                    showAlert = true
                 }
-                showAlert = true
+                
                 buttonDisabled = false
             }
             
@@ -316,6 +302,10 @@ struct OTPView: View {
             params["verification_phone_number"] = sessionManager.verificationPhoneNumber as Any
         } else {
             params["verification_email"] = sessionManager.verificationEmail as Any
+        }
+        
+        if isSignUpFlowEmailPhoneVerification() {
+            params["pre_account_id"] = sessionManager.preAccountId as Any
         }
         
         return params

@@ -33,6 +33,7 @@ class UserSessionManager: ObservableObject {
     var robinhoodMFAType: RobinhoodMFAMethod?
     
     // page?
+    @AppStorage("accumate.user.preAccountId") var preAccountId: Int?
     @AppStorage("accumate.user.isLoggedIn") var isLoggedIn: Bool = false
     @AppStorage("accumate.user.phoneNumber") var phoneNumber: String?
     @AppStorage("accumate.user.email") var email: String?
@@ -70,6 +71,7 @@ class UserSessionManager: ObservableObject {
         brokeragePassword = nil
         brokerageCompleted = false
         robinhoodMFAType = nil
+        preAccountId = nil
         CoreDataStockManager.shared.clearAll()
         return true
     }
@@ -99,6 +101,7 @@ class UserSessionManager: ObservableObject {
             brokerageEmail = nil
             brokeragePassword = nil
             robinhoodMFAType = nil
+            preAccountId = nil
             CoreDataStockManager.shared.clearAll()
             return true
         }

@@ -141,6 +141,7 @@ struct SignUpPasswordView: View {
             path: "api/user/createuser/",
             httpMethod: .post,
             params: [
+                "pre_account_id" : sessionManager.preAccountId as Any,
                 "password" : password as Any,
                 "email" : sessionManager.email as Any,
                 "username" : sessionManager.email as Any,

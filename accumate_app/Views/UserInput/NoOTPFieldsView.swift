@@ -151,7 +151,9 @@ struct NoOTPFieldsView: View {
         default:
             fieldValue = -1 as Any
         }
-        return [fieldString : fieldValue]
+        var params = [fieldString : fieldValue]
+        params["pre_account_id"] = sessionManager.preAccountId as Any
+        return params
     }
     
     // make sure to set up double authentication for changing email or phone (verification code to both)

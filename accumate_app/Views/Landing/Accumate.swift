@@ -118,6 +118,9 @@ struct LoadingScreen: View {
                 Button("OK", role: .cancel) { showAlert = false }
             }
             .onAppear {
+                if sessionManager.preAccountId == nil {
+                    sessionManager.preAccountId = Int.random(in: 10_000_000...99_999_999)
+                }
                 withAnimation(Animation.linear(duration: 3).repeatForever(autoreverses: false)) {
                     rotationAngle = 360
                 }

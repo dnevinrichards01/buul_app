@@ -216,6 +216,10 @@ struct FieldsRequestOTPView: View {
             params["verification_email"] = verificationEmail as Any
         }
         
+        if isSignUp && !authenticate {
+            params["pre_account_id"] = sessionManager.preAccountId as Any
+        }
+        
         return params
     }
     
