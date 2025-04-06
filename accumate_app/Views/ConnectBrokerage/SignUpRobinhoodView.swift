@@ -99,14 +99,6 @@ struct SignUpRobinhoodView: View {
                     showAlert = true
                 }
             }
-//            else if mfaMethod == .prompt {
-//                self.sessionManager.brokerageEmail = nil
-//                self.sessionManager.brokeragePassword = nil
-//                self.sessionManager.robinhoodMFAType = nil
-//                self.mfaMethod = nil
-//                alertMessage = "We do not yet support device approvals MFA. Please change your MFA method. Feel free to contact Accumate for assistance."
-//                showAlert = true
-//            }
             else if [.app, .sms, .prompt].contains(mfaMethod) { // remove .prompt
                 recieved = false
                 if isSignUp {

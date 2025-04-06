@@ -163,7 +163,7 @@ struct OTPView: View {
                     let logoutSuccess: Bool = await sessionManager.resetComplete() //await
                     
                     if !logoutSuccess {
-                        alertMessage = successMessage() + " But session data on this device could not be removed. Please try again or contact Accumate"
+                        alertMessage = successMessage() + " But session data on this device could not be removed. Please try again or contact Buul"
                     } else {
                         alertMessage = successMessage()
                     }

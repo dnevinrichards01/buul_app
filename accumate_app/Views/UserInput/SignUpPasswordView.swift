@@ -22,11 +22,11 @@ struct SignUpPasswordView: View {
     @State private var reEnterField: SignUpFields?
     @State private var buttonDisabled: Bool = false
     
-    private var alertMessagePhoneNumber: String = "This phone number has been taken since you entered it"
-    private var alertMessageEmail: String = "This email has been taken since you entered it"
+    private var alertMessagePhoneNumber: String = "This phone number has been taken since you entered it, or your account has been created but due to an error you must go to login page."
+    private var alertMessageEmail: String = "This email has been taken since you entered it, or your account has been created but due to an error you must go to login page."
     
     
-    var signUpFields: [SignUpFields] = [.password, .password2]
+    var signUpFields: [SignUpFields] = [.password, .password2, .email, .phoneNumber]
     var signUpField: SignUpFields = .password
     var authenticate: Bool = false
     
@@ -55,6 +55,16 @@ struct SignUpPasswordView: View {
             buttonDisabled: $buttonDisabled,
             focusedField: $focusedField
         )
+        .onAppear {
+            password2 = ""
+            focusedField = nil
+            errorMessages = nil
+            userCreated = false
+            tokensRecieved = false
+            alertMessage = ""
+            showAlert = false
+            buttonDisabled = false
+        }
         .onChange(of: showAlert) { oldValue, newValue in
             if oldValue == true && newValue == false {
                 guard let _ = reEnterField else { return }
@@ -144,7 +154,6 @@ struct SignUpPasswordView: View {
                 "pre_account_id" : sessionManager.preAccountId as Any,
                 "password" : password as Any,
                 "email" : sessionManager.email as Any,
-                "username" : sessionManager.email as Any,
                 "full_name" : sessionManager.fullName as Any,
                 "phone_number" : sessionManager.phoneNumber as Any
             ],
@@ -172,13 +181,17 @@ struct SignUpPasswordView: View {
             
             // process response
             if let errorMessages = errorMessages {
+                print("errorMessages")
                 do {
                     // process errors into a list
                     let errorMessagesDictBackend = try SignUpFieldsUtils.keysStringToSignUpFields(errorMessages)
+                    print("dict: ",errorMessagesDictBackend)
                     if let errorMessagesList = SignUpFieldsUtils.parseErrorMessages(signUpFields, errorMessagesDictBackend) {
+                        print("list:", errorMessagesList)
                         // if an earlier field is messed up, error and send them back to it
                         if errorMessagesDictBackend[.password] == nil {
                             if let _ = errorMessagesDictBackend[.phoneNumber] {
+                                print("phone!")
                                 self.sessionManager.phoneNumber = nil
 //                                if !sessionManager.refreshFailed {
                                     self.alertMessage = alertMessagePhoneNumber
@@ -186,6 +199,7 @@ struct SignUpPasswordView: View {
 //                                }
                                 self.reEnterField = .phoneNumber
                             } else if let _ = errorMessagesDictBackend[.email] {
+                                print("email!")
                                 self.sessionManager.email = nil
 //                                if !sessionManager.refreshFailed {
                                     self.alertMessage = alertMessageEmail
@@ -200,6 +214,7 @@ struct SignUpPasswordView: View {
                         return
                     } // if code ends up here it indicates error with username field
                 } catch {
+                    print("error")
                     // error (Decoding error) if difficulty parsing the response
 //                    if !sessionManager.refreshFailed {
                         self.alertMessage = ServerCommunicator.NetworkError.decodingError.errorMessage
@@ -222,7 +237,7 @@ struct SignUpPasswordView: View {
             path: "api/token/",
             httpMethod: .post,
             params: [
-                "username" : sessionManager.email as Any,
+                "email" : sessionManager.email as Any,
                 "password" : password as Any,
             ],
             responseType: LoginResponse.self

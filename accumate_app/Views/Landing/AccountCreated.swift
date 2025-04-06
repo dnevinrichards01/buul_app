@@ -17,9 +17,9 @@ struct AccountCreated: View {
             VStack {
                 Spacer()
                 // App Name
-                Image("AccumateLogoText")
+                Image("BuulLogoText")
                     .resizable()
-                    .frame(width: 350, height: 115)
+                    .frame(width: 300, height: 127)
 //                    .padding(.bottom, -30)
                 
                 VStack {

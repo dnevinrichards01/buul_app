@@ -12,12 +12,12 @@ struct LandingView: View {
             Spacer()
             
             VStack {
-                Image("AccumateLogoText")
+                Image("BuulLogoText")
                     .resizable()
-                    .frame(width: 350, height: 115)
+                    .frame(width: 300, height: 127)
                 
                 // Welcome Message
-                Text("Welcome to Accumate")
+                Text("Welcome to Buul")
                     .font(.title2)
                     .bold()
                     .foregroundColor(.white)
@@ -59,23 +59,28 @@ struct LandingView: View {
             
             Spacer()
         }
+        .onAppear {
+            if sessionManager.preAccountId == nil {
+                sessionManager.preAccountId = Int.random(in: 10_000_000...99_999_999)
+            }
+        }
         .navigationBarBackButtonHidden(true)
         .navigationBarTitleDisplayMode(.inline)
         .background(Color.black.ignoresSafeArea())
         
         .toolbar {
-            ToolbarItem (placement: .topBarLeading) {
-                Text("Accumate")
-                    .font(.system(size: 24, weight: .bold))
-                    .foregroundColor(.white)
-            }
-            
-            ToolbarItem(placement: .topBarTrailing) {
-                Image("AccumateLogo")
-                    .resizable()
-                    .frame(width: 40, height: 40)
-                    .foregroundColor(.white)
-            }
+//            ToolbarItem (placement: .topBarLeading) {
+//                Text("Buul")
+//                    .font(.system(size: 24, weight: .bold))
+//                    .foregroundColor(.white)
+//            }
+//            
+//            ToolbarItem(placement: .topBarTrailing) {
+//                Image("BuulLogo")
+//                    .resizable()
+//                    .frame(width: 40, height: 40)
+//                    .foregroundColor(.white)
+//            }
         }
     }
 }

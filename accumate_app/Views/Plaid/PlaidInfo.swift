@@ -24,9 +24,10 @@ struct PlaidInfo: View {
                 }
                 .padding(.top, 50)
                 HStack {
-                    Image("AccumateLogoText")
+                    Image("BuulLogoText")
                         .resizable()
-                        .frame(width: 150, height: 53.5)
+                        .frame(width: 130, height: 55)
+//                        .padding(.bottom, 15)
                     Image(systemName: "plus")
                         .resizable()
                         .frame(width: 15, height: 15)
@@ -41,7 +42,7 @@ struct PlaidInfo: View {
                     FeatureItem(iconName: "building.columns", title: "Select Bank Accounts", description: "Select accounts you want us to monitor for redeemed cashback or withdraw from to deposit into your brokerage.")
                     FeatureItem(iconName: "tray.full", title: "Your Data", description: "We will view your balance to prevent overdrawing, and your transaction history to identify redeemed cashback.")
                     FeatureItem(iconName: "shield.fill", title: "Revocable", description: "Your data is only stored or accessed as needed with end-to-end encryption.")
-                    FeatureItem(iconName: "xmark.seal.fill", title: "Security", description: "You will be able to revoke our access through settings, deleting your account, or contacting Accumate")
+                    FeatureItem(iconName: "xmark.seal.fill", title: "Security", description: "You will be able to revoke our access through settings, deleting your account, or contacting Buul")
                 }
                 
                 Spacer()

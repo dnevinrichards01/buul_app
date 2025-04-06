@@ -33,16 +33,16 @@ class UserSessionManager: ObservableObject {
     var robinhoodMFAType: RobinhoodMFAMethod?
     
     // page?
-    @AppStorage("accumate.user.preAccountId") var preAccountId: Int?
-    @AppStorage("accumate.user.isLoggedIn") var isLoggedIn: Bool = false
-    @AppStorage("accumate.user.phoneNumber") var phoneNumber: String?
-    @AppStorage("accumate.user.email") var email: String?
-    @AppStorage("accumate.user.unverifiedEmail") var unverifiedEmail: String?
-    @AppStorage("accumate.user.fullName") var fullName: String?
-    @AppStorage("accumate.user.brokerageName") var brokerageName: String?
-    @AppStorage("accumate.user.etfSymbol") var etfSymbol: String?
-    @AppStorage("accumate.user.brokerageCompleted") var brokerageCompleted: Bool = false
-    @AppStorage("accumate.user.link") var linkCompleted: Bool = false
+    @AppStorage("buul.user.preAccountId") var preAccountId: Int?
+    @AppStorage("buul.user.isLoggedIn") var isLoggedIn: Bool = false
+    @AppStorage("buul.user.phoneNumber") var phoneNumber: String?
+    @AppStorage("buul.user.email") var email: String?
+    @AppStorage("buul.user.unverifiedEmail") var unverifiedEmail: String?
+    @AppStorage("buul.user.fullName") var fullName: String?
+    @AppStorage("buul.user.brokerageName") var brokerageName: String?
+    @AppStorage("buul.user.etfSymbol") var etfSymbol: String?
+    @AppStorage("buul.user.brokerageCompleted") var brokerageCompleted: Bool = false
+    @AppStorage("buul.user.link") var linkCompleted: Bool = false
     // alter the back buttons on sign up page to let a user go backwards even if they were dropped in there with no navigationpath / history
     
     init() {
@@ -154,16 +154,16 @@ class UserSessionManager: ObservableObject {
     }
         
     func refreshTokenGet() -> String? {
-        return KeychainHelper.shared.get("accumate.user.refreshToken")
+        return KeychainHelper.shared.get("buul.user.refreshToken")
     }
     func refreshTokenSet(_ value: String?) async -> Bool {
-        return await KeychainHelper.shared.set(value, forKey: "accumate.user.refreshToken")
+        return await KeychainHelper.shared.set(value, forKey: "buul.user.refreshToken")
     }
     func accessTokenGet() -> String? {
-        return KeychainHelper.shared.get("accumate.user.accessToken")
+        return KeychainHelper.shared.get("buul.user.accessToken")
     }
     func accessTokenSet(_ value: String?) async -> Bool {
-        return await KeychainHelper.shared.set(value, forKey: "accumate.user.accessToken")
+        return await KeychainHelper.shared.set(value, forKey: "buul.user.accessToken")
     }
     
     func loadSavedTokens() -> Bool {

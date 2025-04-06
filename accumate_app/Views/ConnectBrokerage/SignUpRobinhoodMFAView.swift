@@ -187,7 +187,7 @@ struct SignUpRobinhoodMFAView: View {
         }
         .onChange(of: recieved) {
             if !recieved { return }
-            recieved = false
+//            recieved = false
             
 //            if robinhoodMFAType != mfaMethod {
 //                let prevPath: [NavigationPathViews] = Array(navManager.path)
@@ -249,7 +249,7 @@ struct SignUpRobinhoodMFAView: View {
         case .app:
             return "Enter the code in your authenticator app associated with your Robinhood account"
         case .prompt:
-            return "\nOpen Robinhood on your device and click approve. \n\nThen return to Accumate and click continue"
+            return "\nOpen Robinhood on your device and click approve. \n\nThen return to Buul and click continue"
         }
     }
     

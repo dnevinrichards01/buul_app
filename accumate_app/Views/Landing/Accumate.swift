@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct Accumate: App {
+struct Buul: App {
     @StateObject var navManager = NavigationPathManager()
     @StateObject var sessionManager = UserSessionManager()
     
@@ -62,10 +62,10 @@ struct LoadingScreen: View {
                     if useBiometrics { Spacer() }
                     
                     VStack {
-                        Image("AccumateLogoText")
+                        Image("BuulLogoText")
                             .resizable()
-                            .frame(width: 350, height: 115)
-                            .padding(.bottom, -30)
+                            .frame(width: 300, height: 127)
+                            .padding(.bottom, 30)
                         
                         
                         Text("Turn your spending into wealth")
@@ -118,9 +118,6 @@ struct LoadingScreen: View {
                 Button("OK", role: .cancel) { showAlert = false }
             }
             .onAppear {
-                if sessionManager.preAccountId == nil {
-                    sessionManager.preAccountId = Int.random(in: 10_000_000...99_999_999)
-                }
                 withAnimation(Animation.linear(duration: 3).repeatForever(autoreverses: false)) {
                     rotationAngle = 360
                 }
@@ -210,7 +207,7 @@ struct LoadingScreen: View {
                         signUpFields: [.brokerage],
                         signUpField: .brokerage,
                         title: "Select a brokerage",
-                        subtitle: "Choose the brokerage you want to use with Accumate.",
+                        subtitle: "Choose the brokerage you want to use with Buul.",
                         nextPage: .signUpBrokerage,
                         authenticate: true
                     )
@@ -408,7 +405,7 @@ struct LoadingScreen: View {
                     FieldsRequestOTPView(
                         signUpFields: [.brokerage],
                         title: "Select a brokerage",
-                        subtitle: "Choose the brokerage you want to use with Accumate.",
+                        subtitle: "Choose the brokerage you want to use with Buul.",
                         nextPage: .changeBrokerageOTP,
                         signUpField: .brokerage,
                         authenticate: true,

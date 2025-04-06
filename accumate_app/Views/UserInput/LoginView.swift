@@ -220,7 +220,7 @@ struct LoginView: View {
                 switch networkError {
                 case .statusCodeError(let status):
                     if status == 401 {
-                        self.alertMessage = "We were unable to log you into your account. Please try again or contact Accumate."
+                        self.alertMessage = "We were unable to log you into your account. Please try again or contact Buul."
                     }
                     print("status code", status)
                 default:

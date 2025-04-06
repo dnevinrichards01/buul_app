@@ -123,7 +123,7 @@ struct HomeStocksView: View {
                         .scaledToFit()
                         .foregroundStyle(.white)
                         .frame(width: 20, height: 16)
-                    Text("You can view the cumulative sum of your investments made through Accumate here.")
+                    Text("You can view the cumulative sum of your investments made through Buul here.")
                         .foregroundStyle(.white)
                         .font(.footnote)
                         .padding(.leading, 10)

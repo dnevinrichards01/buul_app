@@ -7,7 +7,7 @@
 
 import XCTest
 
-final class accumate_appUITestsLaunchTests: XCTestCase {
+final class buul_appUITestsLaunchTests: XCTestCase {
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true

@@ -121,7 +121,7 @@ struct HomeAccountView: View {
                 let logoutSuccess: Bool = await sessionManager.resetComplete() // await
                 if !logoutSuccess {
                     logout = false
-                    alertMessage = "Your session data could not be removed. Please try again or contact Accumate"
+                    alertMessage = "Your session data could not be removed. Please try again or contact Buul"
                 } else {
                     alertMessage = "You have been logged out."
                 }

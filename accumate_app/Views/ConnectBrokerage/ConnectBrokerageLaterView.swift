@@ -74,7 +74,7 @@ struct ConnectBrokerageLaterView: View {
                 HStack {
                     Image(systemName: "lock.shield")
                         .foregroundStyle(.gray)
-                    Text("Accumate uses bank level security to connect to your brokerage")
+                    Text("Buul uses bank level security to connect to your brokerage")
                         .font(.footnote)
                         .foregroundStyle(.gray)
                         .padding(.leading, 10)

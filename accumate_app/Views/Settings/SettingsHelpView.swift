@@ -10,7 +10,7 @@ import SwiftUI
 
 struct SettingsHelpView: View {
     
-    private var email: String = "accumate-verify@accumatewealth.com"
+    private var email: String = "notifications@bu-ul.com"
     @State private var selectedHelpSetting: HelpSettings?
     
     @EnvironmentObject var navManager: NavigationPathManager

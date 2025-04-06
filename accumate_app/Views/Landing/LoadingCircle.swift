@@ -36,7 +36,7 @@ struct LoadingCircle: View {
             }
             Spacer()
         }
-        .background(Color.black.ignoresSafeArea())
+        .background(Color.black.opacity(0.6).ignoresSafeArea())
         .onAppear {
             withAnimation(Animation.linear(duration: 3).repeatForever(autoreverses: false)) {
                 rotationAngle = 360
@@ -68,9 +68,9 @@ struct PlaidLinkPageBackground: View {
                 }
                 Spacer()
                 VStack {
-                    Image("AccumateLogoText")
+                    Image("BuulLogoText")
                         .resizable()
-                        .frame(width: 200, height: 70)
+                        .frame(width: 200, height: 85)
                     Image(systemName: "plus")
                         .resizable()
                         .frame(width: 30, height: 30)
@@ -90,7 +90,9 @@ struct PlaidLinkPageBackground: View {
                             return
                         }
                         sessionManager.linkCompleted = true
-                        disableLoadingCircle = false
+                        withAnimation(Animation.linear(duration: 3).repeatForever(autoreverses: false)) {
+                            disableLoadingCircle = false
+                        }
                         if goBackNPagesIfCompleted > 0 {
                             navManager.removeLast(goBackNPagesIfCompleted)
                         } else {
@@ -110,7 +112,9 @@ struct PlaidLinkPageBackground: View {
                     
                     Button {
                         linkManager.requestCreatePlaidUser(sessionManager)
-                        disableLoadingCircle = false
+                        withAnimation(Animation.linear(duration: 3).repeatForever(autoreverses: false)) {
+                            disableLoadingCircle = false
+                        }
                     } label: {
                         Text("Link more bank accounts")
                             .font(.subheadline)

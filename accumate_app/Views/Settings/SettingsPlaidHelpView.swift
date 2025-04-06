@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SettingsPlaidHelpView: View {
     
-    private var email: String = "accumate-verify@accumatewealth.com"
+    private var email: String = "notifications@bu-ul.com"
     private var plaidLink: String = "https://my.plaid.com"
     @State private var selectedHelpSetting: HelpSettings?
     
@@ -34,7 +34,7 @@ struct SettingsPlaidHelpView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.bottom, 30)
                         
-                        Text("To remove Accumate's access, sign up for Plaid at the link below with the phone number you gave Plaid when signing up for Accumate, or sign in if you already have an account.")
+                        Text("To remove Buul's access, sign up for Plaid at the link below with the phone number you gave Plaid when signing up for Buul, or sign in if you already have an account.")
                             .font(.headline)
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -54,7 +54,7 @@ struct SettingsPlaidHelpView: View {
                         }
                         .padding(.bottom, 30)
                         
-                        Text("Deleting your account will remove all of Accumate's access to your bank and card data.")
+                        Text("Deleting your account will remove all of Buul's access to your bank and card data.")
                             .font(.headline)
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity, alignment: .leading)

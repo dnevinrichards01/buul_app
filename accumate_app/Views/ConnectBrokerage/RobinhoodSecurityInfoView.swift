@@ -24,7 +24,7 @@ struct RobinhoodSecurityInfoView: View {
             VStack(alignment: .leading, spacing: -1) {
                 // Header Image and Title
                 HStack(spacing: 0) {
-                    Image("AccumateLogo")
+                    Image("BuulLogo")
                         .resizable()
                         .frame(width: 80, height: 80)
                     Text("+")
@@ -50,7 +50,7 @@ struct RobinhoodSecurityInfoView: View {
                 .frame(maxWidth: .infinity, alignment: .center)
 //                .multilineTextAlignment(.center)
                 
-                Text("Accumate connects to \(brokerage?.displayName ?? "your brokerage") using")
+                Text("Buul connects to \(brokerage?.displayName ?? "your brokerage") using")
                     .font(.headline)
                     .foregroundStyle(.white)
                 
@@ -59,7 +59,7 @@ struct RobinhoodSecurityInfoView: View {
                     .fontWeight(.bold)
                     .foregroundStyle(.white)
                 
-                Text("Here's how Accumate uses this connection:")
+                Text("Here's how Buul uses this connection:")
                     .font(.subheadline)
                     .padding(.top, 8)
                     .foregroundStyle(.white.opacity(0.8))
@@ -69,9 +69,9 @@ struct RobinhoodSecurityInfoView: View {
             
             // Feature List
             VStack(alignment: .center, spacing: 20) {
-                FeatureItem(iconName: "antenna.radiowaves.left.and.right", title: "Brokerage API Access", description: "Accumate sends buy and sell notifications to your brokerage.")
+                FeatureItem(iconName: "antenna.radiowaves.left.and.right", title: "Brokerage API Access", description: "Buul sends buy and sell notifications to your brokerage.")
                 FeatureItem(iconName: "person.fill", title: "Basic Personal Information", description: "We collect your full name, date of birth, address, and investing preferences.")
-                FeatureItem(iconName: "shield.fill", title: "Bank Level Security", description: "Accumate uses Bank Level Security to connect to \(brokerage?.displayName ?? "your brokerage"). We never store your login credentials and encrypt all data.")
+                FeatureItem(iconName: "shield.fill", title: "Bank Level Security", description: "Buul uses Bank Level Security to connect to \(brokerage?.displayName ?? "your brokerage"). We never store your login credentials and encrypt all data.")
             }
             .padding(.horizontal)
             .frame(maxWidth: .infinity, alignment: .center)
@@ -115,7 +115,7 @@ struct RobinhoodSecurityInfoView: View {
             let brokerage: Brokerages? = Utils.getBrokerage(sessionManager: sessionManager)
             print(sessionManager.brokerageName)
             guard let brokerage = brokerage else {
-                alertMessage = "An internal error occurred and the page could not be loaded. Please contact Accumate"
+                alertMessage = "An internal error occurred and the page could not be loaded. Please contact Buul"
                 showAlert = true
                 return
             }

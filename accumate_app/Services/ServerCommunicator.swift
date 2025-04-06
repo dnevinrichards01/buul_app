@@ -32,20 +32,20 @@ class ServerCommunicator {
 
         var errorMessage: String {
             switch self {
-            case .invalidUrl: return "Invalid URL. Please try again or contact Accumate."
-            case .networkError: return "Network Error. Please try again later, check your internet connection, or contact Accumate."
-            case .statusCodeError(let status): return "Internal server error \(status). Please try again or contact Accumate."
-            case .invalidResponseError: return "Invalid server response. Please try again later, check your internet connection, or contact Accumate."
-            case .encodingError: return "We couldn't encode your web request. Please check your inputs or contact Accumate."
-            case .decodingError: return "Invalid server response format. Please try again or contact Accumate."
-            case .nilData: return "Server returned no data. Please try again or contact Accumate."
+            case .invalidUrl: return "Invalid URL. Please try again or contact Buul."
+            case .networkError: return "Network Error. Please try again later, check your internet connection, or contact Buul."
+            case .statusCodeError(let status): return "Internal server error \(status). Please try again or contact Buul."
+            case .invalidResponseError: return "Invalid server response. Please try again later, check your internet connection, or contact Buul."
+            case .encodingError: return "We couldn't encode your web request. Please check your inputs or contact Buul."
+            case .decodingError: return "Invalid server response format. Please try again or contact Buul."
+            case .nilData: return "Server returned no data. Please try again or contact Buul."
             case .refreshError: return "Your session has timed out and we were unable to renew it. "
             }
         }
     }
 
 
-    init(baseURL: String = "https://accumate-backend-load-balancer.link/" ) { //"http://localhost:8000/", "http://10.0.0.206:8000/", "https://accumate-backend-load-balancer.link/"
+    init(baseURL: String = "https://prod.buul-load-balancer.link/" ) { //"http://localhost:8000/", "http://10.0.0.206:8000/", "https://accumate-backend-load-balancer.link/", "https://prod.buul-load-balancer.link"
         self.baseURL = baseURL
     }
     

@@ -76,7 +76,9 @@ class SignUpFieldsUtils {
         var errorMessagesList: [String?] = []
         var isError = false
         for signUpField in signUpFields {
+            print("field: ", signUpField)
             if let errorMessage = errorMessagesDict[signUpField] {
+                print("error found")
                 if errorMessage != nil {
                     isError = true
                 }
@@ -155,10 +157,10 @@ class SignUpFieldsUtils {
     }
     
     static func sendETF(_ symbol: String) async -> String? {
-        if symbol == "" { return "Your selection was not recorded. Contact Accumate" }
+        if symbol == "" { return "Your selection was not recorded. Contact Buul" }
         
         if symbolToEtf(symbol) == nil {
-            return "\(symbol) does not match one of the options. Contact Accumate."
+            return "\(symbol) does not match one of the options. Contact Buul."
         }
         
         // send it and return its error
@@ -189,7 +191,7 @@ class SignUpFieldsUtils {
     }
     
     static func sendBrokerage(_ brokerageName: String) async -> String? {
-        if brokerageName == "" { return "Your selection was not recorded. Contact Accumate" }
+        if brokerageName == "" { return "Your selection was not recorded. Contact Buul" }
         
         var match = false
         for brokerage in Brokerages.allCases {
@@ -199,7 +201,7 @@ class SignUpFieldsUtils {
             }
         }
         if !match {
-            return "\(brokerageName) does not match one of the options. Contact Accumate."
+            return "\(brokerageName) does not match one of the options. Contact Buul."
         }
         
         // send it and return its error
