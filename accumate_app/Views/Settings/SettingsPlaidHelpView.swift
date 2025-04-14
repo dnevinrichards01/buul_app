@@ -34,7 +34,7 @@ struct SettingsPlaidHelpView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.bottom, 30)
                         
-                        Text("To remove Buul's access, sign up for Plaid at the link below with the phone number you gave Plaid when signing up for Buul, or sign in if you already have an account.")
+                        Text("To remove Buul's access, sign in at the link below. If it is your first time, sign up with the phone number you gave Plaid.")
                             .font(.headline)
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity, alignment: .leading)

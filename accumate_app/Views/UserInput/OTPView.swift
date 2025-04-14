@@ -283,6 +283,8 @@ struct OTPView: View {
         var fieldValue: Any = sessionManager.stringToVerify as Any
         if signUpField == .deleteAccount {
             fieldValue = sessionManager.boolToVerify as Any
+        } else if let brokerage = sessionManager.stringToVerify, signUpField == .brokerage {
+            fieldValue = Utils.camelCaseToSnakeCase(brokerage)
         }
         
         var params = [

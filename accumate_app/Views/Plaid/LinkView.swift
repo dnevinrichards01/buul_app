@@ -45,12 +45,10 @@ struct LinkView: View {
             }
         )
         .alert(linkManager.alertMessage, isPresented: $linkManager.showAlert) {
-            if linkManager.showAlert {
-                Button("OK", role: .cancel) {
-                    linkManager.showAlert = false
-                    linkManager.reset()
-                    linkManager.disableLoadingCircle = true
-                }
+            Button("OK", role: .cancel) {
+                linkManager.showAlert = false
+                linkManager.reset()
+                linkManager.disableLoadingCircle = true
             }
             if sessionManager.refreshFailed {
                 Button("Log Out", role: .destructive) {

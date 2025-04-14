@@ -8,7 +8,7 @@
 import SwiftUI
 import LinkKit
 
-//@MainActor
+@MainActor
 class PlaidLinkManager: ObservableObject {
     @Published var plaidUserRequested: Bool = false
     @Published var plaidUserCreated: Bool = false
@@ -240,13 +240,30 @@ class PlaidLinkManager: ObservableObject {
 //            self.publicToken = success.publicToken
         }
         linkTokenConfig.onExit = { linkExit in // i swapped exit and event --> can't make sandbox error
-//            if !sessionManager.refreshFailed {
+            Task { @MainActor in
+                print(linkExit)
+                //            if !sessionManager.refreshFailed {
+                //                self.showAlert = false
+                //            DispatchQueue.main.async {
                 self.alertMessage = "Link flow was exited before completion."
+                print(self.showAlert)
                 self.showAlert = true
+                print(self.showAlert)
+            }
+//            }
 //            }
         }
         linkTokenConfig.onEvent = { linkEvent in
-            print("link event. \(linkEvent)")
+//            print("EXIT????: ", linkEvent.eventName.description)
+//            if linkEvent.eventName.description == "EXIT" {
+//                print("handling exit")
+//                print("showAlert", self.showAlert)
+////                DispatchQueue.main.async {
+//                    self.alertMessage = "Link flow was exited before completion."
+//                    self.showAlert = true
+////                }
+//            }
+//            print("link event. \(linkEvent)")
         }
         return Plaid.create(linkTokenConfig)
     }

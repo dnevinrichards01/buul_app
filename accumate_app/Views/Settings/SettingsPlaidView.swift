@@ -36,6 +36,7 @@ struct SettingsPlaidView: View {
                         Text(setting.displayName)
                             .font(.headline)
                             .foregroundStyle(.white)
+                            .multilineTextAlignment(.leading)
                         Spacer()
                         Image(systemName: "chevron.right")
                             .resizable()

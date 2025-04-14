@@ -60,7 +60,7 @@ struct ConnectBrokerageLaterView: View {
                         sessionManager.brokerageCompleted = true
                         navManager.append(.plaidInfo)
                     } else {
-                        navManager.removeLast(3)
+                        navManager.removeLast(4)
                     }
                 } label: {
                     Text("Continue")

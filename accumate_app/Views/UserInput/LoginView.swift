@@ -131,7 +131,7 @@ struct LoginView: View {
             path: "api/token/",
             httpMethod: .post,
             params: [
-                "username" : email as Any,
+                "email" : email as Any,
                 "password" : password as Any,
             ],
             responseType: LoginResponse.self

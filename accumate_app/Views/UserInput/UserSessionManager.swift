@@ -399,8 +399,15 @@ class CoreDataStockManager {
         do {
             let seriesList = try context.fetch(request)
             return seriesList.reduce(into: [:]) { dict, series in
-                let points: [CoreStockDataPoint] = Array(series.dataPoints as? Set<CoreStockDataPoint> ?? [])
+                // Skip deleted or incomplete objects
+                guard !series.isFault, !series.isDeleted else {
+                    print("Skipping invalid series object: \(series)")
+                    return
+                }
+                let points: [CoreStockDataPoint] = series.dataPoints?.allObjects as? [CoreStockDataPoint] ?? []
+//                let points: [CoreStockDataPoint] = Array(series.dataPoints as? Set<CoreStockDataPoint> ?? [])
                 let stockPoints: [StockDataPoint] = points
+                    .filter { !$0.isFault && !$0.isDeleted }
                     .sorted { $0.date ?? Date() < $1.date ?? Date()}
                     .compactMap { (point: CoreStockDataPoint) in
                         guard let date = point.date else { return nil }
@@ -422,6 +429,7 @@ class CoreDataStockManager {
         do {
             try context.execute(delete)
             try context.save()
+            context.reset()
             print("All series and data points cleared.")
         } catch {
             print("Failed to clear: \(error)")

@@ -90,9 +90,10 @@ struct PlaidLinkPageBackground: View {
                             return
                         }
                         sessionManager.linkCompleted = true
-                        withAnimation(Animation.linear(duration: 3).repeatForever(autoreverses: false)) {
-                            disableLoadingCircle = false
-                        }
+//                        withAnimation(Animation.linear(duration: 3).repeatForever(autoreverses: false)) {
+//                            disableLoadingCircle = false
+//                        }
+                        disableLoadingCircle = false
                         if goBackNPagesIfCompleted > 0 {
                             navManager.removeLast(goBackNPagesIfCompleted)
                         } else {
@@ -111,10 +112,12 @@ struct PlaidLinkPageBackground: View {
                     .disabled(isPresentingLink)
                     
                     Button {
+                        linkManager.reset()
                         linkManager.requestCreatePlaidUser(sessionManager)
-                        withAnimation(Animation.linear(duration: 3).repeatForever(autoreverses: false)) {
-                            disableLoadingCircle = false
-                        }
+//                        withAnimation(Animation.linear(duration: 3).repeatForever(autoreverses: false)) {
+//                            disableLoadingCircle = false
+//                        }
+                        disableLoadingCircle = false
                     } label: {
                         Text("Link more bank accounts")
                             .font(.subheadline)
