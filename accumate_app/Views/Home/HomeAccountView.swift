@@ -58,16 +58,21 @@ struct HomeAccountView: View {
                     .padding(.vertical, 5)
             }
             .alert(alertMessage, isPresented: $showAlert) {
-                Button("OK", role: .cancel) {
-                    showAlert = false
+                if !logout {
+                    Button("OK", role: .cancel) {
+                        showAlert = false
+                    }
                 }
-                if sessionManager.refreshFailed {
+                if sessionManager.refreshFailed || logout {
                     Button("Log Out", role: .destructive) {
-                        Task {
+                        Task { @MainActor in
                             showAlert = false
+                            logout = false
                             sessionManager.refreshFailed = false
                             _ = await sessionManager.resetComplete()
+//                            await MainActor.run {
                             navManager.reset(views: [.landing])
+//                            }
                         }
                     }
                 }

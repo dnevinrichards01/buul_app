@@ -245,10 +245,12 @@ class PlaidLinkManager: ObservableObject {
                 //            if !sessionManager.refreshFailed {
                 //                self.showAlert = false
                 //            DispatchQueue.main.async {
-                self.alertMessage = "Link flow was exited before completion."
-                print(self.showAlert)
-                self.showAlert = true
-                print(self.showAlert)
+                self.disableLoadingCircle = true
+                self.reset()
+//                self.alertMessage = "Link flow was exited before completion."
+//                print(self.showAlert)
+//                self.showAlert = true
+//                print(self.showAlert)
             }
 //            }
 //            }
