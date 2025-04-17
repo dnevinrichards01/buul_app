@@ -28,6 +28,9 @@ struct FieldsRequestOTPView: View {
     @State private var buttonDisabled: Bool = false
     @State private var errorMessages: [String?]? = nil
     @State private var submitted: Bool = false
+    @State private var otherSelected: Bool = false
+    @State private var customField: String = ""
+    @State private var customFieldError: String = ""
     
     var signUpFields: [SignUpFields]
     var title: String?
@@ -36,6 +39,7 @@ struct FieldsRequestOTPView: View {
     var signUpField: SignUpFields
     var authenticate: Bool
     var isSignUp: Bool
+     
     
     
     private var fieldBindings: [SignUpFields: Binding<String>] {
@@ -62,7 +66,10 @@ struct FieldsRequestOTPView: View {
                     showAlert: $showAlert,
                     buttonDisabled: $buttonDisabled,
                     selectedBrokerage: $brokerage,
-                    selectedETF: $symbol
+                    selectedETF: $symbol,
+                    otherSelected: $otherSelected,
+                    customField: $customField,
+                    customFieldError: $customFieldError
                 )
             }
             else if signUpField == .symbol {
@@ -74,7 +81,10 @@ struct FieldsRequestOTPView: View {
                     showAlert: $showAlert,
                     buttonDisabled: $buttonDisabled,
                     selectedBrokerage: $brokerage,
-                    selectedETF: $symbol
+                    selectedETF: $symbol,
+                    otherSelected: $otherSelected,
+                    customField: $customField,
+                    customFieldError: $customFieldError
                 )
             } else if signUpField == .deleteAccount {
                 FieldsEntryView(
@@ -91,7 +101,7 @@ struct FieldsRequestOTPView: View {
                     buttonDisabled: $buttonDisabled,
                     focusedField: $focusedField
                 )
-            } else  {
+            } else {
                 FieldsEntryView(
                     title: title,
                     subtitle: subtitle,
@@ -145,12 +155,18 @@ struct FieldsRequestOTPView: View {
             submitted = false
             
             if signUpField == .brokerage && isSignUp {
-                for brokerage in Brokerages.allCases {
-                    if self.brokerage == brokerage.rawValue {
-                        navManager.append(brokerage.signUpSecurityInfo)
+                if otherSelected {
+                    navManager.append(.signUpRobinhoodSecurityInfo)
+                } else {
+                    for brokerage in Brokerages.allCases {
+                        if self.brokerage == brokerage.rawValue {
+                            navManager.append(brokerage.signUpSecurityInfo)
+                        }
                     }
                 }
+                otherSelected = false
             } else {
+                otherSelected = false
                 navManager.append(nextPage)
             }
         }
@@ -192,9 +208,17 @@ struct FieldsRequestOTPView: View {
         case .password:
             fieldValue = password
         case .brokerage:
-            fieldValue = Utils.camelCaseToSnakeCase(brokerage)
+            if customField != "" && otherSelected {
+                fieldValue = customField
+            } else {
+                fieldValue = Utils.camelCaseToSnakeCase(brokerage)
+            }
         case .symbol:
-            fieldValue = symbol
+            if customField != "" && otherSelected {
+                fieldValue = customField
+            } else {
+                fieldValue = symbol
+            }
         case .deleteAccount:
             fieldValue = true
         default:
@@ -234,9 +258,17 @@ struct FieldsRequestOTPView: View {
         case .password:
             return password
         case .brokerage:
-            return brokerage
+            if customField != "" && otherSelected {
+                return customField
+            } else {
+                return brokerage
+            }
         case .symbol:
-            return symbol
+            if customField != "" && otherSelected {
+                return customField
+            } else {
+                return symbol
+            }
         default:
             return nil
         }

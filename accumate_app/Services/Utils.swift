@@ -484,4 +484,11 @@ class Utils {
         }
         return date
     }
+    
+    static func censor(_ input: String) -> String {
+        if input.count == 0 {
+            return input
+        }
+        return String(repeating: "•", count: input.count)
+    }
 }

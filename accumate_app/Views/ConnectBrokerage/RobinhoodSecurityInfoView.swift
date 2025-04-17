@@ -32,17 +32,28 @@ struct RobinhoodSecurityInfoView: View {
                         .multilineTextAlignment(.center)
                         .padding(.horizontal)
                         .foregroundStyle(.white)
-                    if let brokerage = brokerage {
+                    if let brokerage = self.brokerage {
                         Image(brokerage.secondaryImageName)
                             .resizable()
                             .frame(width: brokerage.secondaryImageDim[0], height: brokerage.secondaryImageDim[1])
                             .padding(.leading, -6)
                             .padding(.bottom, brokerage.secondaryImageDim[2])
                     } else {
-                        Image(systemName: "photo")
-                            .resizable()
-                            .frame(width: 80, height: 80)
-                            .padding(.leading, -6)
+                        if let brokerageName = sessionManager.brokerageName {
+                            Text(String(brokerageName.prefix(30)))
+                                .font(.custom("Times New Roman", size: 30))
+                                .fontWeight(.black)
+                                .foregroundStyle(.white)
+                                .padding(.top, 5)
+                        } else {
+                            Image(systemName: "briefcase.fill")
+                                .resizable()
+                                .renderingMode(.template)
+                                .foregroundStyle(.white)
+                                .frame(width: 100, height: 100)
+                                .padding(.leading, -6)
+                                .padding(.bottom, 5)
+                        }
                     }
                 }
                 .padding(.bottom, 10)
@@ -80,11 +91,10 @@ struct RobinhoodSecurityInfoView: View {
             
             // Continue Button
             Button {
-                guard let brokerage = brokerage else { return }
                 if isSignUp {
-                    navManager.append(brokerage.signUpConnect)
+                    navManager.append(brokerage?.signUpConnect ?? .signUpConnectBrokerageLater)
                 } else {
-                    navManager.append(brokerage.changeConnect)
+                    navManager.append(brokerage?.changeConnect ?? .connectBrokerageLater)
                 }
             } label: {
                 Text("Connect")
@@ -112,14 +122,7 @@ struct RobinhoodSecurityInfoView: View {
             }
         }
         .onAppear {
-            let brokerage: Brokerages? = Utils.getBrokerage(sessionManager: sessionManager)
-            print(sessionManager.brokerageName)
-            guard let brokerage = brokerage else {
-                alertMessage = "An internal error occurred and the page could not be loaded. Please contact Buul"
-                showAlert = true
-                return
-            }
-            self.brokerage = brokerage
+            self.brokerage = Utils.getBrokerage(sessionManager: sessionManager)
         }
         .background(Color.black.ignoresSafeArea())
         .navigationBarBackButtonHidden(true)

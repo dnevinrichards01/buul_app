@@ -22,23 +22,33 @@ struct ConnectBrokerageLaterView: View {
     var body: some View {
         VStack {
             VStack (alignment: .center) {
-                if let brokerage = brokerage {
+                if let brokerage = self.brokerage {
                     Image(brokerage.imageName)
                         .resizable()
                         .frame(width: brokerage.imageDim[0], height: brokerage.imageDim[1])
                         .padding(.leading, -6)
                 } else {
-                    Image(systemName: "photo")
-                        .resizable()
-                        .frame(width: 80, height: 80)
-                        .padding(.leading, -6)
+                    if let brokerageName = sessionManager.brokerageName {
+                        Text(String(brokerageName.prefix(30)))
+                            .font(.custom("Times New Roman", size: 24))
+                            .fontWeight(.black)
+                            .foregroundStyle(.white)
+                            .padding(.top, 5)
+                    } else {
+                        Image(systemName: "briefcase.fill")
+                            .resizable()
+                            .renderingMode(.template)
+                            .foregroundStyle(.white)
+                            .frame(width: 50, height: 50)
+                            .padding(.leading, 10)
+                    }
                 }
             }
             .frame(maxWidth: .infinity)
             .padding()
             
             VStack (alignment: .leading, spacing: 15) {
-                Text("We are working on connecting users to \(brokerage?.displayName ?? "your brokerage") but we aren't quite ready. We have saved your preference and will notify you when it is time to connect!")
+                Text("We are working on connecting users to \(brokerage?.displayName ?? sessionManager.brokerageName ?? "your brokerage") but we aren't quite ready. We have saved your preference and will notify you when it is time to connect!")
                     .font(.headline)
                     .foregroundColor(.white.opacity(0.8))
                 Text("If you would like to connect to a brokerage immediately, we are only able to connect to \(Brokerages.robinhood.displayName).")
@@ -92,14 +102,8 @@ struct ConnectBrokerageLaterView: View {
             }
         }
         .onAppear {
-            let brokerage: Brokerages? = Utils.getBrokerage(sessionManager: sessionManager)
-            print(sessionManager.brokerageName)
-            guard let _ = brokerage else {
-                alertMessage = "An internal error occurred and the page could not be loaded. Please contact Accumate"
-                showAlert = true
-                return
-            }
-            self.brokerage = brokerage
+            self.brokerage = Utils.getBrokerage(sessionManager: sessionManager)
+            print("name: ", sessionManager.brokerageName)
         }
         .onChange(of: showAlert) { oldValue, newValue in
             if oldValue && !newValue {

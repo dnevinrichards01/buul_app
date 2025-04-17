@@ -12,6 +12,7 @@ enum Brokerages: String, CaseIterable {
     case webull
     case charlesSchwab
     case fidelity
+    case wealthSimple
     
     var displayName: String {
         switch self {
@@ -23,6 +24,8 @@ enum Brokerages: String, CaseIterable {
             return "Charles Schwab"
         case .fidelity:
             return "Fidelity"
+        case .wealthSimple:
+            return "Wealth Simple"
         }
     }
     
@@ -36,6 +39,8 @@ enum Brokerages: String, CaseIterable {
             return "CharlesSchwabLogo"
         case .fidelity:
             return "FidelityLogo"
+        case .wealthSimple:
+            return "WealthSimpleLogo"
         }
     }
     
@@ -49,6 +54,8 @@ enum Brokerages: String, CaseIterable {
             return "CharlesSchwabLogo"
         case .fidelity:
             return "FidelitySmallLogo"
+        case .wealthSimple:
+            return "WealthSimpleLogo"
         }
     }
     
@@ -61,6 +68,8 @@ enum Brokerages: String, CaseIterable {
         case .charlesSchwab:
             return [180, 60]
         case .fidelity:
+            return [180, 70.2]
+        case .wealthSimple:
             return [180, 70.2]
         }
     }
@@ -75,6 +84,8 @@ enum Brokerages: String, CaseIterable {
             return [180, 70.2, 0]
         case .fidelity:
             return [60, 60, 10]
+        case .wealthSimple:
+            return [180, 70.2]
         }
     }
     
@@ -87,6 +98,8 @@ enum Brokerages: String, CaseIterable {
         case .charlesSchwab:
             return .signUpRobinhoodSecurityInfo
         case .fidelity:
+            return .signUpRobinhoodSecurityInfo
+        case .wealthSimple:
             return .signUpRobinhoodSecurityInfo
         }
     }
@@ -101,6 +114,8 @@ enum Brokerages: String, CaseIterable {
             return .robinhoodSecurityInfo
         case .fidelity:
             return .robinhoodSecurityInfo
+        case .wealthSimple:
+            return .robinhoodSecurityInfo
         }
     }
     
@@ -114,6 +129,8 @@ enum Brokerages: String, CaseIterable {
             return .signUpConnectBrokerageLater
         case .fidelity:
             return .signUpConnectBrokerageLater
+        case .wealthSimple:
+            return .signUpConnectBrokerageLater
         }
     }
     
@@ -126,6 +143,8 @@ enum Brokerages: String, CaseIterable {
         case .charlesSchwab:
             return .connectBrokerageLater
         case .fidelity:
+            return .connectBrokerageLater
+        case .wealthSimple:
             return .connectBrokerageLater
         }
     }

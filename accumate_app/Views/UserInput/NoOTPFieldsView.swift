@@ -22,6 +22,9 @@ struct NoOTPFieldsView: View {
     @State private var buttonDisabled: Bool = false
     @State private var errorMessages: [String?]? = nil
     @State private var submitted: Bool = false
+    @State private var otherSelected: Bool = false
+    @State private var customField: String = ""
+    @State private var customFieldError: String = ""
     
     var signUpFields: [SignUpFields]
     var signUpField: SignUpFields
@@ -50,7 +53,10 @@ struct NoOTPFieldsView: View {
                     showAlert: $showAlert,
                     buttonDisabled: $buttonDisabled,
                     selectedBrokerage: $brokerage,
-                    selectedETF: $symbol
+                    selectedETF: $symbol,
+                    otherSelected: $otherSelected,
+                    customField: $customField,
+                    customFieldError: $customFieldError
                 )
             }
             else if signUpField == .symbol {
@@ -62,7 +68,10 @@ struct NoOTPFieldsView: View {
                     showAlert: $showAlert,
                     buttonDisabled: $buttonDisabled,
                     selectedBrokerage: $brokerage,
-                    selectedETF: $symbol
+                    selectedETF: $symbol,
+                    otherSelected: $otherSelected,
+                    customField: $customField,
+                    customFieldError: $customFieldError
                 )
             } else  {
                 FieldsEntryView(
@@ -82,11 +91,13 @@ struct NoOTPFieldsView: View {
         }
         .padding()
         .background(Color.black.ignoresSafeArea())
+        .animation(.easeInOut, value: otherSelected)
         .onAppear() {
             fullName = sessionManager.fullName ?? ""
         }
         .onChange(of: buttonDisabled) {
             if !buttonDisabled { return }
+            print("other", otherSelected)
             if signUpFields == [.fullName] && signUpField == .fullName {
                 let errorMessagesDictLocal = SignUpFieldsUtils.validateInputs(
                     signUpFields: signUpFields,
@@ -107,20 +118,37 @@ struct NoOTPFieldsView: View {
             submitted = false
             
             switch self.signUpField {
-            case .fullName: sessionManager.fullName = fullName
-            case .brokerage: sessionManager.brokerageName = brokerage
-            case .symbol: sessionManager.etfSymbol = symbol
+            case .fullName:
+                sessionManager.fullName = fullName
+            case .brokerage:
+                if customField != "" && otherSelected {
+                    sessionManager.brokerageName = customField
+                } else {
+                    sessionManager.brokerageName = brokerage
+                }
+            case .symbol:
+                if customField != "" && otherSelected {
+                    sessionManager.etfSymbol = customField
+                } else {
+                    sessionManager.etfSymbol = symbol
+                }
             default: break
             }
             
             buttonDisabled = false
             if signUpField == .brokerage {
-                for brokerage in Brokerages.allCases {
-                    if self.brokerage == brokerage.rawValue {
-                        navManager.append(brokerage.signUpSecurityInfo)
+                if otherSelected {
+                    navManager.append(.signUpRobinhoodSecurityInfo)
+                } else {
+                    for brokerage in Brokerages.allCases {
+                        if self.brokerage == brokerage.rawValue {
+                            navManager.append(brokerage.signUpSecurityInfo)
+                        }
                     }
                 }
+                otherSelected = false
             } else {
+                otherSelected = false
                 navManager.append(nextPage)
             }
         }
@@ -141,13 +169,22 @@ struct NoOTPFieldsView: View {
     private func generateParams() -> [String : Any] {
         let fieldString = Utils.camelCaseToSnakeCase(signUpField.rawValue)
         var fieldValue: Any
+        print("other", otherSelected)
         switch signUpField {
         case .fullName:
             fieldValue = fullName as Any
         case .brokerage:
-            fieldValue = Utils.camelCaseToSnakeCase(brokerage) as Any
+            if customField != "" && otherSelected {
+                fieldValue = customField as Any
+            } else {
+                fieldValue = Utils.camelCaseToSnakeCase(brokerage) as Any
+            }
         case .symbol:
-            fieldValue = symbol as Any
+            if customField != "" && otherSelected {
+                fieldValue = customField as Any
+            } else {
+                fieldValue = symbol as Any
+            }
         default:
             fieldValue = -1 as Any
         }
