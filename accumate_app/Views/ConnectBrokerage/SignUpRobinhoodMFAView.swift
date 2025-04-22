@@ -125,7 +125,7 @@ struct SignUpRobinhoodMFAView: View {
                         .cornerRadius(10)
                 }
                 .disabled(buttonDisabled)
-                .padding([.top, .bottom], 20)
+                .padding([.bottom], 10)
                 
                 if mfaMethod == .prompt {
                     Button {
@@ -137,13 +137,20 @@ struct SignUpRobinhoodMFAView: View {
                         resendCode = false
                     } label: {
                         Text("Text sms code instead")
-                            .foregroundColor(.white)
+                            .foregroundColor(.gray)
                             .font(.system(size: 14))
                             .multilineTextAlignment(.center)
-                            .frame(maxWidth: .infinity)
+                            .frame(maxWidth: .infinity, minHeight: 50)
                             .bold()
+                            .background(.black)
+                            .cornerRadius(10)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(.gray, lineWidth: 2)
+                            )
                     }
                     .disabled(buttonDisabled)
+                    .padding([.bottom], 10)
                 }
                 Button {
                     buttonDisabled = true
@@ -151,7 +158,7 @@ struct SignUpRobinhoodMFAView: View {
                 } label: {
                     Text("Click here to retry login")
                         .font(.footnote)
-                        .foregroundStyle(.gray)
+                        .foregroundStyle(.gray.opacity(0.6))
                         .padding(.leading, 10)
                         .multilineTextAlignment(.center)
                 }
