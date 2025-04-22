@@ -11,7 +11,6 @@ struct SignUpRobinhoodView: View {
     @EnvironmentObject var navManager: NavigationPathManager
     @EnvironmentObject var sessionManager: UserSessionManager
     
-    @FocusState private var focusedField: Int?
     @State private var password: String = ""
     @State private var password2: String = ""
     @State private var email: String = ""
@@ -19,6 +18,7 @@ struct SignUpRobinhoodView: View {
     
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = "" // Your brokerage information has been updated
+    @State private var timedOut: Bool = false
     @State private var buttonDisabled: Bool = false
     @State private var errorMessages: [String?]? = nil
     @State private var requested: Bool = false
@@ -38,20 +38,24 @@ struct SignUpRobinhoodView: View {
     }
     
     var body: some View {
-        
-        RobinhoodFieldsEntryView(
-            title: nil,
-            subtitle: nil,
-            signUpFields: signUpFields,
-            fieldBindings: fieldBindings,
-            suggestLogIn: false,
-            isSignUp: true,
-            alertMessage: $alertMessage,
-            showAlert: $showAlert,
-            errorMessages: $errorMessages,
-            buttonDisabled: $buttonDisabled,
-            focusedField: $focusedField
-        )
+        ZStack {
+            RobinhoodFieldsEntryView(
+                title: nil,
+                subtitle: nil,
+                signUpFields: signUpFields,
+                fieldBindings: fieldBindings,
+                suggestLogIn: false,
+                isSignUp: true,
+                alertMessage: $alertMessage,
+                showAlert: $showAlert,
+                errorMessages: $errorMessages,
+                buttonDisabled: $buttonDisabled,
+                timedOut: $timedOut
+            )
+            if buttonDisabled {
+                LoadingCircle()
+            }
+        }
         .onChange(of: showAlert) { oldValue, newValue in
             guard oldValue && !newValue else { return }
             if recieved && !isSignUp {
@@ -62,6 +66,9 @@ struct SignUpRobinhoodView: View {
                 if mfaMethod == nil {
                     navManager.removeLast(4)
                 }
+            } else if timedOut {
+                buttonDisabled = true
+                requestSignIn()
             }
         }
         .onChange(of: buttonDisabled) {
@@ -201,7 +208,7 @@ struct SignUpRobinhoodView: View {
         }
     }
     
-    private func recieveSignInResult(retries: Int = 7) {
+    private func recieveSignInResult(retries: Int = 10) {
         ServerCommunicator().callMyServer(
             path: "rh/login/",
             httpMethod: .get,
@@ -252,20 +259,18 @@ struct SignUpRobinhoodView: View {
                         recieveSignInResult(retries: retries - 1)
                         return
                     }
+                    
+                    self.alertMessage = "We timed out waiting for a response. Would you like to continue waiting?"
+                    self.showAlert = true
                     self.errorMessages = nil
-//                    if !sessionManager.refreshFailed {
-                        self.alertMessage = ServerCommunicator.NetworkError.networkError.errorMessage
-                        self.showAlert = true
-//                    }
                     self.requested = false
                     self.buttonDisabled = false
+                    self.timedOut = true
                 // alert because unexpected response
                 } else {
                     self.errorMessages = nil
-//                    if !sessionManager.refreshFailed {
-                        self.alertMessage = ServerCommunicator.NetworkError.decodingError.errorMessage
-                        self.showAlert = true
-//                    }
+                    self.alertMessage = ServerCommunicator.NetworkError.decodingError.errorMessage
+                    self.showAlert = true
                     self.requested = false
                     self.buttonDisabled = false
                 }

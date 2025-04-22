@@ -13,6 +13,7 @@ struct EmailRecoverView: View {
     @State private var alertMessage: String = ""
     @State private var buttonDisabled: Bool = false
     @State private var errorMessage: String?
+    @FocusState private var focusedField: Int?
     
     
     @EnvironmentObject var navManager: NavigationPathManager
@@ -42,8 +43,11 @@ struct EmailRecoverView: View {
                 inputValue: $email,
                 keyboard: SignUpFields.email.keyboardType,
                 errorMessage: errorMessage,
-                signUpField: .email
+                signUpField: .email,
+                focusedField: $focusedField,
+                index: -1
             )
+            .focused($focusedField, equals: -1)
             .padding()
             
             Spacer()

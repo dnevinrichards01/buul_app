@@ -20,6 +20,7 @@ struct SignUpRobinhoodMFAView: View {
     @State private var showAlert: Bool = false
     @State private var mfaMethod: RobinhoodMFAMethod?
     @State private var resendCode: Bool = false
+    @State private var defaultToSms: Bool = false
 
     @EnvironmentObject var navManager : NavigationPathManager
     @EnvironmentObject var sessionManager: UserSessionManager
@@ -126,12 +127,16 @@ struct SignUpRobinhoodMFAView: View {
                 .disabled(buttonDisabled)
                 .padding([.top, .bottom], 20)
                 
-                if mfaMethod == .sms {
+                if mfaMethod == .prompt {
                     Button {
+                        defaultToSms = true
                         buttonDisabled = true
-                        resendCode = true
+                        requested = false
+                        recieved = false
+                        reEnterFields = false
+                        resendCode = false
                     } label: {
-                        Text("Click here to resend code")
+                        Text("Text sms code instead")
                             .foregroundColor(.white)
                             .font(.system(size: 14))
                             .multilineTextAlignment(.center)
@@ -140,6 +145,17 @@ struct SignUpRobinhoodMFAView: View {
                     }
                     .disabled(buttonDisabled)
                 }
+                Button {
+                    buttonDisabled = true
+                    resendCode = true
+                } label: {
+                    Text("Click here to retry login")
+                        .font(.footnote)
+                        .foregroundStyle(.gray)
+                        .padding(.leading, 10)
+                        .multilineTextAlignment(.center)
+                }
+                .disabled(buttonDisabled)
             }
         }
         .onAppear {
@@ -149,7 +165,6 @@ struct SignUpRobinhoodMFAView: View {
             Button("OK", role: .cancel) {
                 Task {
                     showAlert = false
-                    
                 }
             }
             if sessionManager.refreshFailed {
@@ -187,26 +202,6 @@ struct SignUpRobinhoodMFAView: View {
         }
         .onChange(of: recieved) {
             if !recieved { return }
-//            recieved = false
-            
-//            if robinhoodMFAType != mfaMethod {
-//                let prevPath: [NavigationPathViews] = Array(navManager.path)
-//                prevPath.removeLast(1)
-//                switch mfaMethod {
-//                case .sms:
-//                    prevPath.append(.)
-//                case .app:
-//                    <#code#>
-//                case .prompt:
-//                    <#code#>
-//                case nil:
-//                    <#code#>
-//                }
-//                
-//                
-//                navManager.reset(
-//            }
-            
             if isSignUp {
                 print("recieved issignup")
                 sessionManager.brokerageCompleted = true
@@ -277,6 +272,7 @@ struct SignUpRobinhoodMFAView: View {
             params[mfaFieldString] = otp
         } else {
             params[mfaFieldString] = true
+            params["default_to_sms"] = defaultToSms
         }
         
 //        if mfaMethod == .app {
@@ -306,10 +302,8 @@ struct SignUpRobinhoodMFAView: View {
                         return
                     }
                     self.reEnterFields = true
-//                    if !sessionManager.refreshFailed {
-                        self.alertMessage = "There may be an error in your username and password. Please re-enter them."
-                        self.showAlert = true
-//                    }
+                    self.alertMessage = "There may be an error in your username and password. Please re-enter them."
+                    self.showAlert = true
                     self.buttonDisabled = false
                 // success, set up OTP information
                 } else if let _ = responseData.success, responseData.error == nil {
@@ -332,6 +326,7 @@ struct SignUpRobinhoodMFAView: View {
 //                    }
                     self.buttonDisabled = false
                 }
+                self.defaultToSms = false
             case .failure(let networkError):
 //                if !sessionManager.refreshFailed {
                     self.showAlert = true
@@ -346,6 +341,7 @@ struct SignUpRobinhoodMFAView: View {
                 }
                 self.errorMessage = nil
                 self.buttonDisabled = false
+                self.defaultToSms = false
             }
         }
     }

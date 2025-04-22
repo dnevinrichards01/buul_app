@@ -491,4 +491,12 @@ class Utils {
         }
         return String(repeating: "•", count: input.count)
     }
+    
+    static func extractCode(from url: URL) -> String? {
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              let code = components.queryItems?.first(where: { $0.name == "code" })?.value else {
+            return nil
+        }
+        return code
+    }
 }

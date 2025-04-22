@@ -39,11 +39,15 @@ struct LinkView: View {
             content: {
                 if let handler = linkManager.linkHandler {
                     PlaidViewControllerWrapper(handler: handler)
-                } else {
-                    
                 }
             }
         )
+        .onOpenURL { url in
+            if let code = Utils.extractCode(from: url) {
+                //oauthCode = code
+                // Call server to exchange code, update UI, etc.
+            }
+        }
         .alert(linkManager.alertMessage, isPresented: $linkManager.showAlert) {
             Button("OK", role: .cancel) {
                 linkManager.showAlert = false

@@ -53,7 +53,8 @@ struct SignUpPasswordView: View {
             showAlert: $showAlert,
             errorMessages: $errorMessages,
             buttonDisabled: $buttonDisabled,
-            focusedField: $focusedField
+            focusedField: $focusedField,
+            isNewPassword: true
         )
         .onAppear {
             password2 = ""

@@ -16,14 +16,32 @@ struct RobinhoodFieldsEntryView: View {
     var subtitle: String?
     var signUpFields: [SignUpFields]
     var fieldBindings: [SignUpFields : Binding<String>]
-    var suggestLogIn: Bool = false
-    var isLogin: Bool = false
+    var suggestLogIn: Bool
+    var isLogin: Bool
     var isSignUp: Bool
     @Binding var alertMessage: String
     @Binding var showAlert: Bool
     @Binding var errorMessages: [String?]?
     @Binding var buttonDisabled: Bool
-    @FocusState.Binding var focusedField: Int?
+    @FocusState var focusedField: Int?
+    @Binding var timedOut: Bool
+    
+    init(title: String?, subtitle: String?, signUpFields: [SignUpFields], fieldBindings: [SignUpFields : Binding<String>],
+         suggestLogIn: Bool = false, isLogin: Bool = false, isSignUp: Bool = false, alertMessage: Binding<String>,
+         showAlert: Binding<Bool>, errorMessages: Binding<[String?]?>, buttonDisabled: Binding<Bool>, timedOut: Binding<Bool>) {
+        self.title = title
+        self.subtitle = subtitle
+        self.signUpFields = signUpFields
+        self.fieldBindings = fieldBindings
+        self.suggestLogIn = suggestLogIn
+        self.isLogin = isLogin
+        self.isSignUp = isSignUp
+        self._alertMessage = alertMessage
+        self._showAlert = showAlert
+        self._errorMessages = errorMessages
+        self._buttonDisabled = buttonDisabled
+        self._timedOut = timedOut
+    }
     
     var body: some View {
         VStack {
@@ -45,7 +63,9 @@ struct RobinhoodFieldsEntryView: View {
                         inputValue: binding,
                         keyboard: signUpField.keyboardType,
                         errorMessage: errorMessages?[index],
-                        signUpField: signUpField
+                        signUpField: signUpField,
+                        focusedField: $focusedField,
+                        index: index
                     )
                     .focused($focusedField, equals: index)
                 }
@@ -97,7 +117,15 @@ struct RobinhoodFieldsEntryView: View {
             
         }
         .alert(alertMessage, isPresented: $showAlert) {
-            if showAlert {
+            if timedOut {
+                Button("No", role: .cancel) {
+                    showAlert = false
+                    timedOut = false
+                }
+                Button("Yes", role: .cancel) {
+                    showAlert = false
+                }
+            } else {
                 Button("OK", role: .cancel) {
                     showAlert = false
                 }
@@ -139,6 +167,7 @@ struct RobinhoodFieldsEntryView: View {
                 Button {
                     if let _focusedField = focusedField {
                         focusedField = max(_focusedField - 1, 0)
+                        print(focusedField)
                     }
                 } label: {
                     Image(systemName: "chevron.left")
@@ -147,6 +176,7 @@ struct RobinhoodFieldsEntryView: View {
                 Button {
                     if let _focusedField = focusedField {
                         focusedField = min(_focusedField + 1, signUpFields.count - 1)
+                        print(focusedField)
                     }
                 } label: {
                     Image(systemName: "chevron.right")

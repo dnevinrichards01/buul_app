@@ -45,7 +45,7 @@ class ServerCommunicator {
     }
 
 
-    init(baseURL: String = "https://88fa-2601-646-8283-4f00-68bd-5c6c-7df0-f9e6.ngrok-free.app/" ) { //"http://localhost:8000/", "http://10.0.0.206:8000/", "https://prod.buul-load-balancer.link/"
+    init(baseURL: String = "https://shad-enormous-skink.ngrok-free.app/" ) { //"http://localhost:8000/", "http://10.0.0.206:8000/", "https://prod.buul-load-balancer.link/"
         self.baseURL = baseURL
     }
     

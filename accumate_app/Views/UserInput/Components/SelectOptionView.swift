@@ -24,6 +24,7 @@ struct SelectOptionView: View {
     @Binding var customField: String
     @Binding var customFieldError: String
     @State var isSecure: Bool
+    @FocusState var focusedField: Int?
     
     init(
         title: String? = nil,
@@ -178,7 +179,9 @@ struct SelectOptionView: View {
                             inputValue: $customField,
                             placeholder: signUpField == .symbol ? "AAPL" : "J. P. Morgan",
                             keyboard: .default,
-                            isSecure: $isSecure
+                            isSecure: $isSecure,
+                            focusedField: $focusedField,
+                            index: -1
                         )
                         Text(customFieldError)
                             .foregroundColor(.red)

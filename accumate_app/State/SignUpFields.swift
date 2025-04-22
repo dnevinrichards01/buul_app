@@ -10,8 +10,10 @@ import SwiftUI
 // Enum to represent input fields
 enum SignUpFields: String, CaseIterable {
     case email
+    case disabledEmail
     case password
     case password2
+    case disabledPassword
     case fullName
     case phoneNumber
     case verificationEmail

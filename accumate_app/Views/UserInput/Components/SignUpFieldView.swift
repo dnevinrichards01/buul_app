@@ -49,14 +49,26 @@ struct CustomTextField: View {
     var keyboard : UIKeyboardType
     @Binding var isSecure: Bool
     @State private var censoredInputValue: String
-//    @FocusState private var isFocused: Bool = true
+    var textType: UITextContentType? 
+    var isNewPassword: Bool
+    var isUserName: Bool
+    @State private var blinkCursor: Bool = false
+    @State var focusedField: FocusState<Int?>.Binding
+    var index: Int
     
-    init(inputValue: Binding<String>, placeholder: String, keyboard: UIKeyboardType, isSecure: Binding<Bool>) {
+    init(inputValue: Binding<String>, placeholder: String, keyboard: UIKeyboardType, isSecure: Binding<Bool>,
+         textType: UITextContentType? = .none, isNewPassword: Bool = false, isUserName: Bool = false,
+         focusedField: FocusState<Int?>.Binding, index: Int) {
         self._inputValue = inputValue
         self.placeholder = placeholder
         self.keyboard = keyboard
         self._isSecure = isSecure
         self.censoredInputValue = Utils.censor(inputValue.wrappedValue)
+        self.textType = textType
+        self.isNewPassword = isNewPassword
+        self.isUserName = isUserName
+        self.focusedField = focusedField
+        self.index = index
     }
     
     var body: some View {
@@ -67,25 +79,41 @@ struct CustomTextField: View {
                     .padding(.leading, 8)
             }
             ZStack {
-                TextField("", text: $inputValue)
-                    .foregroundColor(isSecure ? .clear : .white.opacity(0.8))
-                    .accentColor(isSecure ? .clear : .white.opacity(0.8))
-                    .padding(8)
-                    .keyboardType(keyboard)
-                    .autocorrectionDisabled(true)
-                    .textInputAutocapitalization(.never)
-                if isSecure {
-                    Text(censoredInputValue)
-                        .foregroundColor(.white.opacity(0.8))
-                        .accentColor(.white.opacity(0.8))
+                Group {
+                    TextField("", text: $inputValue)
+                        .foregroundColor(isSecure ? .clear : .white.opacity(0.8))
+                        .accentColor(isSecure ? .clear : .white.opacity(0.8))
                         .padding(8)
+                        .keyboardType(keyboard)
+                        .autocorrectionDisabled(true)
+                        .textInputAutocapitalization(.never)
+                        .textContentType(textType)
+                        .focused(focusedField, equals: index)
+                    if isSecure {
+                        HStack (spacing: 0) {
+                            Text(String(repeating: "•", count: inputValue.count))
+                                .font(.system(.body, design: .monospaced))
+                                .frame(alignment: .leading)
+                                .foregroundColor(.white.opacity(0.8))
+                                .padding(8)
+//                            if actuallyFocused {
+//                                Rectangle()
+//                                    .fill(Color.white.opacity(blinkCursor ? 1 : 0))
+//                                    .frame(width: 1.5, height: 20)
+//                                    .offset(x: -8)
+//                                    .onAppear {
+//                                        blinkCursor.toggle()
+//                                        withAnimation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true)) {
+//                                            blinkCursor.toggle()
+//                                        }
+//                                    }
+//                            }
+                            Spacer()
+                        }
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .allowsHitTesting(false)
+                    }
                 }
             }
-        }
-        .onChange(of: inputValue) {
-            censoredInputValue = Utils.censor(inputValue)
         }
         .background(.black)
         .cornerRadius(8)
@@ -104,14 +132,19 @@ struct SignUpFieldView: View {
     var errorMessage : String?
     var displayErrorMessage : Bool = true
     var signUpField: SignUpFields
-    
+    var isNewPassword: Bool
+    var isUserName: Bool
     @State private var isSecure: Bool
+    
+    @State var focusedField: FocusState<Int?>.Binding
+    var index: Int
     
     @EnvironmentObject var navManager: NavigationPathManager
     @EnvironmentObject var sessionManager: UserSessionManager
     
     init(instruction: String, placeholder: String, inputValue: Binding<String>, keyboard: UIKeyboardType, errorMessage: String?,
-         signUpField: SignUpFields) {
+         signUpField: SignUpFields, isNewPassword: Bool = false, isUserName: Bool = true, focusedField: FocusState<Int?>.Binding,
+         index: Int) {
         self.instruction = instruction
         self.placeholder = placeholder
         self._inputValue = inputValue
@@ -119,6 +152,11 @@ struct SignUpFieldView: View {
         self.errorMessage = errorMessage
         self.signUpField = signUpField
         self.isSecure = signUpField == .password || signUpField == .password2
+        self.isNewPassword = isNewPassword
+        self.isUserName = isUserName
+        
+        self.focusedField = focusedField
+        self.index = index
     }
     
     var body: some View {
@@ -135,12 +173,16 @@ struct SignUpFieldView: View {
                         inputValue: $inputValue,
                         placeholder: placeholder,
                         keyboard: keyboard,
-                        isSecure: $isSecure
+                        isSecure: $isSecure,
+                        textType: getTextTypeFromFieldType(),
+                        isNewPassword: isNewPassword,
+                        focusedField: focusedField,
+                        index: index
                     )
                     if signUpField == .password || signUpField == .password2 {
-                        Button(action: {
+                        Button {
                             isSecure.toggle()
-                        }) {
+                        } label: {
                             Image(systemName: isSecure ? "eye.slash" : "eye")
                                 .foregroundColor(.gray)
                         }
@@ -179,19 +221,41 @@ struct SignUpFieldView: View {
         }
     }
     
-    
+    private func getTextTypeFromFieldType() -> UITextContentType? {
+        switch signUpField {
+        case .email:
+            return .username
+        case .password:
+            return isNewPassword ? .newPassword : .password
+        case .password2:
+            return .none
+        case .phoneNumber:
+            return .telephoneNumber
+        case .verificationEmail:
+            return .emailAddress
+        case .verificationPhoneNumber:
+            return .telephoneNumber
+//        case .code:
+//            return .oneTimeCode
+        default:
+            return .none
+        }
+        
+    }
 }
 
-#Preview {
-    SignUpFieldView(
-        instruction: "example instruction",
-        placeholder: "value like this",
-        inputValue: .constant(""),
-        keyboard: UIKeyboardType.phonePad,
-        errorMessage: nil,
-        signUpField: .password
-    )
-    .environmentObject(UserSessionManager())
-    .environmentObject(NavigationPathManager())
-    .background(.black)
-}
+//#Preview {
+//    SignUpFieldView(
+//        instruction: "example instruction",
+//        placeholder: "value like this",
+//        inputValue: .constant(""),
+//        keyboard: UIKeyboardType.phonePad,
+//        errorMessage: nil,
+//        signUpField: .password,
+//        index: 0,
+//        focusedField: .Binding
+//    )
+//    .environmentObject(UserSessionManager())
+//    .environmentObject(NavigationPathManager())
+//    .background(.black)
+//}

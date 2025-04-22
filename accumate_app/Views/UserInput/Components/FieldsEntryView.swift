@@ -25,108 +25,117 @@ struct FieldsEntryView: View {
     @Binding var errorMessages: [String?]?
     @Binding var buttonDisabled: Bool
     @FocusState.Binding var focusedField: Int?
+    var isNewPassword: Bool = false
     
     var body: some View {
-        VStack {
-            VStack (alignment: .center) {
-                if let title = title {
-                    Text(title)
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .foregroundStyle(.white)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.bottom, 20)
+        ZStack {
+            VStack {
+                VStack (alignment: .center) {
+                    if let title = title {
+                        Text(title)
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                            .foregroundStyle(.white)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.bottom, 20)
+                    }
+                    if let subtitle = subtitle {
+                        Text(subtitle)
+                            .font(.headline)
+                            .foregroundStyle(.white.opacity(0.8))
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
-                if let subtitle = subtitle {
-                    Text(subtitle)
-                        .font(.headline)
-                        .foregroundStyle(.white.opacity(0.8))
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .padding()
-            
-            if suggestLogIn {
-                HStack {
-                    Spacer()
-                    Text("Already a member?")
-                        .foregroundColor(.white.opacity(0.9))
-                        .font(.system(size: 12))
-                        .background(.black)
-                        .cornerRadius(10)
-                    Button {
-                        navManager.append(.login)
-                    } label: {
-                        Text("Log In")
-                            .foregroundColor(.blue)
+                .frame(maxWidth: .infinity)
+                .padding()
+                
+                if suggestLogIn {
+                    HStack {
+                        Spacer()
+                        Text("Already a member?")
+                            .foregroundColor(.white.opacity(0.9))
                             .font(.system(size: 12))
                             .background(.black)
                             .cornerRadius(10)
+                        Button {
+                            navManager.append(.login)
+                        } label: {
+                            Text("Log In")
+                                .foregroundColor(.blue)
+                                .font(.system(size: 12))
+                                .background(.black)
+                                .cornerRadius(10)
+                        }
+                    }
+                    .padding()
+                }
+                
+                ForEach(0..<signUpFields.count, id: \.self) { index in
+                    let signUpField = signUpFields[index]
+                    
+                    if let binding = fieldBindings[signUpField], signUpFields.contains(signUpField) {
+                        SignUpFieldView(
+                            instruction: selectInstructionType(signUpField),
+                            placeholder: signUpField.placeholder,
+                            inputValue: binding,
+                            keyboard: signUpField.keyboardType,
+                            errorMessage: errorMessages?[index],
+                            signUpField: signUpField,
+                            isNewPassword: isNewPassword,
+                            focusedField: $focusedField,
+                            index: index
+                        )
+                        .focused($focusedField, equals: index)
                     }
                 }
-                .padding()
-            }
-            
-            ForEach(0..<signUpFields.count, id: \.self) { index in
-                let signUpField = signUpFields[index]
-               
-                if let binding = fieldBindings[signUpField], signUpFields.contains(signUpField) {
-                    SignUpFieldView(
-                        instruction: selectInstructionType(signUpField),
-                        placeholder: signUpField.placeholder,
-                        inputValue: binding,
-                        keyboard: signUpField.keyboardType,
-                        errorMessage: errorMessages?[index],
-                        signUpField: signUpField
-                    )
-                    .focused($focusedField, equals: index)
-                }
-            }
-            
-            if isLogin {
-                HStack (alignment: .firstTextBaseline) {
-                    Spacer()
-                    Text("Forgot your")
-                        .foregroundColor(.white.opacity(0.9))
-                        .font(.system(size: 15))
-                    Button {
-                        navManager.append(NavigationPathViews.emailRecover)
-                    } label: {
-                        Text("email")
-                            .foregroundColor(.blue)
+                
+                if isLogin {
+                    HStack (alignment: .firstTextBaseline) {
+                        Spacer()
+                        Text("Forgot your")
+                            .foregroundColor(.white.opacity(0.9))
                             .font(.system(size: 15))
-                    }
-                    Text("or")
-                        .foregroundColor(.white.opacity(0.9))
-                        .font(.system(size: 15))
-                    Button {
-                        navManager.append(NavigationPathViews.passwordRecoverInitiate)
-                    } label: {
-                        Text("password?")
-                            .foregroundColor(.blue)
+                        Button {
+                            navManager.append(NavigationPathViews.emailRecover)
+                        } label: {
+                            Text("email")
+                                .foregroundColor(.blue)
+                                .font(.system(size: 15))
+                        }
+                        Text("or")
+                            .foregroundColor(.white.opacity(0.9))
                             .font(.system(size: 15))
+                        Button {
+                            navManager.append(NavigationPathViews.passwordRecoverInitiate)
+                        } label: {
+                            Text("password?")
+                                .foregroundColor(.blue)
+                                .font(.system(size: 15))
+                        }
                     }
                 }
+                
+                Spacer()
+                
+                Button {
+                    buttonDisabled = true
+                } label: {
+                    Text(buttonText)
+                        .font(.headline)
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity, minHeight: 50)
+                        .background(.white)
+                        .cornerRadius(10)
+                }
+                .disabled(buttonDisabled)
+                .padding(20)
+                
             }
-            
-            Spacer()
-            
-            Button {
-                buttonDisabled = true
-            } label: {
-                Text(buttonText)
-                    .font(.headline)
-                    .foregroundColor(.black)
-                    .frame(maxWidth: .infinity, minHeight: 50)
-                    .background(.white)
-                    .cornerRadius(10)
+            if signUpFields.contains(.password) && !signUpFields.contains(.email) && !signUpFields.contains(.verificationEmail) {
+                
             }
-            .disabled(buttonDisabled)
-            .padding(20)
-            
         }
         .alert(alertMessage, isPresented: $showAlert) {
             if showAlert {
@@ -163,6 +172,9 @@ struct FieldsEntryView: View {
 //        }
         .onAppear {
             buttonDisabled = false
+        }
+        .onChange(of: focusedField) {
+            
         }
         .animation(.easeInOut(duration: 0.5), value: errorMessages)
         .background(Color.black.ignoresSafeArea())
