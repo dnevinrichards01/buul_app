@@ -14,6 +14,7 @@ struct EmailRecoverView: View {
     @State private var buttonDisabled: Bool = false
     @State private var errorMessage: String?
     @FocusState private var focusedField: Int?
+    @State private var focusedFieldCopy: Int?
     
     
     @EnvironmentObject var navManager: NavigationPathManager
@@ -45,9 +46,10 @@ struct EmailRecoverView: View {
                 errorMessage: errorMessage,
                 signUpField: .email,
                 focusedField: $focusedField,
-                index: -1
+                focusedFieldCopy: $focusedFieldCopy,
+                index: 0,
+                totalFields: 1
             )
-            .focused($focusedField, equals: -1)
             .padding()
             
             Spacer()

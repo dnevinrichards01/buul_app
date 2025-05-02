@@ -7,41 +7,6 @@
 
 import SwiftUI
 
-//struct CustomSecureField: View {
-//    @Binding var inputValue: String
-//    var placeholder: String
-//    var keyboard : UIKeyboardType
-//    @State private var censoredInputValue: String
-//    
-//    init(inputValue: Binding<String>, placeholder: String, keyboard: UIKeyboardType) {
-//        self._inputValue = inputValue
-//        self.placeholder = placeholder
-//        self.keyboard = keyboard
-//        self.censoredInputValue = inputValue.wrappedValue
-//    }
-//    
-//    var body: some View {
-//        ZStack {
-//            TextField("", text: $inputValue)
-//                .foregroundColor(.white.opacity(0.8))
-//                .accentColor(.white.opacity(0.8))
-//                .padding(8)
-//                .keyboardType(keyboard)
-//            //            .textContentType(.oneTimeCode)
-//                .onChange(of: inputValue) {
-//                    censoredInputValue = censor(inputValue)
-//                    inputValue =
-//                }
-//        }
-//    }
-//    
-//    private func censor(_ input: String) -> String {
-//        if input.count == 0 {
-//            return ""
-//        }
-//        return String(repeating: "•", count: input.count)
-//    }
-//}
 
 struct CustomTextField: View {
     @Binding var inputValue: String
@@ -49,16 +14,38 @@ struct CustomTextField: View {
     var keyboard : UIKeyboardType
     @Binding var isSecure: Bool
     @State private var censoredInputValue: String
-    var textType: UITextContentType? 
+    var textType: UITextContentType?
     var isNewPassword: Bool
     var isUserName: Bool
-    @State private var blinkCursor: Bool = false
-    @State var focusedField: FocusState<Int?>.Binding
+    var maxWidth: CGFloat
+    var totalFields: Int
     var index: Int
+    var isInteractive: Bool
+    private var truncatedInputValue: String {
+        truncateText(inputValue)
+    }
     
-    init(inputValue: Binding<String>, placeholder: String, keyboard: UIKeyboardType, isSecure: Binding<Bool>,
-         textType: UITextContentType? = .none, isNewPassword: Bool = false, isUserName: Bool = false,
-         focusedField: FocusState<Int?>.Binding, index: Int) {
+    @State private var blinkCursor: Bool = false
+    @Binding var focusedFieldCopy: Int?
+    @State var focusedField: FocusState<Int?>.Binding
+    @State var actuallyFocused = false
+    @State private var isCurrentIndex: Bool = false
+    @State var uncensoredText: String = ""
+    
+    init(
+        inputValue: Binding<String>,
+        placeholder: String,
+        keyboard: UIKeyboardType,
+        isSecure: Binding<Bool>,
+        textType: UITextContentType? = .none,
+        isNewPassword: Bool = false,
+        isUserName: Bool = false,
+        focusedField: FocusState<Int?>.Binding,
+        focusedFieldCopy: Binding<Int?>,
+        index: Int,
+        totalFields: Int,
+        isInteractive: Bool = true
+    ) {
         self._inputValue = inputValue
         self.placeholder = placeholder
         self.keyboard = keyboard
@@ -68,7 +55,12 @@ struct CustomTextField: View {
         self.isNewPassword = isNewPassword
         self.isUserName = isUserName
         self.focusedField = focusedField
+        self._focusedFieldCopy = focusedFieldCopy
+        self.maxWidth = UIScreen.main.bounds.width - ([.password,.newPassword].contains(textType) ? 80 : 50)
         self.index = index
+        self.totalFields = totalFields
+        self.isInteractive = isInteractive
+        
     }
     
     var body: some View {
@@ -80,40 +72,71 @@ struct CustomTextField: View {
             }
             ZStack {
                 Group {
-                    TextField("", text: $inputValue)
-                        .foregroundColor(isSecure ? .clear : .white.opacity(0.8))
-                        .accentColor(isSecure ? .clear : .white.opacity(0.8))
-                        .padding(8)
-                        .keyboardType(keyboard)
-                        .autocorrectionDisabled(true)
-                        .textInputAutocapitalization(.never)
-                        .textContentType(textType)
-                        .focused(focusedField, equals: index)
-                    if isSecure {
-                        HStack (spacing: 0) {
-                            Text(String(repeating: "•", count: inputValue.count))
-                                .font(.system(.body, design: .monospaced))
-                                .frame(alignment: .leading)
+                    ZStack {
+                        if [.password,.newPassword].contains(textType) {
+                            NoSelectionTextField(
+                                placeholder,
+                                text: $inputValue,
+                                isSecure: $isSecure,
+                                maxWidth: maxWidth,
+                                textType: textType,
+                                keyboardType: keyboard,
+                                focusedField: focusedField,
+                                focusedFieldCopy: $focusedFieldCopy,
+                                totalFields: totalFields,
+                                index: index
+                            )
+                            .frame(width: maxWidth, height: 40)
+                            .padding(.horizontal, 8)
+                        } else {
+                            TextField(placeholder, text: $inputValue)
+                                .textContentType(textType)
+                                .keyboardType(keyboard)
                                 .foregroundColor(.white.opacity(0.8))
-                                .padding(8)
-//                            if actuallyFocused {
-//                                Rectangle()
-//                                    .fill(Color.white.opacity(blinkCursor ? 1 : 0))
-//                                    .frame(width: 1.5, height: 20)
-//                                    .offset(x: -8)
-//                                    .onAppear {
-//                                        blinkCursor.toggle()
-//                                        withAnimation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true)) {
-//                                            blinkCursor.toggle()
-//                                        }
-//                                    }
-//                            }
+                                .tint(.white.opacity(0.8))
+                                .frame(height: 40)
+                                .frame(maxWidth: .infinity)
+                                .cornerRadius(10)
+                                .autocorrectionDisabled()
+                                .textInputAutocapitalization(.never)
+                                .padding(.horizontal, 8)
+                                .simultaneousGesture(
+                                    TapGesture().onEnded {
+                                        focusedFieldCopy = index
+                                    }
+                                )
+                                .focused(focusedField, equals: index)
+                        }
+                    }
+                    if !isSecure {
+                        HStack (spacing: 0) {
+                            Text(truncatedInputValue)
+                                .background(.black)
+                                .foregroundColor(.white.opacity(0.8))
+                                .lineLimit(1)
+                                .padding(.horizontal, 8)
+                                .frame(height: 40)
+                                .allowsHitTesting(false)
+                            
+                            if focusedFieldCopy == index {
+                                Rectangle()
+                                    .fill(Color.white.opacity(blinkCursor ? 1 : 0))
+                                    .frame(width: 2, height: 22)
+                                    .offset(x: -7)
+                                    .onAppear {
+                                        blinkCursor.toggle()
+                                        withAnimation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true)) {
+                                            blinkCursor.toggle()
+                                        }
+                                    }
+                            }
                             Spacer()
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
             }
+            
         }
         .background(.black)
         .cornerRadius(8)
@@ -121,6 +144,22 @@ struct CustomTextField: View {
             RoundedRectangle(cornerRadius: 10)
                 .stroke(.gray.opacity(0.4), lineWidth: 2)
         )
+        
+    }
+    
+    func truncateText(_ text: String) -> String {
+        var _text = text
+        while getStringWidth(_text) > maxWidth {
+            _text = String(_text.dropFirst())
+        }
+        return _text
+    }
+    
+    func getStringWidth(_ text: String) -> CGFloat {
+        let font = UIFont.systemFont(ofSize: 17)
+        let attributes = [NSAttributedString.Key.font: font]
+        let width = (text as NSString).size(withAttributes: attributes).width
+        return width
     }
 }
 
@@ -134,29 +173,34 @@ struct SignUpFieldView: View {
     var signUpField: SignUpFields
     var isNewPassword: Bool
     var isUserName: Bool
-    @State private var isSecure: Bool
-    
+    @Binding var isSecure: Bool
+    @Binding var focusedFieldCopy: Int?
     @State var focusedField: FocusState<Int?>.Binding
     var index: Int
+    var totalFields: Int
+    var isInteractive: Bool
     
     @EnvironmentObject var navManager: NavigationPathManager
     @EnvironmentObject var sessionManager: UserSessionManager
     
     init(instruction: String, placeholder: String, inputValue: Binding<String>, keyboard: UIKeyboardType, errorMessage: String?,
          signUpField: SignUpFields, isNewPassword: Bool = false, isUserName: Bool = true, focusedField: FocusState<Int?>.Binding,
-         index: Int) {
+         focusedFieldCopy: Binding<Int?>, index: Int, totalFields: Int, isInteractive: Bool = true,
+         isSecure: Binding<Bool> = .constant(true)) {
         self.instruction = instruction
         self.placeholder = placeholder
         self._inputValue = inputValue
         self.keyboard = keyboard
         self.errorMessage = errorMessage
         self.signUpField = signUpField
-        self.isSecure = signUpField == .password || signUpField == .password2
         self.isNewPassword = isNewPassword
         self.isUserName = isUserName
-        
         self.focusedField = focusedField
+        self._focusedFieldCopy = focusedFieldCopy
         self.index = index
+        self.totalFields = totalFields
+        self.isInteractive = isInteractive
+        self._isSecure = isSecure
     }
     
     var body: some View {
@@ -168,6 +212,7 @@ struct SignUpFieldView: View {
                     .font(.system(size: 18))
                     .background(.black)
                     .cornerRadius(10)
+                    .fixedSize(horizontal: false, vertical: true)
                 HStack {
                     CustomTextField(
                         inputValue: $inputValue,
@@ -177,7 +222,10 @@ struct SignUpFieldView: View {
                         textType: getTextTypeFromFieldType(),
                         isNewPassword: isNewPassword,
                         focusedField: focusedField,
-                        index: index
+                        focusedFieldCopy: $focusedFieldCopy,
+                        index: index,
+                        totalFields: totalFields,
+                        isInteractive: isInteractive
                     )
                     if signUpField == .password || signUpField == .password2 {
                         Button {
@@ -185,6 +233,7 @@ struct SignUpFieldView: View {
                         } label: {
                             Image(systemName: isSecure ? "eye.slash" : "eye")
                                 .foregroundColor(.gray)
+                                .frame(width: 40, height: 40)
                         }
                     }
                 }
@@ -211,6 +260,7 @@ struct SignUpFieldView: View {
             }
         }
         .onAppear {
+            // maybe make copy of input value and pass it in
             if signUpField == .phoneNumber {
                 if let _phoneNumber = sessionManager.phoneNumber {
                     inputValue = !sessionManager.isLoggedIn ? _phoneNumber : "+1"
@@ -224,11 +274,11 @@ struct SignUpFieldView: View {
     private func getTextTypeFromFieldType() -> UITextContentType? {
         switch signUpField {
         case .email:
-            return .username
+            return isUserName ? .username : .emailAddress
         case .password:
             return isNewPassword ? .newPassword : .password
         case .password2:
-            return .none
+            return .password
         case .phoneNumber:
             return .telephoneNumber
         case .verificationEmail:

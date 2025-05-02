@@ -10,8 +10,11 @@ import SwiftUI
 struct LoginView: View {
     @State private var password: String = ""
     @State private var email: String = ""
+    @State private var isSecurePassword: Bool = true
+    @State private var isSecureEmail: Bool = true
     
     @FocusState private var focusedField: Int?
+    
     @State private var errorMessages: [String?]? = nil
     @State private var submitted: Bool = false
     @State private var showAlert: Bool = false
@@ -21,15 +24,24 @@ struct LoginView: View {
     @State private var accessToken: String?
     @State private var refreshToken: String?
     @State private var tokensSaved: Bool = false
+    @State private var buttonText: String = "Continue"
     
     var signUpFields: [SignUpFields] = [.email, .password]
     
     var authenticate = false
+    var isUserName: Bool = true
     
     private var fieldBindings: [SignUpFields: Binding<String>] {
         [
             .password: $password,
             .email: $email,
+        ]
+    }
+    
+    private var isSecureBindings: [SignUpFields: Binding<Bool>] {
+        [
+            .password: $isSecurePassword,
+            .email: $isSecureEmail,
         ]
     }
     
@@ -45,12 +57,14 @@ struct LoginView: View {
             suggestLogIn: false,
             isLogin: true,
             isSignUp: false,
-            buttonText: "Continue",
+            buttonText: $buttonText,
+            isUserName: isUserName,
             alertMessage: $alertMessage,
             showAlert: $showAlert,
             errorMessages: $errorMessages,
             buttonDisabled: $buttonDisabled,
-            focusedField: $focusedField
+            focusedField: $focusedField,
+            isSecureBindings: isSecureBindings
         )
         .onChange(of: buttonDisabled) {
             if !buttonDisabled { return }

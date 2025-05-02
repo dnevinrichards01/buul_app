@@ -10,6 +10,7 @@ import SwiftUI
 class Utils {
     
     static func dismissKeyboard() {
+        print("dismiss")
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
     

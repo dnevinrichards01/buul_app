@@ -19,13 +19,57 @@ struct FieldsEntryView: View {
     var suggestLogIn: Bool = false
     var isLogin: Bool = false
     var isSignUp: Bool
-    var buttonText: String
+    @Binding var buttonText: String
+    var isUserName: Bool
     @Binding var alertMessage: String
     @Binding var showAlert: Bool
     @Binding var errorMessages: [String?]?
     @Binding var buttonDisabled: Bool
-    @FocusState.Binding var focusedField: Int?
+    @State var focusedField: FocusState<Int?>.Binding
+    @State var focusedFieldCopy: Int?
+    @Binding var hideFields: [SignUpFields]
+    @State private var email: String = ""
     var isNewPassword: Bool = false
+    var isSecureBindings: [SignUpFields : Binding<Bool>]
+    
+    init(
+        title: String? = nil,
+        subtitle: String? = nil,
+        signUpFields: [SignUpFields],
+        fieldBindings: [SignUpFields : Binding<String>],
+        suggestLogIn: Bool = false,
+        isLogin: Bool = false,
+        isSignUp: Bool,
+        buttonText: Binding<String>,
+        isUserName: Bool = false,
+        alertMessage: Binding<String>,
+        showAlert: Binding<Bool>,
+        errorMessages: Binding<[String?]?>,
+        buttonDisabled: Binding<Bool>,
+        focusedField: FocusState<Int?>.Binding,
+        isNewPassword: Bool = false,
+        isSecureBindings: [SignUpFields : Binding<Bool>],
+        hideFields: Binding<[SignUpFields]> = .constant([])
+    ) {
+        self.title = title
+        self.subtitle = subtitle
+        self.signUpFields = signUpFields
+        self.fieldBindings = fieldBindings
+        self.suggestLogIn = suggestLogIn
+        self.isLogin = isLogin
+        self.isSignUp = isSignUp
+        self._buttonText = buttonText
+        self.isUserName = isUserName
+        self._alertMessage = alertMessage
+        self._showAlert = showAlert
+        self._errorMessages = errorMessages
+        self._buttonDisabled = buttonDisabled
+        self.focusedField = focusedField
+        self.isNewPassword = isNewPassword
+        self.isSecureBindings = isSecureBindings
+        self._hideFields = hideFields
+    }
+    
     
     var body: some View {
         ZStack {
@@ -74,22 +118,25 @@ struct FieldsEntryView: View {
                 
                 ForEach(0..<signUpFields.count, id: \.self) { index in
                     let signUpField = signUpFields[index]
-                    
-                    if let binding = fieldBindings[signUpField], signUpFields.contains(signUpField) {
+                    if let binding = fieldBindings[signUpField], let isSecure = isSecureBindings[signUpField], signUpFields.contains(signUpField), !hideFields.contains(signUpField) {
                         SignUpFieldView(
-                            instruction: selectInstructionType(signUpField),
+                            instruction: getLabel(signUpField),
                             placeholder: signUpField.placeholder,
                             inputValue: binding,
                             keyboard: signUpField.keyboardType,
                             errorMessage: errorMessages?[index],
                             signUpField: signUpField,
                             isNewPassword: isNewPassword,
-                            focusedField: $focusedField,
-                            index: index
+                            isUserName: isUserName,
+                            focusedField: focusedField,
+                            focusedFieldCopy: $focusedFieldCopy,
+                            index: index,
+                            totalFields: signUpFields.count,
+                            isSecure: isSecure
                         )
-                        .focused($focusedField, equals: index)
                     }
                 }
+                .animation(.easeInOut(duration: 0.25), value: hideFields)
                 
                 if isLogin {
                     HStack (alignment: .firstTextBaseline) {
@@ -137,10 +184,14 @@ struct FieldsEntryView: View {
                 
             }
         }
+        .onAppear() {
+            email = sessionManager.email ?? ""
+        }
         .alert(alertMessage, isPresented: $showAlert) {
             if showAlert {
                 Button("OK", role: .cancel) {
                     showAlert = false
+                    
                 }
             }
             if sessionManager.refreshFailed {
@@ -155,26 +206,8 @@ struct FieldsEntryView: View {
                 }
             }
         }
-//        .alert(sessionManager.refreshFailedMessage, isPresented: $sessionManager.refreshFailed) {
-//            Button("OK", role: .cancel) {
-//                showAlert = false
-//                sessionManager.refreshFailed = false
-//            }
-//            Button("Log Out", role: .destructive) {
-//                Task {
-//                    showAlert = false
-//                    
-//                    sessionManager.refreshFailed = false
-//                    _ = await sessionManager.resetComplete()
-//                    navManager.reset(views: [.landing])
-//                }
-//            }
-//        }
         .onAppear {
             buttonDisabled = false
-        }
-        .onChange(of: focusedField) {
-            
         }
         .animation(.easeInOut(duration: 0.5), value: errorMessages)
         .background(Color.black.ignoresSafeArea())
@@ -183,16 +216,18 @@ struct FieldsEntryView: View {
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Button {
-                    if let _focusedField = focusedField {
-                        focusedField = max(_focusedField - 1, 0)
+                    if let _focusedField = focusedFieldCopy {
+                        focusedFieldCopy = max(_focusedField - 1, 0)
+                        focusedField.wrappedValue = focusedFieldCopy
                     }
                 } label: {
                     Image(systemName: "chevron.left")
                         .foregroundColor(.blue)
                 }
                 Button {
-                    if let _focusedField = focusedField {
-                        focusedField = min(_focusedField + 1, signUpFields.count - 1)
+                    if let _focusedField = focusedFieldCopy {
+                        focusedFieldCopy = min(_focusedField + 1, signUpFields.count - 1)
+                        focusedField.wrappedValue = focusedFieldCopy
                     }
                 } label: {
                     Image(systemName: "chevron.right")
@@ -215,6 +250,16 @@ struct FieldsEntryView: View {
             instruction = signUpField.loginInstruction
         } else {
             instruction = signUpField.resetInstruction
+        }
+        return instruction
+    }
+    
+    private func getLabel(_ signUpField: SignUpFields) -> String {
+        var instruction: String
+        if isNewPassword && signUpField == .email {
+            instruction = "Your previously selected email is your username"
+        } else {
+            instruction = selectInstructionType(signUpField)
         }
         return instruction
     }

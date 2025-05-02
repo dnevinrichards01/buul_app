@@ -13,6 +13,7 @@ struct FieldsRequestOTPView: View {
     @EnvironmentObject var sessionManager: UserSessionManager
     
     @FocusState private var focusedField: Int?
+    
     @State private var verificationEmail: String = ""
     @State private var verificationPhoneNumber: String = ""
     @State private var password: String = ""
@@ -23,6 +24,14 @@ struct FieldsRequestOTPView: View {
     @State private var email: String = ""
     @State private var fullName: String = ""
     
+    @State private var isSecureVerificationEmail: Bool = true
+    @State private var isSecureverificationPhoneNumber: Bool = true
+    @State private var isSecurepassword: Bool = true
+    @State private var isSecurepassword2: Bool = true
+    @State private var isSecurePhoneNumber: Bool = true
+    @State private var isSecureEmail: Bool = true
+    @State private var isSecureFullName: Bool = true
+    
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
     @State private var buttonDisabled: Bool = false
@@ -31,6 +40,7 @@ struct FieldsRequestOTPView: View {
     @State private var otherSelected: Bool = false
     @State private var customField: String = ""
     @State private var customFieldError: String = ""
+    @State private var buttonText: String = "Next"
     
     var signUpFields: [SignUpFields]
     var title: String?
@@ -39,7 +49,7 @@ struct FieldsRequestOTPView: View {
     var signUpField: SignUpFields
     var authenticate: Bool
     var isSignUp: Bool
-     
+    var isUserName: Bool = false
     
     
     private var fieldBindings: [SignUpFields: Binding<String>] {
@@ -51,6 +61,18 @@ struct FieldsRequestOTPView: View {
             .phoneNumber: $phoneNumber,
             .email: $email,
             .fullName: $fullName
+        ]
+    }
+    
+    private var isSecureBindings: [SignUpFields: Binding<Bool>] {
+        [
+            .verificationEmail: $isSecureVerificationEmail,
+            .verificationPhoneNumber: $isSecureverificationPhoneNumber,
+            .password: $isSecurepassword,
+            .password2: $isSecurepassword2,
+            .phoneNumber: $isSecurePhoneNumber,
+            .email: $isSecureEmail,
+            .fullName: $isSecureFullName
         ]
     }
     
@@ -94,12 +116,14 @@ struct FieldsRequestOTPView: View {
                     fieldBindings: fieldBindings,
                     suggestLogIn: false,
                     isSignUp: false,
-                    buttonText: "Next",
+                    buttonText: $buttonText,
+                    isUserName: isUserName,
                     alertMessage: $alertMessage,
                     showAlert: $showAlert,
                     errorMessages: $errorMessages,
                     buttonDisabled: $buttonDisabled,
-                    focusedField: $focusedField
+                    focusedField: $focusedField,
+                    isSecureBindings: isSecureBindings
                 )
             } else {
                 FieldsEntryView(
@@ -109,12 +133,14 @@ struct FieldsRequestOTPView: View {
                     fieldBindings: fieldBindings,
                     suggestLogIn: signUpField == .phoneNumber && !authenticate,
                     isSignUp: [.email, .phoneNumber].contains(signUpField) && !authenticate,
-                    buttonText: "Next",
+                    buttonText: $buttonText,
+                    isUserName: isUserName,
                     alertMessage: $alertMessage,
                     showAlert: $showAlert,
                     errorMessages: $errorMessages,
                     buttonDisabled: $buttonDisabled,
-                    focusedField: $focusedField
+                    focusedField: $focusedField,
+                    isSecureBindings: isSecureBindings
                 )
             }
         }
@@ -376,7 +402,8 @@ struct FieldsRequestOTPView: View {
         nextPage: .passwordRecoveryOTP,
         signUpField: .password,
         authenticate: false,
-        isSignUp: true
+        isSignUp: true,
+        isUserName: true
     )
         .environmentObject(NavigationPathManager())
         .environmentObject(UserSessionManager())

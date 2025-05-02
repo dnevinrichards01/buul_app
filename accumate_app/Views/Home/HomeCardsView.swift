@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct HomeCardsView: View {
-    let cards: [Card] = cardsList
+    @State private var cards: [Card] = cardsList
     @State private var selectedCard: Card?
     
     @EnvironmentObject var navManager : NavigationPathManager
@@ -57,11 +57,21 @@ struct HomeCardsView: View {
                     }
                 }
                 .padding(.top, 10)
+                .animation(.easeInOut(duration: 0.4), value: cards)
+                .onAppear {
+//                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+//                        getSpendingCategories()
+//                    }
+                }
             }
             .background(.black)
         }
         .padding(.bottom, 10)
         .background(Color.black.ignoresSafeArea())
+    }
+    
+    func getSpendingCategories() {
+        self.cards = self.cards.reversed()
     }
 }
 

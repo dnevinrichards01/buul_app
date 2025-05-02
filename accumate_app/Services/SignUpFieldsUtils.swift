@@ -53,7 +53,6 @@ class SignUpFieldsUtils {
             }
             errorMessagesDict[signUpField] = errorMessage
         }
-        
         return errorMessagesDict
     }
     

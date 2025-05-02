@@ -4,10 +4,12 @@
 <dict>
 	<key>com.apple.developer.associated-domains</key>
 	<array>
-		<string>applinks:bu-ul.com</string>
-		<string>webcredentials:bu-ul.com</string>
-		<string>applinks:shad-enormous-skink.ngrok-free.app</string>
+		<string>webcredentials:test.buul-load-balancer.link</string>
+		<string>webcredentials:prod.buul-load-balancer.link</string>
 		<string>webcredentials:shad-enormous-skink.ngrok-free.app</string>
+		<string>applinks:test.buul-load-balancer.link</string>
+		<string>applinks:prod.buul-load-balancer.link</string>
+		<string>applinks:shad-enormous-skink.ngrok-free.app</string>
 	</array>
 	<key>com.apple.security.app-sandbox</key>
 	<true/>

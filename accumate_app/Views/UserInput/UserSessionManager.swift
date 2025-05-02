@@ -109,6 +109,7 @@ class UserSessionManager: ObservableObject {
     }
     
     
+    
 //    @MainActor
     func authenticateUser(completion: @escaping (Result<Bool, AuthenticationError>) -> Void) {
         let context = LAContext()

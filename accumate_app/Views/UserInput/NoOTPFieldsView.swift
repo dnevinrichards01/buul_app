@@ -13,9 +13,14 @@ struct NoOTPFieldsView: View {
     @EnvironmentObject var sessionManager: UserSessionManager
     
     @FocusState private var focusedField: Int?
+    
     @State private var fullName: String = ""
     @State private var brokerage: String = ""
     @State private var symbol: String = ""
+    
+    @State private var isSecureFullName: Bool = true
+    @State private var isSecureBrokerage: Bool = true
+    @State private var isSecureSymbol: Bool = true
     
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
@@ -25,6 +30,8 @@ struct NoOTPFieldsView: View {
     @State private var otherSelected: Bool = false
     @State private var customField: String = ""
     @State private var customFieldError: String = ""
+    @State private var buttonText: String = "Next"
+    
     
     var signUpFields: [SignUpFields]
     var signUpField: SignUpFields
@@ -32,6 +39,7 @@ struct NoOTPFieldsView: View {
     var subtitle: String?
     var nextPage: NavigationPathViews
     var authenticate: Bool
+    var isUserName: Bool = false
     
     
     private var fieldBindings: [SignUpFields: Binding<String>] {
@@ -39,6 +47,14 @@ struct NoOTPFieldsView: View {
             .fullName: $fullName,
             .brokerage: $brokerage,
             .symbol: $symbol
+        ]
+    }
+    
+    private var isSecureBindings: [SignUpFields: Binding<Bool>] {
+        [
+            .fullName: $isSecureFullName,
+            .brokerage: $isSecureBrokerage,
+            .symbol: $isSecureSymbol
         ]
     }
     
@@ -80,12 +96,14 @@ struct NoOTPFieldsView: View {
                     signUpFields: signUpFields,
                     fieldBindings: fieldBindings,
                     isSignUp: true,
-                    buttonText: "Next",
+                    buttonText: $buttonText,
+                    isUserName: isUserName,
                     alertMessage: $alertMessage,
                     showAlert: $showAlert,
                     errorMessages: $errorMessages,
                     buttonDisabled: $buttonDisabled,
-                    focusedField: $focusedField
+                    focusedField: $focusedField,
+                    isSecureBindings: isSecureBindings
                 )
             }
         }
@@ -278,7 +296,8 @@ struct NoOTPFieldsView: View {
         title: nil,
         subtitle: nil,
         nextPage: .signUpPassword,
-        authenticate: false
+        authenticate: false,
+        isUserName: false
     )
     .environmentObject(NavigationPathManager())
     .environmentObject(UserSessionManager())

@@ -25,6 +25,7 @@ struct SelectOptionView: View {
     @Binding var customFieldError: String
     @State var isSecure: Bool
     @FocusState var focusedField: Int?
+    @State var focusedFieldCopy: Int?
     
     init(
         title: String? = nil,
@@ -181,7 +182,9 @@ struct SelectOptionView: View {
                             keyboard: .default,
                             isSecure: $isSecure,
                             focusedField: $focusedField,
-                            index: -1
+                            focusedFieldCopy: $focusedFieldCopy,
+                            index: 0,
+                            totalFields: 1
                         )
                         Text(customFieldError)
                             .foregroundColor(.red)

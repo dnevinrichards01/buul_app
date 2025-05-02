@@ -24,6 +24,7 @@ struct RobinhoodFieldsEntryView: View {
     @Binding var errorMessages: [String?]?
     @Binding var buttonDisabled: Bool
     @FocusState var focusedField: Int?
+    @State var focusedFieldCopy: Int?
     @Binding var timedOut: Bool
     
     init(title: String?, subtitle: String?, signUpFields: [SignUpFields], fieldBindings: [SignUpFields : Binding<String>],
@@ -65,9 +66,10 @@ struct RobinhoodFieldsEntryView: View {
                         errorMessage: errorMessages?[index],
                         signUpField: signUpField,
                         focusedField: $focusedField,
-                        index: index
+                        focusedFieldCopy: $focusedFieldCopy,
+                        index: index,
+                        totalFields: signUpFields.count
                     )
-                    .focused($focusedField, equals: index)
                 }
             }
             
@@ -142,21 +144,6 @@ struct RobinhoodFieldsEntryView: View {
                 }
             }
         }
-//        .alert(sessionManager.refreshFailedMessage, isPresented: $sessionManager.refreshFailed) {
-//            Button("OK", role: .cancel) {
-//                showAlert = false
-//                sessionManager.refreshFailed = false
-//            }
-//            Button("Log Out", role: .destructive) {
-//                Task {
-//                    showAlert = false
-//                    
-//                    sessionManager.refreshFailed = false
-//                    _ = await sessionManager.resetComplete()
-//                    navManager.reset(views: [.landing])
-//                }
-//            }
-//        }
         .padding()
         .animation(.easeInOut(duration: 0.5), value: errorMessages)
         .background(.black)
@@ -165,18 +152,18 @@ struct RobinhoodFieldsEntryView: View {
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Button {
-                    if let _focusedField = focusedField {
-                        focusedField = max(_focusedField - 1, 0)
-                        print(focusedField)
+                    if let _focusedField = focusedFieldCopy {
+                        focusedFieldCopy = max(_focusedField - 1, 0)
+                        focusedField = focusedFieldCopy
                     }
                 } label: {
                     Image(systemName: "chevron.left")
                         .foregroundColor(.blue)
                 }
                 Button {
-                    if let _focusedField = focusedField {
-                        focusedField = min(_focusedField + 1, signUpFields.count - 1)
-                        print(focusedField)
+                    if let _focusedField = focusedFieldCopy {
+                        focusedFieldCopy = min(_focusedField + 1, signUpFields.count - 1)
+                        focusedField = focusedFieldCopy
                     }
                 } label: {
                     Image(systemName: "chevron.right")

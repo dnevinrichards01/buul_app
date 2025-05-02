@@ -11,6 +11,11 @@ import SwiftUI
 struct SignUpPasswordView: View {
     @State private var password: String = ""
     @State private var password2: String = ""
+    @State private var email: String = ""
+    @State private var isSecurePassword: Bool = true
+    @State private var isSecurePassword2: Bool = true
+    @State private var isSecureEmail: Bool = true
+    
     @FocusState private var focusedField: Int?
     
     @State private var errorMessages: [String?]? = nil
@@ -21,21 +26,30 @@ struct SignUpPasswordView: View {
     @State private var showAlert: Bool = false
     @State private var reEnterField: SignUpFields?
     @State private var buttonDisabled: Bool = false
+    @State private var buttonText: String = "Create Account"
+    @State private var hideFields: [SignUpFields] = []
     
-    private var alertMessagePhoneNumber: String = "This phone number has been taken since you entered it, or your account has been created but due to an error you must go to login page."
-    private var alertMessageEmail: String = "This email has been taken since you entered it, or your account has been created but due to an error you must go to login page."
     
-    
-    var signUpFields: [SignUpFields] = [.password, .password2, .email, .phoneNumber]
-    var signUpField: SignUpFields = .password
+    var signUpFields: [SignUpFields] = [.email, .password, .password2, .phoneNumber]
     var authenticate: Bool = false
+    var isUserName: Bool = true
     
     private var fieldBindings: [SignUpFields: Binding<String>] {
         [
+            .email: $email,
             .password: $password,
             .password2: $password2,
         ]
     }
+    private var isSecureBindings: [SignUpFields: Binding<Bool>] {
+        [
+            .email: $isSecureEmail,
+            .password: $isSecurePassword,
+            .password2: $isSecurePassword2,
+        ]
+    }
+    
+    
     
     @EnvironmentObject var navManager: NavigationPathManager
     @EnvironmentObject var sessionManager: UserSessionManager
@@ -46,17 +60,21 @@ struct SignUpPasswordView: View {
             subtitle: nil,
             signUpFields: signUpFields,
             fieldBindings: fieldBindings,
-            suggestLogIn: signUpField == .phoneNumber && !authenticate,
+            suggestLogIn: false,
             isSignUp: true,
-            buttonText: "Create Account",
+            buttonText: $buttonText,
+            isUserName: isUserName,
             alertMessage: $alertMessage,
             showAlert: $showAlert,
             errorMessages: $errorMessages,
             buttonDisabled: $buttonDisabled,
             focusedField: $focusedField,
-            isNewPassword: true
+            isNewPassword: true,
+            isSecureBindings: isSecureBindings,
+            hideFields: $hideFields
         )
         .onAppear {
+            email = sessionManager.email ?? ""
             password2 = ""
             focusedField = nil
             errorMessages = nil
@@ -83,8 +101,13 @@ struct SignUpPasswordView: View {
                 }
             }
         }
-        .onChange(of: buttonDisabled) { oldValue, newValue in
+        .onChange(of: buttonDisabled) {
             if !buttonDisabled { return }
+            
+            isSecureEmail = true
+            isSecurePassword = true
+            isSecurePassword2 = true
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
             
             if userCreated && !tokensRecieved {
                 login()
@@ -117,9 +140,15 @@ struct SignUpPasswordView: View {
                     showAlert = true
                     return
                 }
-                buttonDisabled = false
+                
                 sessionManager.isLoggedIn = true
-                navManager.append(.accountCreated)
+                buttonText = "Account Created!"
+
+                // Delay navigation so Keychain can intercept form submission
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+                    buttonDisabled = false
+                    navManager.append(.accountCreated)
+                }
             }
         }
         .animation(.easeInOut(duration: 0.5), value: errorMessages)
@@ -154,7 +183,7 @@ struct SignUpPasswordView: View {
             params: [
                 "pre_account_id" : sessionManager.preAccountId as Any,
                 "password" : password as Any,
-                "email" : sessionManager.email as Any,
+                "email" : email as Any,
                 "full_name" : sessionManager.fullName as Any,
                 "phone_number" : sessionManager.phoneNumber as Any
             ],
@@ -195,7 +224,7 @@ struct SignUpPasswordView: View {
                                 print("phone!")
                                 self.sessionManager.phoneNumber = nil
 //                                if !sessionManager.refreshFailed {
-                                    self.alertMessage = alertMessagePhoneNumber
+                                    self.alertMessage = "We found an error with your number. Please re-enter it."
                                     self.showAlert = true
 //                                }
                                 self.reEnterField = .phoneNumber
@@ -203,7 +232,7 @@ struct SignUpPasswordView: View {
                                 print("email!")
                                 self.sessionManager.email = nil
 //                                if !sessionManager.refreshFailed {
-                                    self.alertMessage = alertMessageEmail
+                                    self.alertMessage = "We found an error with your email. Please re-enter it."
                                     self.showAlert = true
 //                                }
                                 self.reEnterField = .email
