@@ -33,7 +33,7 @@ class UserSessionManager: ObservableObject {
     var robinhoodMFAType: RobinhoodMFAMethod?
     
     // page?
-    @AppStorage("buul.user.preAccountId") var preAccountId: Int?
+    @AppStorage("buul.user.preAccountId") var _preAccountId: Int?
     @AppStorage("buul.user.isLoggedIn") var isLoggedIn: Bool = false
     @AppStorage("buul.user.phoneNumber") var phoneNumber: String?
     @AppStorage("buul.user.email") var email: String?
@@ -43,7 +43,50 @@ class UserSessionManager: ObservableObject {
     @AppStorage("buul.user.etfSymbol") var etfSymbol: String?
     @AppStorage("buul.user.brokerageCompleted") var brokerageCompleted: Bool = false
     @AppStorage("buul.user.link") var linkCompleted: Bool = false
-    // alter the back buttons on sign up page to let a user go backwards even if they were dropped in there with no navigationpath / history
+    
+    var preAccountId: Int? {
+        get {
+            if _preAccountId == nil {
+                let newPreAccountId: Int =  Int.random(in: 10_000_000...99_999_999)
+                _preAccountId = newPreAccountId
+                return _preAccountId
+            } else {
+                return _preAccountId
+            }
+        }
+        set {
+            _preAccountId = newValue
+        }
+    }
+    
+    @AppStorage("buul.user.plaidItems") var plaidItemsData: String = "[]"
+    var plaidItems: [String] {
+        get {
+            (try? JSONDecoder().decode([String].self, from: Data(plaidItemsData.utf8))) ?? []
+        }
+        set {
+            if let encoded = try? JSONEncoder().encode(newValue) {
+                plaidItemsData = String(data: encoded, encoding: .utf8) ?? "[]"
+            }
+        }
+    }
+    
+    @AppStorage("buul.user.cardRecommendationsData") var cardRecommendationsData: String?
+    var cardRecommendations: SpendingCategoriesResponseSuccess? {
+        get {
+            if let jsonString = cardRecommendationsData,
+               let data = jsonString.data(using: .utf8) {
+                return try? JSONDecoder().decode(SpendingCategoriesResponseSuccess.self, from: data)
+            } else {
+                return nil
+            }
+        }
+        set {
+            if let data = try? JSONEncoder().encode(newValue) {
+                cardRecommendationsData = String(data: data, encoding: .utf8)
+            }
+        }
+    }
     
     init() {
         sharedKeychainReadContext.localizedReason = "Authenticate to access your saved credentials"
@@ -72,6 +115,7 @@ class UserSessionManager: ObservableObject {
         brokerageCompleted = false
         robinhoodMFAType = nil
         preAccountId = nil
+        plaidItems = []
         CoreDataStockManager.shared.clearAll()
         return true
     }
@@ -102,6 +146,7 @@ class UserSessionManager: ObservableObject {
             brokeragePassword = nil
             robinhoodMFAType = nil
             preAccountId = nil
+            plaidItems = []
             CoreDataStockManager.shared.clearAll()
             return true
         }

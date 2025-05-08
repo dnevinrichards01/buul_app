@@ -125,7 +125,13 @@ struct SelectOptionView: View {
                                         growth: etf.growth,
                                         etf: etf,
                                         buttonDisabled: $buttonDisabled,
-                                        selectedETF: $selectedETF
+                                        selectedETF: $selectedETF,
+                                        description: etf.description,
+                                        compositionImages: etf.compositionImages,
+                                        link: etf.link,
+                                        targetDemographic: etf.targetDemographic,
+                                        pros: etf.pros,
+                                        cons: etf.cons
                                     )
                                 }
                                 Button {
@@ -155,6 +161,7 @@ struct SelectOptionView: View {
                                 }
                             }
                             .padding(.top, 10)
+                            .animation(.easeInOut(duration: 0.4), value: selectedETF)
                         }
                         .background(.black)
                     } else {

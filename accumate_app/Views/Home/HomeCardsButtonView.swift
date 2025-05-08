@@ -100,9 +100,6 @@ struct HomeCardsButtonView: View {
                     .padding(.top, 5)
                 }
             }
-//            Divider()
-//                .frame(height: 2)
-//                .background(.white.opacity(0.8))
         }
         .padding(.vertical, 15)
         .background(Color.black.ignoresSafeArea())

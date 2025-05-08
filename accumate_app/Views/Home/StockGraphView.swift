@@ -333,7 +333,12 @@ struct StockGraphView: View {
     func changeText() -> String {
         guard stockData.count > 1 else { return "0.00%" }
         let change = stockData.last!.price - stockData[0].price
-        let percentage = (change / stockData[0].price) * 100
+        var percentage: CGFloat
+        if stockData[0].price == 0 {
+            percentage = 0
+        } else {
+            percentage = (change / stockData[0].price ) * 100
+        }
         return formatAsCurrency(abs(change)) + " (" + String(format: "%.2f%%", percentage) + ")"
     }
     

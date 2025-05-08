@@ -26,6 +26,7 @@ enum NavigationPathViews: CaseIterable {
     case login
     case plaidInfo
     case link
+    case redeemCashbackInstructions
     case passwordRecoveryOTP
     case emailRecover
     case passwordRecoverInitiate
@@ -53,7 +54,12 @@ enum NavigationPathViews: CaseIterable {
     case changeETF
     case plaidInfoAdd
     case linkAdd
+    case redeemCashbackInstructionsAdd
+    case plaidInfoUpdate
+    case linkUpdate
+    case redeemCashbackInstructionsUpdate
     case plaidSettingsHelp
     case plaidSettings
+    case redeemCashbackInstructionsHelp
 }
 

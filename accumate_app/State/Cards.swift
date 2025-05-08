@@ -55,8 +55,8 @@ var chaseFreedomFlex = Card(
 )
 
 
-struct Card: Identifiable, Hashable {
-    let id: UUID = UUID()
+struct Card: Codable, Identifiable, Hashable {
+    var id: UUID = UUID()
     let name: String
     let description: String
     let imageName: String

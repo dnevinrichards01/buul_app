@@ -44,23 +44,28 @@ struct SettingsHelpView: View {
                                 .padding(.trailing, 20)
                         }
                     }
+                    .padding(.top, -15)
                     Divider()
                         .frame(height: 1)
                         .background(.white.opacity(0.8))
                         .padding(.top, -15)
                     
                 }
-                .onChange(of: selectedHelpSetting) { newSetting, oldSetting in
-                    if newSetting != nil {
+                .onChange(of: selectedHelpSetting) {
+                    if selectedHelpSetting != nil {
                         switch selectedHelpSetting {
                         case .faq:
                             break
+                        case .autoredeem:
+                            navManager.append(.redeemCashbackInstructionsHelp)
                         case .none:
                             break
                         }
+                        selectedHelpSetting = nil
                     }
                 }
                 .padding(.bottom, 30)
+                
                 VStack {
                     Text("Please contact us at the address below with any questions, concerns, bugs, and more:")
                         .font(.headline)
@@ -105,12 +110,14 @@ struct SettingsHelpView: View {
 
 enum HelpSettings: CaseIterable {
     case faq
+    case autoredeem
 //    case documents
 
     /// Returns a user-friendly display name
     var displayName: String {
         switch self {
         case .faq: return "FAQ - coming soon"
+        case .autoredeem: return "Autoredeem your cashback"
         }
     }
 }

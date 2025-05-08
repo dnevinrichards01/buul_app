@@ -8,16 +8,52 @@
 import SwiftUI
 import LinkKit
 
+struct LinkViewUpdate: View {
+    @EnvironmentObject var linkManager: PlaidLinkManager
+    var goBackNPagesToRedoEntries: Int
+    var goBackNPagesIfCompleted: Int
+    var nextPage: NavigationPathViews?
+    var isSignUp: Bool
+    
+    var body: some View {
+        LinkViewBase(
+            goBackNPagesToRedoEntries: goBackNPagesToRedoEntries,
+            goBackNPagesIfCompleted: goBackNPagesIfCompleted,
+            nextPage: nextPage,
+            isSignUp: isSignUp,
+            linkManager: linkManager
+        )
+    }
+}
+
 struct LinkView: View {
+    @StateObject var linkManager: PlaidLinkManager = PlaidLinkManager()
+    var goBackNPagesToRedoEntries: Int
+    var goBackNPagesIfCompleted: Int
+    var nextPage: NavigationPathViews?
+    var isSignUp: Bool
+    
+    var body: some View {
+        LinkViewBase(
+            goBackNPagesToRedoEntries: goBackNPagesToRedoEntries,
+            goBackNPagesIfCompleted: goBackNPagesIfCompleted,
+            nextPage: nextPage,
+            isSignUp: isSignUp,
+            linkManager: linkManager
+        )
+    }
+}
+
+struct LinkViewBase: View {
     @EnvironmentObject var navManager : NavigationPathManager
     @EnvironmentObject var sessionManager: UserSessionManager
-    @StateObject private var linkManager: PlaidLinkManager = PlaidLinkManager()
     
     
     var goBackNPagesToRedoEntries: Int
     var goBackNPagesIfCompleted: Int
     @State var nextPage: NavigationPathViews?
     var isSignUp: Bool
+    @ObservedObject var linkManager: PlaidLinkManager
     
     var body: some View {
         PlaidLinkPageBackground(
@@ -25,9 +61,9 @@ struct LinkView: View {
             disableLoadingCircle: $linkManager.disableLoadingCircle,
             nextPage: $nextPage,
             goBackNPagesIfCompleted: goBackNPagesIfCompleted,
-            isSignUp: isSignUp
+            isSignUp: isSignUp,
+            linkManager: linkManager
         )
-        .environmentObject(linkManager)
         .padding()
         .fullScreenCover(
             isPresented: $linkManager.isPresentingLink,

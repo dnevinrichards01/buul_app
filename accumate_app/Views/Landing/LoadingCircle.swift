@@ -48,12 +48,12 @@ struct LoadingCircle: View {
 struct PlaidLinkPageBackground: View {
     @EnvironmentObject var navManager: NavigationPathManager
     @EnvironmentObject var sessionManager: UserSessionManager
-    @EnvironmentObject var linkManager: PlaidLinkManager
     @Binding var isPresentingLink: Bool
     @Binding var disableLoadingCircle: Bool
     @Binding var nextPage: NavigationPathViews?
     var goBackNPagesIfCompleted: Int
     var isSignUp: Bool
+    @ObservedObject var linkManager: PlaidLinkManager
     
     
     var body: some View {

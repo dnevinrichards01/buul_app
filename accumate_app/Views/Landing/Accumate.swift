@@ -11,6 +11,7 @@ import SwiftUI
 struct Buul: App {
     @StateObject var navManager = NavigationPathManager()
     @StateObject var sessionManager = UserSessionManager()
+    @StateObject var plaidManager = PlaidLinkManager()
     
     init() {
         initToolbarAppearance()
@@ -21,6 +22,7 @@ struct Buul: App {
             LoadingScreen()
                 .environmentObject(navManager)
                 .environmentObject(sessionManager)
+                .environmentObject(plaidManager)
         }
     }
     
@@ -233,10 +235,14 @@ struct LoadingScreen: View {
                     LinkView(
                         goBackNPagesToRedoEntries: 0,
                         goBackNPagesIfCompleted: 0,
+                        nextPage: .redeemCashbackInstructions,
+                        isSignUp: true
+                    )
+                case .redeemCashbackInstructions:
+                    RedeemCashbackInstructionsView(
                         nextPage: .home,
                         isSignUp: true
                     )
-                    // recover account info
                 case .emailRecover:
                     EmailRecoverView()
                 case .passwordRecoverInitiate:
@@ -442,8 +448,36 @@ struct LoadingScreen: View {
                     LinkView(
                         goBackNPagesToRedoEntries: 0,
                         goBackNPagesIfCompleted: 2,
-                        nextPage: nil,
+                        nextPage: .redeemCashbackInstructionsAdd,
                         isSignUp: false
+                    )
+                case .redeemCashbackInstructionsAdd:
+                    RedeemCashbackInstructionsView(
+                        nextPage: .home,
+                        isSignUp: false
+                    )
+                case .plaidInfoUpdate:
+                    PlaidInfo(
+                        nextPage: .linkUpdate,
+                        isSignUp: false
+                    )
+                case .linkUpdate:
+                    LinkViewUpdate(
+                        goBackNPagesToRedoEntries: 0,
+                        goBackNPagesIfCompleted: 2,
+                        nextPage: .redeemCashbackInstructionsUpdate,
+                        isSignUp: false
+                    )
+                case .redeemCashbackInstructionsUpdate:
+                    RedeemCashbackInstructionsView(
+                        nextPage: .home,
+                        isSignUp: false
+                    )
+                case .redeemCashbackInstructionsHelp:
+                    RedeemCashbackInstructionsView(
+                        nextPage: .home,
+                        isSignUp: true,
+                        goBackNPagesOnCompletion: 1
                     )
                 }
             }

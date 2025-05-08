@@ -16,6 +16,7 @@ struct RobinhoodFieldsEntryView: View {
     var subtitle: String?
     var signUpFields: [SignUpFields]
     var fieldBindings: [SignUpFields : Binding<String>]
+    var isSecureBindings: [SignUpFields : Binding<Bool>]
     var suggestLogIn: Bool
     var isLogin: Bool
     var isSignUp: Bool
@@ -27,13 +28,26 @@ struct RobinhoodFieldsEntryView: View {
     @State var focusedFieldCopy: Int?
     @Binding var timedOut: Bool
     
-    init(title: String?, subtitle: String?, signUpFields: [SignUpFields], fieldBindings: [SignUpFields : Binding<String>],
-         suggestLogIn: Bool = false, isLogin: Bool = false, isSignUp: Bool = false, alertMessage: Binding<String>,
-         showAlert: Binding<Bool>, errorMessages: Binding<[String?]?>, buttonDisabled: Binding<Bool>, timedOut: Binding<Bool>) {
+    init(
+        title: String?,
+        subtitle: String?,
+        signUpFields: [SignUpFields],
+        fieldBindings: [SignUpFields : Binding<String>],
+        isSecureBindings: [SignUpFields : Binding<Bool>],
+        suggestLogIn: Bool = false,
+        isLogin: Bool = false,
+        isSignUp: Bool = false,
+        alertMessage: Binding<String>,
+        showAlert: Binding<Bool>,
+        errorMessages: Binding<[String?]?>,
+        buttonDisabled: Binding<Bool>,
+        timedOut: Binding<Bool>
+    ) {
         self.title = title
         self.subtitle = subtitle
         self.signUpFields = signUpFields
         self.fieldBindings = fieldBindings
+        self.isSecureBindings = isSecureBindings
         self.suggestLogIn = suggestLogIn
         self.isLogin = isLogin
         self.isSignUp = isSignUp
@@ -57,7 +71,7 @@ struct RobinhoodFieldsEntryView: View {
             ForEach(0..<signUpFields.count, id: \.self) { index in
                 let signUpField = signUpFields[index]
                
-                if let binding = fieldBindings[signUpField], signUpFields.contains(signUpField) {
+                if let binding = fieldBindings[signUpField], let isSecureBinding = isSecureBindings[signUpField], signUpFields.contains(signUpField) {
                     SignUpFieldView(
                         instruction: selectInstructionType(signUpField),
                         placeholder: signUpField.placeholder,
@@ -68,7 +82,8 @@ struct RobinhoodFieldsEntryView: View {
                         focusedField: $focusedField,
                         focusedFieldCopy: $focusedFieldCopy,
                         index: index,
-                        totalFields: signUpFields.count
+                        totalFields: signUpFields.count,
+                        isSecure: isSecureBinding
                     )
                 }
             }

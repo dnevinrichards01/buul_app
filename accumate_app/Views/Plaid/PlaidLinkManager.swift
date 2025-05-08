@@ -30,6 +30,8 @@ class PlaidLinkManager: ObservableObject {
     
     @Published var disableLoadingCircle = false
     
+    @Published var updateInstitutionName: String?
+    
     func reset() {
         plaidUserRequested = false
         plaidUserCreated = false
@@ -100,10 +102,22 @@ class PlaidLinkManager: ObservableObject {
         }
     }
     
+    func getRequestLinkTokenParams() -> [String : Any]? {
+        if let updateInstitutionName = updateInstitutionName {
+            return [
+                "update": true,
+                "institution_name": updateInstitutionName as Any
+            ]
+        } else {
+            return nil
+        }
+    }
+    
     func requestLinkToken(_ sessionManager: UserSessionManager) {
         ServerCommunicator().callMyServer(
             path: "api/plaid/linktokencreate/",
             httpMethod: .post,
+            params: getRequestLinkTokenParams(),
             sessionManager: sessionManager,
             responseType: SuccessErrorResponse.self
         ) { response in
@@ -138,9 +152,9 @@ class PlaidLinkManager: ObservableObject {
                         self.alertMessage = ServerCommunicator.NetworkError.networkError.errorMessage
                         self.showAlert = true
 //                    }
-                } else if let _ = responseData.error, responseData.success == nil {
+                } else if let errorMessage = responseData.error, responseData.success == nil {
 //                    if !sessionManager.refreshFailed {
-                        self.alertMessage = ServerCommunicator.NetworkError.statusCodeError(400).errorMessage
+                        self.alertMessage = errorMessage
                         self.showAlert = true
 //                    }
                 } else {

@@ -14,6 +14,11 @@ struct SignUpRobinhoodView: View {
     @State private var password: String = ""
     @State private var password2: String = ""
     @State private var email: String = ""
+    
+    @State private var isSecurePassword: Bool = true
+    @State private var isSecurePassword2: Bool = true
+    @State private var isSecureEmail: Bool = true
+    
     @State private var mfaMethod: RobinhoodMFAMethod?
     
     @State private var showAlert: Bool = false
@@ -37,6 +42,14 @@ struct SignUpRobinhoodView: View {
         ]
     }
     
+    private var isSecureBindings: [SignUpFields: Binding<Bool>] {
+        [
+            .password: $isSecurePassword,
+            .password2: $isSecurePassword2,
+            .email: $isSecureEmail
+        ]
+    }
+    
     var body: some View {
         ZStack {
             RobinhoodFieldsEntryView(
@@ -44,6 +57,7 @@ struct SignUpRobinhoodView: View {
                 subtitle: nil,
                 signUpFields: signUpFields,
                 fieldBindings: fieldBindings,
+                isSecureBindings: isSecureBindings,
                 suggestLogIn: false,
                 isSignUp: true,
                 alertMessage: $alertMessage,
