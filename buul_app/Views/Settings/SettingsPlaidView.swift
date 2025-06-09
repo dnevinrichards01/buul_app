@@ -105,7 +105,9 @@ struct SettingsPlaidView: View {
             }
         }
         .refreshable {
-            fetchItems()
+            Task.detached {
+                await fetchItems()
+            }
         }
         .onChange(of: selectedSetting) { newSetting, oldSetting in
             if let selectedSetting = selectedSetting {
@@ -118,16 +120,18 @@ struct SettingsPlaidView: View {
             }
         }
         .onAppear {
-            items = sessionManager.plaidItems
-            fetchItems()
+            Task.detached {
+                await MainActor.run {
+                    selectedSetting = nil
+                    items = sessionManager.plaidItems
+                }
+                await fetchItems()
+            }
         }
         .environmentObject(plaidManager)
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden()
         .background(Color.black.ignoresSafeArea())
-        .onAppear() {
-            selectedSetting = nil
-        }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: {
@@ -142,8 +146,8 @@ struct SettingsPlaidView: View {
         }
     }
     
-    private func fetchItems() {
-        ServerCommunicator().callMyServer(
+    private func fetchItems() async {
+        await ServerCommunicator().callMyServer(
             path: "api/user/getplaiditems/",
             httpMethod: .get,
             sessionManager: sessionManager,

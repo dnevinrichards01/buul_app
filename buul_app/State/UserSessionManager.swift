@@ -10,7 +10,7 @@ import SwiftUI
 import LocalAuthentication
 import CoreData
 
-//@MainActor
+@MainActor
 class UserSessionManager: ObservableObject {
     @Published var otp: String?
     @Published var accessToken: String?

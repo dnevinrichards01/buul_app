@@ -229,7 +229,8 @@ struct LoadingScreen: View {
                 case .plaidInfo:
                     PlaidInfo(
                         nextPage: .link,
-                        isSignUp: true
+                        isSignUp: true,
+                        isUpdate: false
                     )
                 case .link:
                     LinkView(
@@ -442,7 +443,8 @@ struct LoadingScreen: View {
                 case .plaidInfoAdd:
                     PlaidInfo(
                         nextPage: .linkAdd,
-                        isSignUp: false
+                        isSignUp: false,
+                        isUpdate: false
                     )
                 case .linkAdd:
                     LinkView(
@@ -459,7 +461,8 @@ struct LoadingScreen: View {
                 case .plaidInfoUpdate:
                     PlaidInfo(
                         nextPage: .linkUpdate,
-                        isSignUp: false
+                        isSignUp: false,
+                        isUpdate: true
                     )
                 case .linkUpdate:
                     LinkViewUpdate(

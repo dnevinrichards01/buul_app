@@ -28,6 +28,7 @@ struct SignUpRobinhoodView: View {
     @State private var errorMessages: [String?]? = nil
     @State private var requested: Bool = false
     @State private var recieved: Bool = false
+    @State private var recieveSignInResultRetries: Int = 10
     
     var signUpFields: [SignUpFields]
     var title: String?
@@ -70,43 +71,61 @@ struct SignUpRobinhoodView: View {
                 LoadingCircle()
             }
         }
+        .onAppear {
+            recieveSignInResultRetries = 10
+        }
         .onChange(of: showAlert) { oldValue, newValue in
             guard oldValue && !newValue else { return }
-            if recieved && !isSignUp {
-                recieved = false
-                sessionManager.robinhoodMFAType = nil
-                sessionManager.brokerageEmail = nil
-                sessionManager.brokeragePassword = nil
-                if mfaMethod == nil {
-                    navManager.removeLast(4)
+            Task.detached {
+                if await recieved && !isSignUp {
+                    await MainActor.run {
+                        recieved = false
+                        sessionManager.robinhoodMFAType = nil
+                        sessionManager.brokerageEmail = nil
+                        sessionManager.brokeragePassword = nil
+                        if mfaMethod == nil {
+                            navManager.removeLast(4)
+                        }
+                    }
+                } else if await timedOut {
+                    await MainActor.run {
+                        buttonDisabled = true
+                    }
+                    await requestSignIn()
                 }
-            } else if timedOut {
-                buttonDisabled = true
-                requestSignIn()
             }
         }
         .onChange(of: buttonDisabled) {
             if !buttonDisabled { return }
-            let errorMessagesDictLocal = SignUpFieldsUtils.validateInputs(
-                signUpFields: signUpFields,
-                password: password,
-                password2: password2,
-                email: email
-            )
-            if let errorMessagesList = SignUpFieldsUtils.parseErrorMessages(signUpFields, errorMessagesDictLocal) {
-                errorMessages = errorMessagesList
-                buttonDisabled = false
-            } else {
-                requestSignIn()
+            Task.detached {
+                let errorMessagesDictLocal = SignUpFieldsUtils.validateInputs(
+                    signUpFields: signUpFields,
+                    password: await password,
+                    password2: await password2,
+                    email: await email
+                )
+                if let errorMessagesList = SignUpFieldsUtils.parseErrorMessages(signUpFields, errorMessagesDictLocal) {
+                    await MainActor.run {
+                        errorMessages = errorMessagesList
+                        buttonDisabled = false
+                    }
+                } else {
+                    await requestSignIn()
+                }
             }
         }
         .onChange(of: requested) {
             if !requested { return }
-            sleep(2)
-            recieveSignInResult()
+            Task.detached {
+                sleep(2)
+                if await recieveSignInResultRetries > 0 {
+                    await recieveSignInResult(retries: recieveSignInResultRetries)
+                }
+            }
         }
         .onChange(of: recieved) {
             if !recieved { return }
+            
             errorMessages = nil
             
             if mfaMethod == nil {
@@ -154,8 +173,8 @@ struct SignUpRobinhoodView: View {
     }
     
        
-    private func requestSignIn() {
-        ServerCommunicator().callMyServer(
+    private func requestSignIn() async {
+        await ServerCommunicator().callMyServer(
             path: "rh/login/",
             httpMethod: .post,
             params: [
@@ -222,8 +241,8 @@ struct SignUpRobinhoodView: View {
         }
     }
     
-    private func recieveSignInResult(retries: Int = 10) {
-        ServerCommunicator().callMyServer(
+    private func recieveSignInResult(retries: Int = 10) async {
+        await ServerCommunicator().callMyServer(
             path: "rh/login/",
             httpMethod: .get,
             params: nil,
@@ -259,7 +278,6 @@ struct SignUpRobinhoodView: View {
                     return
                 // success, set up OTP information
                 } else if let _ = responseData.success, responseData.error == nil {
-                    
                     self.requested = false
                     self.recieved = true
                     self.mfaMethod = nil
@@ -267,19 +285,17 @@ struct SignUpRobinhoodView: View {
                     self.buttonDisabled = false
                 // not yet ready
                 } else if responseData.error == nil && responseData.success == nil {
-                    
                     if retries > 0 {
-                        sleep(1)
-                        recieveSignInResult(retries: retries - 1)
-                        return
+                        self.recieveSignInResultRetries = retries - 1
+                        self.requested = true
+                    } else {
+                        self.alertMessage = "We timed out waiting for a response. Would you like to continue waiting?"
+                        self.showAlert = true
+                        self.errorMessages = nil
+                        self.requested = false
+                        self.buttonDisabled = false
+                        self.timedOut = true
                     }
-                    
-                    self.alertMessage = "We timed out waiting for a response. Would you like to continue waiting?"
-                    self.showAlert = true
-                    self.errorMessages = nil
-                    self.requested = false
-                    self.buttonDisabled = false
-                    self.timedOut = true
                 // alert because unexpected response
                 } else {
                     self.errorMessages = nil

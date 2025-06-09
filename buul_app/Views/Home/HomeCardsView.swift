@@ -74,8 +74,8 @@ struct HomeCardsView: View {
             if let cardData = sessionManager.cardRecommendations {
                 processSpendingCategories(cardData)
             }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                getSpendingCategories()
+            Task.detached {
+                await getSpendingCategories()
             }
         }
         .alert(alertMessage, isPresented: $showAlert) {
@@ -135,8 +135,8 @@ struct HomeCardsView: View {
     
     
     
-    private func getSpendingCategories() {
-        ServerCommunicator().callMyServer(
+    private func getSpendingCategories() async {
+        await ServerCommunicator().callMyServer(
             path: "api/user/getspendingrecommendations/",
             httpMethod: .get,
             sessionManager: sessionManager,
@@ -171,8 +171,6 @@ struct HomeCardsView: View {
                 }
             }
         }
-        
-        
     }
 }
 

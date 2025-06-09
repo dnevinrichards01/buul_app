@@ -14,6 +14,7 @@ struct SignUpRobinhoodMFAView: View {
     @State private var errorMessage: String?
     @State private var buttonDisabled: Bool = false
     @State private var requested: Bool = false
+    @State private var recieveSignInResultRetries: Int = 10
     @State private var recieved: Bool = false
     @State private var reEnterFields: Bool = false
     @State private var alertMessage: String = ""
@@ -199,13 +200,16 @@ struct SignUpRobinhoodMFAView: View {
             }
         }
         .onChange(of: buttonDisabled) {
-            if !buttonDisabled { return }
-            requestSignIn()
+            guard buttonDisabled else { return }
+            Task.detached {
+                await requestSignIn()
+            }
         }
         .onChange(of: requested) {
-            if !requested { return }
-            sleep(2)
-            recieveSignInResult()
+            guard requested else { return }
+            Task.detached {
+                await recieveSignInResult(retries: recieveSignInResultRetries)
+            }
         }
         .onChange(of: recieved) {
             if !recieved { return }
@@ -291,8 +295,8 @@ struct SignUpRobinhoodMFAView: View {
         return params
     }
 
-    private func requestSignIn() {
-        ServerCommunicator().callMyServer(
+    private func requestSignIn() async {
+        await ServerCommunicator().callMyServer(
             path: "rh/login/",
             httpMethod: .post,
             params: getParams(mfaMethod: self.mfaMethod, resendCode: self.resendCode),
@@ -353,8 +357,8 @@ struct SignUpRobinhoodMFAView: View {
         }
     }
     
-    private func recieveSignInResult(retries: Int = 7) {
-        ServerCommunicator().callMyServer(
+    private func recieveSignInResult(retries: Int = 7) async {
+        await ServerCommunicator().callMyServer(
             path: "rh/login/",
             httpMethod: .get,
             params: nil,
@@ -389,9 +393,12 @@ struct SignUpRobinhoodMFAView: View {
                 // not yet ready
                 } else if let _ = responseData.error, let _ = responseData.success {
                     
-                    if retries > 0 {
-                        sleep(1)
-                        recieveSignInResult(retries: retries - 1)
+                    if self.recieveSignInResultRetries > 0 {
+                        self.recieveSignInResultRetries = self.recieveSignInResultRetries - 1
+                        self.requested = false
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            self.requested = true
+                        }
                         return
                     }
                     self.errorMessage = nil

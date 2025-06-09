@@ -173,7 +173,9 @@ struct FieldsRequestOTPView: View {
                 errorMessages = errorMessagesList
                 buttonDisabled = false
             } else {
-                validateField()
+                Task.detached {
+                    await validateField()
+                }
             }
         }
         .onChange(of: submitted) {
@@ -301,8 +303,8 @@ struct FieldsRequestOTPView: View {
     }
     
     // make sure to set up double authentication for changing email or phone (verification code to both)
-    private func validateField() {
-        ServerCommunicator().callMyServer(
+    private func validateField() async {
+        await ServerCommunicator().callMyServer(
             path: Utils.getOTPEndpoint(signUpField, authenticate),
             httpMethod: .put,
             params: generateOTPParams(),

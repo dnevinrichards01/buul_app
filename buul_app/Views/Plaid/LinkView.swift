@@ -79,7 +79,7 @@ struct LinkViewBase: View {
             }
         )
         .onOpenURL { url in
-            if let code = Utils.extractCode(from: url) {
+            if let _ = Utils.extractCode(from: url) {
                 //oauthCode = code
                 // Call server to exchange code, update UI, etc.
             }
@@ -104,47 +104,27 @@ struct LinkViewBase: View {
                 }
             }
         }
-//        .alert(sessionManager.refreshFailedMessage, isPresented: $sessionManager.refreshFailed) {
-//            Button("OK", role: .cancel) {
-//                linkManager.showAlert = false
-//                linkManager.reset()
-//                linkManager.disableLoadingCircle = true
-//                
-//                sessionManager.refreshFailed = false
-//            }
-//            Button("Log Out", role: .destructive) {
-//                Task {
-//                    linkManager.showAlert = false
-//                    linkManager.reset()
-//                    linkManager.disableLoadingCircle = true
-//                    
-//                    sessionManager.refreshFailed = false
-//                    _ = await sessionManager.resetComplete()
-//                    navManager.reset(views: [.landing])
-//                }
-//            }
-//        }
         .onAppear {
-            linkManager.requestCreatePlaidUser(sessionManager)
+            Task.detached {
+                await linkManager.requestCreatePlaidUser(sessionManager)
+            }
         }
         .onChange(of: linkManager.plaidUserRequested) {
-            Task {
-                if !linkManager.plaidUserRequested { return }
-                try? await Task.sleep(nanoseconds: 1_500_000_000)
-                linkManager.verifyCreatePlaidUser(sessionManager)
+            guard linkManager.plaidUserRequested else { return }
+            Task.detached {
+                await linkManager.verifyCreatePlaidUser(sessionManager)
             }
         }
         .onChange(of: linkManager.plaidUserCreated) {
-            Task {
-                if !linkManager.plaidUserCreated { return }
-                linkManager.requestLinkToken(sessionManager)
+            guard linkManager.plaidUserCreated else { return }
+            Task.detached {
+                await linkManager.requestLinkToken(sessionManager)
             }
         }
         .onChange(of: linkManager.linkTokenRequested) {
-            Task {
-                if !linkManager.linkTokenRequested { return }
-                try? await Task.sleep(nanoseconds: 1_500_000_000)
-                linkManager.fetchLinkToken(sessionManager)
+            guard linkManager.linkTokenRequested else { return }
+            Task.detached {
+                await linkManager.fetchLinkToken(sessionManager)
             }
         }
         .onChange(of: linkManager.linkToken) {

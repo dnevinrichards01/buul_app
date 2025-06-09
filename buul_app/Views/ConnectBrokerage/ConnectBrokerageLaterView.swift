@@ -14,6 +14,7 @@ struct ConnectBrokerageLaterView: View {
     @State private var brokerage: Brokerages?
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
+    @State private var returnToHome: Bool = false
     
     init(isSignUp: Bool) {
         self.isSignUp = isSignUp
@@ -70,7 +71,9 @@ struct ConnectBrokerageLaterView: View {
                         sessionManager.brokerageCompleted = true
                         navManager.append(.plaidInfo)
                     } else {
-                        navManager.removeLast(4)
+                        returnToHome = true
+                        alertMessage = "Your brokerage selection has been updated."
+                        showAlert = true
                     }
                 } label: {
                     Text("Continue")
@@ -98,12 +101,17 @@ struct ConnectBrokerageLaterView: View {
             if showAlert {
                 Button("OK", role: .cancel) {
                     showAlert = false
+                    if returnToHome {
+                        navManager.removeLast(4)
+                    }
                 }
             }
         }
         .onAppear {
-            self.brokerage = Utils.getBrokerage(sessionManager: sessionManager)
-            print("name: ", sessionManager.brokerageName)
+            Task {
+                self.brokerage = await Utils.getBrokerage(sessionManager: sessionManager)
+                print("name: ", sessionManager.brokerageName as Any)
+            }
         }
         .onChange(of: showAlert) { oldValue, newValue in
             if oldValue && !newValue {

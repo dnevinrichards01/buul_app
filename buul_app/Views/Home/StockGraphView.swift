@@ -216,7 +216,7 @@ struct StockGraphView: View {
         }
 
         let point1 = stockData[index - 1]  // Left neighbor
-        let point2 = stockData[index]      // Right neighbor
+//        let point2 = stockData[index]      // Right neighbor
         
         return point1
 
@@ -295,12 +295,12 @@ struct StockGraphView: View {
     
     func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
-        var dateToFormate = date
+        let dateToFormat = date
         switch timePeriod {
         case .day:
             formatter.dateFormat = "h:mm a"
         case .week:
-//            dateToFormate = Calendar.current.date(
+//            dateToFormat = Calendar.current.date(
 //                bySettingHour: Calendar.current.component(.hour, from: date),
 //                minute: 0,
 //                second: 0,
@@ -308,7 +308,7 @@ struct StockGraphView: View {
 //            )!
             formatter.dateFormat = "h a, MMM dd"
         case .month:
-//            dateToFormate = Calendar.current.date(
+//            dateToFormat = Calendar.current.date(
 //                bySettingHour: Calendar.current.component(.hour, from: date),
 //                minute: 0,
 //                second: 0,
@@ -327,7 +327,7 @@ struct StockGraphView: View {
             formatter.dateFormat = "MMM, yyyy"
         }
         
-        return formatter.string(from: dateToFormate)
+        return formatter.string(from: dateToFormat)
     }
     
     func changeText() -> String {

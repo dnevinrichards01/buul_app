@@ -78,7 +78,9 @@ struct LoginView: View {
                 errorMessages = errorMessagesList
                 buttonDisabled = false
             } else {
-                login()
+                Task.detached {
+                    await login()
+                }
             }
         }
         .onChange(of: tokensRecieved) {
@@ -105,9 +107,11 @@ struct LoginView: View {
             }
         }
         .onChange(of: tokensSaved) {
-            print(tokensSaved)
-            if !tokensSaved { return }
-            getUserInfo()
+            guard tokensSaved else { return }
+            Task.detached {
+                print(await self.tokensSaved)
+                await getUserInfo()
+            }
         }
         .onChange(of: submitted) {
             if !submitted { return }
@@ -140,8 +144,8 @@ struct LoginView: View {
         }
     }
     
-    private func login() {
-        ServerCommunicator().callMyServer(
+    private func login() async {
+        await ServerCommunicator().callMyServer(
             path: "api/token/",
             httpMethod: .post,
             params: [
@@ -203,8 +207,8 @@ struct LoginView: View {
         }
     }
     
-    private func getUserInfo() {
-        ServerCommunicator().callMyServer(
+    private func getUserInfo() async {
+        await ServerCommunicator().callMyServer(
             path: "api/user/getuserinfo/",
             httpMethod: .get,
             sessionManager: sessionManager,

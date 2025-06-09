@@ -85,7 +85,7 @@ enum Brokerages: String, CaseIterable {
         case .fidelity:
             return [60, 60, 10]
         case .wealthSimple:
-            return [180, 70.2]
+            return [180, 70.2, 0]
         }
     }
     

@@ -87,7 +87,9 @@ struct EmailRecoverView: View {
         }
         .onChange(of: buttonDisabled) {
             if !buttonDisabled { return }
-            sendEmail()
+            Task.detached {
+                await sendEmail()
+            }
         }
         .animation(.easeInOut(duration: 0.5), value: errorMessage)
         .background(Color.black.ignoresSafeArea())
@@ -114,8 +116,8 @@ struct EmailRecoverView: View {
         }
     }
     
-    private func sendEmail() {
-        ServerCommunicator().callMyServer(
+    private func sendEmail() async {
+        await ServerCommunicator().callMyServer(
             path: "api/user/sendemail/",
             httpMethod: .post,
             params: [

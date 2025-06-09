@@ -86,10 +86,34 @@ class Utils {
         return ""
     }
     
-    static func getBrokerage(sessionManager: UserSessionManager, brokerageString: String? = nil) -> Brokerages? {
-        let brokerageName: String? = brokerageString ?? sessionManager.brokerageName
+    static func getBrokerage(sessionManager: UserSessionManager, brokerageString: String? = nil) async -> Brokerages? {
+        let brokerageName: String?
+        if let brokerageString = brokerageString {
+            brokerageName = brokerageString
+        } else {
+            brokerageName = await sessionManager.brokerageName
+        }
+        
         for brokerage in Brokerages.allCases {
-            print(brokerage.rawValue, brokerageName)
+            print(brokerage.rawValue as Any, brokerageName as Any)
+            if brokerage.rawValue == brokerageName {
+                return brokerage
+            }
+        }
+        return nil
+    }
+    
+    @MainActor
+    static func getBrokerageMainActor(sessionManager: UserSessionManager, brokerageString: String? = nil) -> Brokerages? {
+        let brokerageName: String?
+        if let brokerageString = brokerageString {
+            brokerageName = brokerageString
+        } else {
+            brokerageName = sessionManager.brokerageName
+        }
+        
+        for brokerage in Brokerages.allCases {
+            print(brokerage.rawValue as Any, brokerageName as Any)
             if brokerage.rawValue == brokerageName {
                 return brokerage
             }
@@ -427,8 +451,30 @@ class Utils {
 //        print(result.count)
         for i in result.indices {
             print(i, result[i].count)
-            if result[i].count < 2 {
-                result[i] = defaultData[i]
+            if result[i].count == 0 {
+                print("filling in zeros")
+                var mostRecentValue: Double?
+                for j in i..<result.count {
+                    print("checking", j)
+                    if result[j].count > 0 {
+                        mostRecentValue = result[j][result[j].count-1].price
+                        break
+                    } else {
+                        continue
+                    }
+                }
+                if let mostRecentValue = mostRecentValue {
+                    print("most recent value", mostRecentValue)
+                    result[i] = defaultData[i].map { original in
+                        var modified = original
+                        modified.price = mostRecentValue
+                        return modified
+                    }
+                    let allMatch = result[i].allSatisfy { $0.price == mostRecentValue }
+                    print("All prices match mostRecentValue:", allMatch)
+                } else {
+                    result[i] = defaultData[i]
+                }
 //                print(i, result[i].count)
             }
         }

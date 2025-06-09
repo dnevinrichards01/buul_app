@@ -12,12 +12,16 @@ struct PlaidInfo: View {
     
     var nextPage: NavigationPathViews
     var isSignUp: Bool
+    var isUpdate: Bool
     
     var body: some View {
         VStack {
             VStack (spacing: 10) {
                 HStack {
-                    Text("Connect your bank account with Plaid")
+                    // later add the specific institution instead of 'your bank'
+                    // to do that we need the link manager...
+                    // when we refactor app state, reset linkManager state before / after starting new link flow...
+                    Text(isUpdate ? "Update your bank's connection with Plaid" : "Connect your bank account with Plaid")
                         .font(.system(size: 30, weight: .bold))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
@@ -42,8 +46,8 @@ struct PlaidInfo: View {
                 VStack(alignment: .center, spacing: 20) {
                     FeatureItem(iconName: "building.columns", title: "Select Bank Accounts", description: "Select accounts you want us to monitor for redeemed cashback or withdraw from to deposit into your brokerage.")
                     FeatureItem(iconName: "tray.full", title: "Your Data", description: "We will view your balance to prevent overdrawing, and your transaction history to identify redeemed cashback.")
-                    FeatureItem(iconName: "shield.fill", title: "Revocable", description: "You will be able to revoke our access through settings, deleting your account, or contacting Buul")
-                    FeatureItem(iconName: "xmark.seal.fill", title: "Security", description: "Your data is only stored or accessed as needed with end-to-end encryption.")
+                    FeatureItem(iconName: "xmark.seal.fill", title: "Revocable", description: "You will be able to revoke our access through settings, deleting your account, or contacting Buul")
+                    FeatureItem(iconName: "shield.fill", title: "Security", description: "Your data is only stored or accessed as needed with end-to-end encryption.")
                 }
                 
                 Spacer()
@@ -51,7 +55,7 @@ struct PlaidInfo: View {
                 Button {
                     navManager.append(nextPage)
                 } label: {
-                    Text("Connect")
+                    Text(isUpdate ? "Update" : "Connect")
                         .font(.headline)
                         .foregroundColor(.black)
                         .frame(maxWidth: .infinity, minHeight: 50)
@@ -87,7 +91,8 @@ struct PlaidInfo: View {
 #Preview {
     PlaidInfo(
         nextPage: .home,
-        isSignUp: true
+        isSignUp: true,
+        isUpdate: false
     )
     .environmentObject(NavigationPathManager())
 }

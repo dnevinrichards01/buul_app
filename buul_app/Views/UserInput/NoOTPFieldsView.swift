@@ -115,20 +115,24 @@ struct NoOTPFieldsView: View {
         }
         .onChange(of: buttonDisabled) {
             if !buttonDisabled { return }
-            print("other", otherSelected)
-            if signUpFields == [.fullName] && signUpField == .fullName {
-                let errorMessagesDictLocal = SignUpFieldsUtils.validateInputs(
-                    signUpFields: signUpFields,
-                    fullName: fullName
-                )
-                if let errorMessagesList = SignUpFieldsUtils.parseErrorMessages(signUpFields, errorMessagesDictLocal) {
-                    errorMessages = errorMessagesList
-                    buttonDisabled = false
+            Task.detached {
+                print("other", await otherSelected)
+                if signUpFields == [.fullName] && signUpField == .fullName {
+                    let errorMessagesDictLocal = SignUpFieldsUtils.validateInputs(
+                        signUpFields: signUpFields,
+                        fullName: await fullName
+                    )
+                    if let errorMessagesList = SignUpFieldsUtils.parseErrorMessages(signUpFields, errorMessagesDictLocal) {
+                        await MainActor.run {
+                            errorMessages = errorMessagesList
+                            buttonDisabled = false
+                        }
+                    } else {
+                        await validateField()
+                    }
                 } else {
-                    validateField()
+                    await validateField()
                 }
-            } else {
-                validateField()
             }
         }
         .onChange(of: submitted) {
@@ -212,8 +216,8 @@ struct NoOTPFieldsView: View {
     }
     
     // make sure to set up double authentication for changing email or phone (verification code to both)
-    private func validateField() {
-        ServerCommunicator().callMyServer(
+    private func validateField() async {
+        await ServerCommunicator().callMyServer(
             path: Utils.getSignUpFieldsValidateEndpoint(signUpField),
             httpMethod: .post,
             params: generateParams(),

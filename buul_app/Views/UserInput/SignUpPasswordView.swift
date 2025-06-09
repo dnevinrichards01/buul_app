@@ -104,31 +104,41 @@ struct SignUpPasswordView: View {
         .onChange(of: buttonDisabled) {
             if !buttonDisabled { return }
             
-            isSecureEmail = true
-            isSecurePassword = true
-            isSecurePassword2 = true
-            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-            
-            if userCreated && !tokensRecieved {
-                login()
-                return
-            }
-            
-            let errorMessagesDictLocal = SignUpFieldsUtils.validateInputs(
-                signUpFields: signUpFields,
-                password: password,
-                password2: password2
-            )
-            if let errorMessagesList = SignUpFieldsUtils.parseErrorMessages(signUpFields, errorMessagesDictLocal) {
-                errorMessages = errorMessagesList
-                buttonDisabled = false
-            } else {
-                createUser()
+            Task.detached {
+                await MainActor.run {
+                    isSecureEmail = true
+                    isSecurePassword = true
+                    isSecurePassword2 = true
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                }
+                
+                let userCreated = await self.userCreated
+                let tokensRecieved = await self.tokensRecieved
+                if userCreated && !tokensRecieved {
+                    await login()
+                    return
+                }
+                
+                let errorMessagesDictLocal = SignUpFieldsUtils.validateInputs(
+                    signUpFields: signUpFields,
+                    password: await password,
+                    password2: await password2
+                )
+                if let errorMessagesList = SignUpFieldsUtils.parseErrorMessages(signUpFields, errorMessagesDictLocal) {
+                    await MainActor.run {
+                        errorMessages = errorMessagesList
+                        buttonDisabled = false
+                    }
+                } else {
+                    await createUser()
+                }
             }
         }
         .onChange(of: userCreated) {
-            if !userCreated { return }
-            login()
+            guard userCreated else { return }
+            Task.detached {
+                await login()
+            }
         }
         .onChange(of: tokensRecieved) {
             Task {
@@ -176,8 +186,8 @@ struct SignUpPasswordView: View {
         }
     }
     
-    private func createUser() {
-        ServerCommunicator().callMyServer(
+    private func createUser() async {
+        await ServerCommunicator().callMyServer(
             path: "api/user/createuser/",
             httpMethod: .post,
             params: [
@@ -262,8 +272,8 @@ struct SignUpPasswordView: View {
     }
     
     
-    private func login() {
-        ServerCommunicator().callMyServer(
+    private func login() async {
+        await ServerCommunicator().callMyServer(
             path: "api/token/",
             httpMethod: .post,
             params: [

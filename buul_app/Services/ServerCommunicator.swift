@@ -10,7 +10,7 @@ import Foundation
 ///
 /// Just a helper class that simplifies some of the work involved in calling our server
 ///
-class ServerCommunicator {
+class ServerCommunicator: @unchecked Sendable {
     
     let baseURL: String
 
@@ -45,7 +45,7 @@ class ServerCommunicator {
     }
 
 
-    init(baseURL: String = "https://shad-enormous-skink.ngrok-free.app/" ) { //"http://localhost:8000/", "http://10.0.0.206:8000/", "https://prod.buul-load-balancer.link/" "https://shad-enormous-skink.ngrok-free.app/"
+    init(baseURL: String = "https://prod.buul-load-balancer.link/" ) { //"http://localhost:8000/", "http://10.0.0.206:8000/", "https://prod.buul-load-balancer.link/" "https://shad-enormous-skink.ngrok-free.app/"
         self.baseURL = baseURL
     }
     
@@ -58,7 +58,7 @@ class ServerCommunicator {
         responseType: T.Type,
         tryRefresh: Bool = true,
         completion: @escaping (Result<T, NetworkError>) -> Void
-    ) {
+    ) async {
         print("params", params as Any)
         guard let url = URL(string: baseURL + path) else {
             completion(.failure(.invalidUrl))
@@ -69,7 +69,7 @@ class ServerCommunicator {
         request.httpMethod = httpMethod.rawValue
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
-        if let accessToken = sessionManager?.accessToken {
+        if let accessToken = await sessionManager?.accessToken {
             request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         }
 //        maybe add the host field here, and make sure it matches server_name in nginx
@@ -114,7 +114,7 @@ class ServerCommunicator {
                     if let sessionManager = sessionManager, httpResponse.statusCode == 401 {
                         if tryRefresh {
                             print("refresh")
-                            self.refresh(
+                            await self.refresh(
                                 sessionManager: sessionManager,
                                 path: path,
                                 httpMethod: httpMethod,
@@ -125,8 +125,10 @@ class ServerCommunicator {
                             )
                             return
                         } else {
-                            sessionManager.refreshFailedMessage = "Your session has timed out. To update or get new information, please log out and sign back in."
-                            sessionManager.refreshFailed = true
+                            await MainActor.run {
+                                sessionManager.refreshFailedMessage = "Your session has timed out. To update or get new information, please log out and sign back in."
+                                sessionManager.refreshFailed = true
+                            }
                         }
                     }
                     DispatchQueue.main.async {
@@ -170,11 +172,14 @@ class ServerCommunicator {
         responseType: T.Type,
         tryRefresh: Bool,
         completion: @escaping (Result<T, NetworkError>) -> Void
-    ) {
+    ) async {
         guard let url = URL(string: baseURL + "api/token/refresh/") else {
-            sessionManager.refreshFailed = true
-            sessionManager.refreshFailedMessage = "Your session has timed out and due to an internal error we could not refresh your session. To update or get new information, please log out and sign back in."
-            completion(.failure(.invalidUrl))
+            DispatchQueue.main.async {
+                sessionManager.refreshFailed = true
+                sessionManager.refreshFailedMessage = "Your session has timed out and due to an internal error we could not refresh your session. To update or get new information, please log out and sign back in."
+                completion(.failure(.invalidUrl))
+            }
+            
             return
         }
 
@@ -186,12 +191,14 @@ class ServerCommunicator {
         request.timeoutInterval = 3
         
         do {
-            let jsonData = try JSONSerialization.data(withJSONObject: ["refresh": sessionManager.refreshToken], options: [])
+            let jsonData = try JSONSerialization.data(withJSONObject: ["refresh": await sessionManager.refreshToken], options: [])
             request.httpBody = jsonData
         } catch {
-            sessionManager.refreshFailed = true
-            sessionManager.refreshFailedMessage = "Your session has timed out and due to an internal error we could not refresh your session. To update or get new information, please log out and sign back in."
-            completion(.failure(.encodingError))
+            DispatchQueue.main.async {
+                sessionManager.refreshFailed = true
+                sessionManager.refreshFailedMessage = "Your session has timed out and due to an internal error we could not refresh your session. To update or get new information, please log out and sign back in."
+                completion(.failure(.encodingError))
+            }
             return
         }
 
@@ -224,7 +231,7 @@ class ServerCommunicator {
                 guard (200...299).contains(httpResponse.statusCode) else {
                     if refreshRetries > 0 {
                         print("refresh retry")
-                        self.refresh(
+                        await self.refresh(
                             sessionManager: sessionManager,
                             refreshRetries: refreshRetries - 1,
                             path: path,
@@ -258,26 +265,24 @@ class ServerCommunicator {
                     decoder.keyDecodingStrategy = .convertFromSnakeCase
                     let decodedResponse = try decoder.decode(LoginResponse.self, from: data)
                     print(decodedResponse)
-                    DispatchQueue.main.async {
+                    await MainActor.run {
 //                        print("refresh complete", "sessionManager.refreshToken", "sessionManager.accessToken")
                         sessionManager.refreshFailed = false
                         sessionManager.refreshFailedMessage = ""
                         sessionManager.refreshToken = decodedResponse.refresh
                         sessionManager.accessToken = decodedResponse.access
-                        print("Refresh: ", decodedResponse.refresh, sessionManager.refreshToken)
-                        print("refresh failed?: ", sessionManager.refreshFailed)
-                        
-                        self.callMyServer(
-                            path: path,
-                            httpMethod: httpMethod,
-                            params: params,
-                            sessionManager: sessionManager,
-                            responseType: responseType,
-                            tryRefresh: false,
-                            completion: completion
-                        )
+                        print("Refresh: " as Any, decodedResponse.refresh, sessionManager.refreshToken as Any)
+                        print("refresh failed?: " as Any, sessionManager.refreshFailed as Any)
                     }
-                    
+                    await self.callMyServer(
+                        path: path,
+                        httpMethod: httpMethod,
+                        params: params,
+                        sessionManager: sessionManager,
+                        responseType: responseType,
+                        tryRefresh: false,
+                        completion: completion
+                    )
                 } catch {
                     DispatchQueue.main.async {
                         sessionManager.refreshFailed = true

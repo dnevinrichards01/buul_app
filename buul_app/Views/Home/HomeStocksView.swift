@@ -199,7 +199,7 @@ struct RecieveStockDataPoint: Hashable, Codable {
 struct StockDataPoint: Identifiable, Hashable, Codable {
     let id = UUID()
     let date: Date
-    let price: Double
+    var price: Double
 
     enum CodingKeys: String, CodingKey {
         case date, price

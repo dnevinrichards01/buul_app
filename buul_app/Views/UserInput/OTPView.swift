@@ -116,7 +116,7 @@ struct OTPView: View {
         }
         .onChange(of: showAlert) { oldValue, newValue in
             if oldValue && !newValue {
-                let brokerage: Brokerages? = Utils.getBrokerage(sessionManager: sessionManager, brokerageString: sessionManager.stringToVerify)
+                let brokerage: Brokerages? = Utils.getBrokerageMainActor(sessionManager: sessionManager, brokerageString: sessionManager.stringToVerify)
                 nextPage = brokerage?.changeSecurityInfo
                 
                 
@@ -142,9 +142,11 @@ struct OTPView: View {
             }
         }
         .onChange(of: buttonDisabled) {
-            if !buttonDisabled || resendCodeDisabled { return }
+            guard buttonDisabled && !resendCodeDisabled else { return }
             if otp == Utils.truncateTo6Digits(text: otp) && otp.count == 6 {
-                submitOTP()
+                Task.detached {
+                    await submitOTP()
+                }
             } else {
                 errorMessage = "The code must be exactly 6 digits."
                 buttonDisabled = false
@@ -153,7 +155,9 @@ struct OTPView: View {
         }
         .onChange(of: resendCodeDisabled) {
             if !resendCodeDisabled || buttonDisabled { return }
-            resendOTP()
+            Task.detached {
+                await resendOTP()
+            }
         }
         .onChange(of: submitted) {
             if !submitted { return }
@@ -214,7 +218,7 @@ struct OTPView: View {
                     showAlert = true
                 case .brokerage:
                     sessionManager.brokerageName = sessionManager.stringToVerify
-                    let brokerage: Brokerages? = Utils.getBrokerage(sessionManager: sessionManager, brokerageString: sessionManager.stringToVerify)
+                    let brokerage: Brokerages? = Utils.getBrokerageMainActor(sessionManager: sessionManager, brokerageString: sessionManager.stringToVerify)
                     nextPage = brokerage?.changeSecurityInfo
                     navManager.append(nextPage ?? .robinhoodSecurityInfo)
                 default:
@@ -313,8 +317,8 @@ struct OTPView: View {
         return params
     }
     
-    private func submitOTP() {
-        ServerCommunicator().callMyServer(
+    private func submitOTP() async {
+        await ServerCommunicator().callMyServer(
             path: Utils.getOTPEndpoint(signUpField, authenticate),
             httpMethod: .post,
             params: generateOTPParams(isRequestOTP: false),
@@ -384,8 +388,8 @@ struct OTPView: View {
         }
     }
     
-    private func resendOTP() {
-        ServerCommunicator().callMyServer(
+    private func resendOTP() async {
+        await ServerCommunicator().callMyServer(
             path: Utils.getOTPEndpoint(signUpField, authenticate),
             httpMethod: .put,
             params: generateOTPParams(isRequestOTP: true),

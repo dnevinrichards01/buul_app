@@ -60,7 +60,7 @@ struct PlaidLinkPageBackground: View {
         ZStack {
             VStack {
                 HStack {
-                    Text("Connecting to your bank with Plaid")
+                    Text(linkManager.updateInstitutionName != nil ? "Updating your bank's connection with Plaid" :  "Connecting to your bank with Plaid")
                         .font(.system(size: 30, weight: .bold))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
@@ -112,14 +112,16 @@ struct PlaidLinkPageBackground: View {
                     .disabled(isPresentingLink)
                     
                     Button {
+                        
                         linkManager.reset()
-                        linkManager.requestCreatePlaidUser(sessionManager)
-//                        withAnimation(Animation.linear(duration: 3).repeatForever(autoreverses: false)) {
-//                            disableLoadingCircle = false
-//                        }
-                        disableLoadingCircle = false
+                        Task.detached {
+                            await linkManager.requestCreatePlaidUser(sessionManager)
+                            await MainActor.run {
+                                self.disableLoadingCircle = false
+                            }
+                        }
                     } label: {
-                        Text("Link more bank accounts")
+                        Text(linkManager.updateInstitutionName != nil ? "Retry" : "Link more bank accounts")
                             .font(.subheadline)
                             .foregroundColor(.black)
                             .frame(maxWidth: .infinity, minHeight: 50)

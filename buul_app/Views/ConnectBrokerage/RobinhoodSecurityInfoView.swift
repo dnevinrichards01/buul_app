@@ -37,7 +37,7 @@ struct RobinhoodSecurityInfoView: View {
                             .resizable()
                             .frame(width: brokerage.secondaryImageDim[0], height: brokerage.secondaryImageDim[1])
                             .padding(.leading, -6)
-                            .padding(.bottom, brokerage.secondaryImageDim[1])
+                            .padding(.bottom, brokerage.secondaryImageDim[2])
                     } else {
                         if let brokerageName = sessionManager.brokerageName {
                             Text(String(brokerageName.prefix(30)))
@@ -122,7 +122,9 @@ struct RobinhoodSecurityInfoView: View {
             }
         }
         .onAppear {
-            self.brokerage = Utils.getBrokerage(sessionManager: sessionManager)
+            Task {
+                self.brokerage = await Utils.getBrokerage(sessionManager: sessionManager)
+            }
         }
         .background(Color.black.ignoresSafeArea())
         .navigationBarBackButtonHidden(true)

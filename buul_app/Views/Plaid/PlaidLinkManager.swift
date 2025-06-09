@@ -12,9 +12,11 @@ import LinkKit
 class PlaidLinkManager: ObservableObject {
     @Published var plaidUserRequested: Bool = false
     @Published var plaidUserCreated: Bool = false
+    @State var verifyCreatePlaidUserRetries: Int = 3
     
     @Published var linkTokenRequested: Bool = false
     @Published var linkToken: String? = nil
+    @State var fetchLinkTokenRetries: Int = 3
     @Published var linkHandler: Handler?
     @Published var linkHandlerCreated: Bool = false
     
@@ -47,8 +49,8 @@ class PlaidLinkManager: ObservableObject {
 //        sessionManager.linkCompleted = nil
     }
     
-    func requestCreatePlaidUser(_ sessionManager: UserSessionManager) {
-        ServerCommunicator().callMyServer(
+    func requestCreatePlaidUser(_ sessionManager: UserSessionManager) async {
+        await ServerCommunicator().callMyServer(
             path: "api/plaid/usercreate/",
             httpMethod: .post,
             sessionManager: sessionManager,
@@ -66,8 +68,8 @@ class PlaidLinkManager: ObservableObject {
         }
     }
     
-    func verifyCreatePlaidUser(_ sessionManager: UserSessionManager, retries: Int = 3) {
-        ServerCommunicator().callMyServer(
+    func verifyCreatePlaidUser(_ sessionManager: UserSessionManager, retries: Int = 5) async {
+        await ServerCommunicator().callMyServer(
             path: "api/plaid/usercreate/",
             httpMethod: .get,
             sessionManager: sessionManager,
@@ -76,28 +78,26 @@ class PlaidLinkManager: ObservableObject {
             switch response {
             case .success(let responseData):
                 if responseData.success == nil && responseData.error == nil {
-                    if retries > 0 {
-                        sleep(2)
-                        self.verifyCreatePlaidUser(sessionManager, retries: retries - 1)
+                    if self.verifyCreatePlaidUserRetries > 0 {
+                        self.verifyCreatePlaidUserRetries = self.verifyCreatePlaidUserRetries - 1
+                        self.plaidUserRequested = false
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                            self.plaidUserRequested = true
+                        }
                         return
-                    }
-//                    if !sessionManager.refreshFailed {
+                    } else {
                         self.alertMessage = ServerCommunicator.NetworkError.networkError.errorMessage
                         self.showAlert = true
-//                    }
+                    }
                 } else if let _ = responseData.error, responseData.success == nil {
-//                    if !sessionManager.refreshFailed {
-                        self.alertMessage = ServerCommunicator.NetworkError.statusCodeError(400).errorMessage
-                        self.showAlert = true
-//                    }
+                    self.alertMessage = ServerCommunicator.NetworkError.statusCodeError(400).errorMessage
+                    self.showAlert = true
                 } else {
                     self.plaidUserCreated = true
                 }
             case .failure(let error):
-//                if !sessionManager.refreshFailed {
-                    self.alertMessage = error.errorMessage
-                    self.showAlert = true
-//                }
+                self.alertMessage = error.errorMessage
+                self.showAlert = true
             }
         }
     }
@@ -113,8 +113,8 @@ class PlaidLinkManager: ObservableObject {
         }
     }
     
-    func requestLinkToken(_ sessionManager: UserSessionManager) {
-        ServerCommunicator().callMyServer(
+    func requestLinkToken(_ sessionManager: UserSessionManager) async {
+        await ServerCommunicator().callMyServer(
             path: "api/plaid/linktokencreate/",
             httpMethod: .post,
             params: getRequestLinkTokenParams(),
@@ -125,16 +125,14 @@ class PlaidLinkManager: ObservableObject {
             case .success:
                 self.linkTokenRequested = true
             case .failure(let error):
-//                if !sessionManager.refreshFailed {
-                    self.alertMessage = error.errorMessage
-                    self.showAlert = true
-//                }
+                self.alertMessage = error.errorMessage
+                self.showAlert = true
             }
         }
     }
     
-    func fetchLinkToken(_ sessionManager: UserSessionManager, retries: Int = 3) {
-        ServerCommunicator().callMyServer(
+    func fetchLinkToken(_ sessionManager: UserSessionManager, retries: Int = 3) async {
+        await ServerCommunicator().callMyServer(
             path: "api/plaid/linktokencreate/",
             httpMethod: .get,
             sessionManager: sessionManager,
@@ -144,8 +142,12 @@ class PlaidLinkManager: ObservableObject {
             case .success(let responseData):
                 if responseData.success == nil && responseData.error == nil {
                     if retries > 0 {
-                        sleep(2)
-                        self.fetchLinkToken(sessionManager, retries: retries - 1)
+                        self.fetchLinkTokenRetries = self.fetchLinkTokenRetries - 1
+                        self.linkTokenRequested = false
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                            self.linkTokenRequested = true
+                        }
+                        sleep(1)
                         return
                     }
 //                    if !sessionManager.refreshFailed {
@@ -169,8 +171,8 @@ class PlaidLinkManager: ObservableObject {
         }
     }
     
-//    func requestExchangePublicToken(_ sessionManager: UserSessionManager?) {
-//        ServerCommunicator().callMyServer(
+//    func requestExchangePublicToken(_ sessionManager: UserSessionManager?) async {
+//        await ServerCommunicator().callMyServer(
 //            path: "api/plaid/publictokenexchange/",
 //            httpMethod: .post,
 //            params: ["public_token" : self.publicToken],
@@ -187,48 +189,49 @@ class PlaidLinkManager: ObservableObject {
 //        }
 //    }
     
-    func verifyExchangePublicToken(_ sessionManager: UserSessionManager, retries: Int = 5) {
-        ServerCommunicator().callMyServer(
-            path: "api/plaid/itemwebhook/",
-            httpMethod: .get,
-            sessionManager: sessionManager,
-            responseType: SuccessErrorResponse.self
-        ) { response in
-            switch response {
-            case .success(let responseData):
-                if responseData.success == nil && responseData.error == nil {
-                    if retries > 0 {
-                        sleep(1)
-                        self.verifyExchangePublicToken(sessionManager, retries: retries - 1)
-                        return
-                    }
-//                    self.alertMessage = "We were unable to verify if Plaid recieved your submission due to network errors. Retry verification, or restart link connection?" + ServerCommunicator.NetworkError.networkError.errorMessage
-//                    self.showAlert = true
-                    self.exchangeSuccess = true
-                } else if let _ = responseData.error, responseData.success == nil {
-//                    self.alertMessage = ServerCommunicator.NetworkError.statusCodeError(400).errorMessage
-//                    self.showAlert = true
-                    self.exchangeSuccess = true
-                } else {
-                    self.exchangeSuccess = true
-                }
-            case .failure(let error):
-//                if !sessionManager.refreshFailed {
-                    self.showAlert = true
-                    self.alertMessage = error.errorMessage
+//    func verifyExchangePublicToken(_ sessionManager: UserSessionManager, retries: Int = 5) async {
+//        await ServerCommunicator().callMyServer(
+//            path: "api/plaid/itemwebhook/",
+//            httpMethod: .get,
+//            sessionManager: sessionManager,
+//            responseType: SuccessErrorResponse.self
+//        ) { response in
+//            switch response {
+//            case .success(let responseData):
+//                if responseData.success == nil && responseData.error == nil {
+//                    if retries > 0 {
+//                        sleep(1)
+//                        self.verifyExchangePublicToken(sessionManager, retries: retries - 1)
+//                        return
+//                    }
+//                    
+////                    self.alertMessage = "We were unable to verify if Plaid recieved your submission due to network errors. Retry verification, or restart link connection?" + ServerCommunicator.NetworkError.networkError.errorMessage
+////                    self.showAlert = true
+//                    self.exchangeSuccess = true
+//                } else if let _ = responseData.error, responseData.success == nil {
+////                    self.alertMessage = ServerCommunicator.NetworkError.statusCodeError(400).errorMessage
+////                    self.showAlert = true
+//                    self.exchangeSuccess = true
+//                } else {
+//                    self.exchangeSuccess = true
 //                }
-                switch error {
-                case .statusCodeError(let status):
-                    if status == 401 {
-                        self.alertMessage = "Your session has expired. To retrieve updated information, please logout then sign in."
-                    }
-                default: break
-                }
-                
-            }
-        }
-    }
-    
+//            case .failure(let error):
+////                if !sessionManager.refreshFailed {
+//                    self.showAlert = true
+//                    self.alertMessage = error.errorMessage
+////                }
+//                switch error {
+//                case .statusCodeError(let status):
+//                    if status == 401 {
+//                        self.alertMessage = "Your session has expired. To retrieve updated information, please logout then sign in."
+//                    }
+//                default: break
+//                }
+//                
+//            }
+//        }
+//    }
+//    
 //    func delayedFunction(
 //        _ webRequest: @escaping () async -> Any?,
 //        nanoSeconds: UInt64,
