@@ -83,7 +83,6 @@ struct PlaidLinkPageBackground: View {
                 
                 VStack (spacing: 15) {
                     Button {
-                        print("linkcomplete: ", sessionManager.linkCompleted)
                         if !sessionManager.linkCompleted && isSignUp {
                             linkManager.alertMessage = "You must link at least one account before proceeding."
                             linkManager.showAlert = true

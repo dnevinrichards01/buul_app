@@ -78,17 +78,8 @@ class PlaidViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
-//        setupPlaid()
     }
-
-//    func setupPlaid() {
-//        let linkTokenConfiguration = LinkTokenConfiguration(token: linkToken) { success in
-//            print("Plaid Link Success: \(success.publicToken)")
-//        }
-//
-//        handler = Plaid.create(linkTokenConfiguration)
-//    }
-
+    
     func openPlaidLink() {
         guard let handler = handler else {
             print("Handler is nil, Link won't open")

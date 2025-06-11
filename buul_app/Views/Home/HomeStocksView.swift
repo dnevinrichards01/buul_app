@@ -10,14 +10,36 @@ import SwiftUI
 struct HomeStocksView: View {
     @EnvironmentObject var navManager: NavigationPathManager
     @State private var selected: Int?
-//    @Binding var graphData: [RecieveStockDataPoint]
-    private var buttons: [String] = ["1D", "1W", "1M", "1Y", "YTD", "5Y", "All"]
     @Binding var processedData: [[StockDataPoint]]
-    @State private var selectedPeriod: TimePeriods = .day
-    @State private var color: Color = .gray
+    @State private var selectedPeriod: TimePeriods?
     
-    init(processedData: Binding<[[StockDataPoint]]>) {
+    @Binding var oneDayColor: Color
+    @Binding var oneWeekColor: Color
+    @Binding var oneMonthColor: Color
+    @Binding var threeMonthsColor: Color
+    @Binding var oneYearColor: Color
+    @Binding var ytdColor: Color
+    @Binding var allColor: Color
+    @State private var selectedButtonColor: Color?
+    
+    init(
+        processedData: Binding<[[StockDataPoint]]>,
+        oneDayColor: Binding<Color>,
+        oneWeekColor: Binding<Color>,
+        oneMonthColor: Binding<Color>,
+        threeMonthsColor: Binding<Color>,
+        oneYearColor: Binding<Color>,
+        ytdColor: Binding<Color>,
+        allColor: Binding<Color>
+    ) {
         self._processedData = processedData
+        self._oneDayColor = oneDayColor
+        self._oneWeekColor = oneWeekColor
+        self._oneMonthColor = oneMonthColor
+        self._threeMonthsColor = threeMonthsColor
+        self._oneYearColor = oneYearColor
+        self._ytdColor = ytdColor
+        self._allColor = allColor
     }
     
     var body: some View {
@@ -28,7 +50,15 @@ struct HomeStocksView: View {
                 StockGraphView(
                     stockData: stockData,
                     timePeriod: .day,
-                    color: changeColor(stockData: stockData)
+                    color: getColorFromPeriod(period: .day)
+                )
+                .frame(height: 500)
+            case .none:
+                let stockData = processedData[0]
+                StockGraphView(
+                    stockData: stockData,
+                    timePeriod: .day,
+                    color: getColorFromPeriod(period: .day)
                 )
                 .frame(height: 500)
             case .week:
@@ -36,7 +66,7 @@ struct HomeStocksView: View {
                 StockGraphView(
                     stockData: stockData,
                     timePeriod: .week,
-                    color: changeColor(stockData: stockData)
+                    color: getColorFromPeriod(period: .week)
                 )
                 .frame(height: 500)
             case .month:
@@ -44,7 +74,7 @@ struct HomeStocksView: View {
                 StockGraphView(
                     stockData: stockData,
                     timePeriod: .month,
-                    color:  changeColor(stockData: stockData)
+                    color: getColorFromPeriod(period: .month)
                 )
                 .frame(height: 500)
             case .threeMonths:
@@ -52,31 +82,23 @@ struct HomeStocksView: View {
                 StockGraphView(
                     stockData: stockData,
                     timePeriod: .threeMonths,
-                    color:  changeColor(stockData: stockData)
-                )
-                .frame(height: 500)
-            case .ytd:
-                let stockData = processedData[4]
-                StockGraphView(
-                    stockData: stockData,
-                    timePeriod: .ytd,
-                    color:  changeColor(stockData: stockData)
+                    color: getColorFromPeriod(period: .threeMonths)
                 )
                 .frame(height: 500)
             case .year:
-                let stockData = processedData[5]
+                let stockData = processedData[4]
                 StockGraphView(
                     stockData: stockData,
                     timePeriod: .year,
-                    color:  changeColor(stockData: stockData)
+                    color: getColorFromPeriod(period: .year)
                 )
                 .frame(height: 500)
-            case .fiveYears:
-                let stockData = processedData[6]
+            case .ytd:
+                let stockData = processedData[5]
                 StockGraphView(
                     stockData: stockData,
-                    timePeriod: .fiveYears,
-                    color: changeColor(stockData: stockData)
+                    timePeriod: .ytd,
+                    color: getColorFromPeriod(period: .ytd)
                 )
                 .frame(height: 500)
             case .all:
@@ -84,7 +106,7 @@ struct HomeStocksView: View {
                 StockGraphView(
                     stockData: stockData,
                     timePeriod: .all,
-                    color: changeColor(stockData: stockData)
+                    color: getColorFromPeriod(period: .all)
                 )
                 .frame(height: 500)
             }
@@ -94,15 +116,14 @@ struct HomeStocksView: View {
                     ForEach(TimePeriods.allCases, id: \.self) { period in
                         Button {
                             selectedPeriod = period
-                            let stockData = processedData[period.index]
-                            color = changeColor(stockData: stockData)
+                            selectedButtonColor =  getColorFromPeriod(period: selectedPeriod ?? .day).wrappedValue
                         } label: {
                             VStack {
                                 Text(period.displayName)
                                     .lineLimit(1)
-                                    .foregroundStyle(selectedPeriod == period ? color : .white)
+                                    .foregroundStyle(selectedPeriod == period ? (selectedButtonColor ?? .white) : .white)
                                 Rectangle()
-                                    .fill(selectedPeriod == period ? color : .black)
+                                    .fill(selectedPeriod == period ? (selectedButtonColor ?? .black) : .black)
                                     .frame(width: 25, height: 2)
                                     .padding(.top, -8)
                             }
@@ -148,52 +169,38 @@ struct HomeStocksView: View {
             }
             .padding(.vertical, 10)
         }
+        .onAppear {
+            selectedPeriod = .day
+        }
+        .onChange(of: selectedPeriod) {
+            if let selectedPeriod = selectedPeriod {
+                selectedButtonColor = getColorFromPeriod(period: selectedPeriod).wrappedValue
+            }
+        }
         .onChange(of: processedData) {
-//            guard let processedGraphData = processedGraphData else { return }
-            self.color = changeColor(stockData: processedData[selectedPeriod.index])
+            if let selectedPeriod = selectedPeriod {
+                selectedButtonColor = getColorFromPeriod(period: selectedPeriod).wrappedValue
+            }
         }
         .frame(maxHeight: .infinity)
         .background(Color.black.ignoresSafeArea())
-        .onAppear {
-//            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { // delay to ensure reset
-//                color = changeColor(stockData: data[0])
-//            }
-        }
     }
     
-    func changeColor(stockData: [StockDataPoint]) -> Color {
-        guard stockData.count > 1 else { return .gray }
-        let change = stockData.last!.price - stockData[0].price
-        if change > 0 {
-            return .green
-        } else if change < 0 {
-            return .red
-        } else {
-            return .gray
+    func getColorFromPeriod(period: TimePeriods) -> Binding<Color> {
+        switch period {
+        case .day: return $oneDayColor
+        case .week: return $oneWeekColor
+        case .month: return $oneMonthColor
+        case .threeMonths: return $threeMonthsColor
+        case .year: return $oneYearColor
+        case .ytd: return $ytdColor
+        case .all: return $allColor
         }
     }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
 }
-
-
-
         
 struct StockDataPoints: Codable {
-    let data: [RecieveStockDataPoint]
-}
-
-struct RecieveStockDataPoint: Hashable, Codable {
-    let date: String
-    let price: Double
+    let data: [StockDataPoint]
 }
 
 struct StockDataPoint: Identifiable, Hashable, Codable {
@@ -206,10 +213,8 @@ struct StockDataPoint: Identifiable, Hashable, Codable {
     }
 }
 
-
-
 enum TimePeriods: CaseIterable {
-    case day, week, month, threeMonths, year, ytd, fiveYears, all
+    case day, week, month, threeMonths, year, ytd, all
 
     var displayName: String {
         switch self {
@@ -219,7 +224,6 @@ enum TimePeriods: CaseIterable {
         case .threeMonths: return "3M"
         case .year: return "1Y"
         case .ytd: return "YTD"
-        case .fiveYears: return "5Y"
         case .all: return "All"
         }
     }
@@ -232,14 +236,7 @@ enum TimePeriods: CaseIterable {
         case .threeMonths: return 3
         case .year: return 4
         case .ytd: return 5
-        case .fiveYears: return 6
-        case .all: return 7
+        case .all: return 6
         }
     }
 }
-
-//
-//#Preview {
-//    HomeStocksView(graphData: nil)
-//        .environmentObject(NavigationPathManager())
-//}

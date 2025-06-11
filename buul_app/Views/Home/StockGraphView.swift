@@ -24,7 +24,7 @@ struct StockGraphView: View {
     
 //    @State var domain: [Double]
     var timePeriod: TimePeriods
-    var color: Color
+    @Binding var color: Color
     
     
     var body: some View {
@@ -321,8 +321,6 @@ struct StockGraphView: View {
             formatter.dateFormat = "MMM d, yyyy"
         case .ytd:
             formatter.dateFormat = "MMM d, yyyy"
-        case .fiveYears:
-            formatter.dateFormat = "MMM d, yyyy"
         case .all:
             formatter.dateFormat = "MMM, yyyy"
         }
@@ -374,18 +372,7 @@ let stockData: [StockDataPoint] = [
 
 struct StockGraphView_Previews: PreviewProvider {
     static var previews: some View {
-        StockGraphView(stockData: stockData, timePeriod: .day, color: changeColor(stockData: stockData))
+        StockGraphView(stockData: stockData, timePeriod: .day, color: .constant(.gray))
     }
 }
 
-func changeColor(stockData: [StockDataPoint]) -> Color {
-    guard stockData.count > 1 else { return .gray }
-    let change = stockData.last!.price - stockData[0].price
-    if change > 0 {
-        return .green
-    } else if change < 0 {
-        return .red
-    } else {
-        return .gray
-    }
-}

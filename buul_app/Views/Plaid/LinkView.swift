@@ -154,7 +154,6 @@ struct LinkViewBase: View {
         .onChange(of: linkManager.linkSuccess) {
             if !linkManager.linkSuccess { return }
             linkManager.isPresentingLink = false
-            print("on link success?")
             sessionManager.linkCompleted = true
             linkManager.disableLoadingCircle = true
         }

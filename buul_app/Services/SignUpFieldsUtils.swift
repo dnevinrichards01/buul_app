@@ -75,9 +75,7 @@ class SignUpFieldsUtils {
         var errorMessagesList: [String?] = []
         var isError = false
         for signUpField in signUpFields {
-            print("field: ", signUpField)
             if let errorMessage = errorMessagesDict[signUpField] {
-                print("error found")
                 if errorMessage != nil {
                     isError = true
                 }

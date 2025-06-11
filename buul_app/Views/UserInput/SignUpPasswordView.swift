@@ -221,30 +221,21 @@ struct SignUpPasswordView: View {
             
             // process response
             if let errorMessages = errorMessages {
-                print("errorMessages")
                 do {
                     // process errors into a list
                     let errorMessagesDictBackend = try SignUpFieldsUtils.keysStringToSignUpFields(errorMessages)
-                    print("dict: ",errorMessagesDictBackend)
                     if let errorMessagesList = SignUpFieldsUtils.parseErrorMessages(signUpFields, errorMessagesDictBackend) {
-                        print("list:", errorMessagesList)
                         // if an earlier field is messed up, error and send them back to it
                         if errorMessagesDictBackend[.password] == nil {
                             if let _ = errorMessagesDictBackend[.phoneNumber] {
-                                print("phone!")
                                 self.sessionManager.phoneNumber = nil
-//                                if !sessionManager.refreshFailed {
-                                    self.alertMessage = "We found an error with your number. Please re-enter it."
-                                    self.showAlert = true
-//                                }
+                                self.alertMessage = "We found an error with your number. Please re-enter it."
+                                self.showAlert = true
                                 self.reEnterField = .phoneNumber
                             } else if let _ = errorMessagesDictBackend[.email] {
-                                print("email!")
                                 self.sessionManager.email = nil
-//                                if !sessionManager.refreshFailed {
-                                    self.alertMessage = "We found an error with your email. Please re-enter it."
-                                    self.showAlert = true
-//                                }
+                                self.alertMessage = "We found an error with your email. Please re-enter it."
+                                self.showAlert = true
                                 self.reEnterField = .email
                             }
                         }
@@ -254,12 +245,8 @@ struct SignUpPasswordView: View {
                         return
                     } // if code ends up here it indicates error with username field
                 } catch {
-                    print("error")
-                    // error (Decoding error) if difficulty parsing the response
-//                    if !sessionManager.refreshFailed {
-                        self.alertMessage = ServerCommunicator.NetworkError.decodingError.errorMessage
-                        self.showAlert = true
-//                    }
+                    self.alertMessage = ServerCommunicator.NetworkError.decodingError.errorMessage
+                    self.showAlert = true
                     self.buttonDisabled = false
                     return
                 }

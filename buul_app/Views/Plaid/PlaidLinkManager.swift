@@ -231,46 +231,18 @@ class PlaidLinkManager: ObservableObject {
 //            }
 //        }
 //    }
-//    
-//    func delayedFunction(
-//        _ webRequest: @escaping () async -> Any?,
-//        nanoSeconds: UInt64,
-//        oldVal: Any,
-//        newVal: Binding<Any>,
-//        retries: Int = 3
-//    ) async -> Any? {
-//
-//        var attemptsLeft = retries
-//
-//        while newVal.wrappedValue as? Equatable == oldVal as? Equatable && attemptsLeft > 0 {
-//            let result = await webRequest() // Await the async request
-//            try? await Task.sleep(nanoseconds: nanoSeconds) // Sleep for given delay
-//            attemptsLeft -= 1
-//        }
-//
-//        return attemptsLeft > 0 ? newVal.wrappedValue : nil
-//    }
     
     func createLinkHandler(_ linkToken: String, sessionManager: UserSessionManager) -> Result<Handler, Plaid.CreateError>? {
         var linkTokenConfig = LinkTokenConfiguration(token: linkToken) { success in
             self.linkSuccess = true
 //            self.publicToken = success.publicToken
         }
-        linkTokenConfig.onExit = { linkExit in // i swapped exit and event --> can't make sandbox error
+        linkTokenConfig.onExit = { linkExit in
             Task { @MainActor in
                 print(linkExit)
-                //            if !sessionManager.refreshFailed {
-                //                self.showAlert = false
-                //            DispatchQueue.main.async {
                 self.disableLoadingCircle = true
                 self.reset()
-//                self.alertMessage = "Link flow was exited before completion."
-//                print(self.showAlert)
-//                self.showAlert = true
-//                print(self.showAlert)
             }
-//            }
-//            }
         }
         linkTokenConfig.onEvent = { linkEvent in
 //            print("EXIT????: ", linkEvent.eventName.description)

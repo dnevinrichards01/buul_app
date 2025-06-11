@@ -110,7 +110,6 @@ struct ConnectBrokerageLaterView: View {
         .onAppear {
             Task {
                 self.brokerage = await Utils.getBrokerage(sessionManager: sessionManager)
-                print("name: ", sessionManager.brokerageName as Any)
             }
         }
         .onChange(of: showAlert) { oldValue, newValue in

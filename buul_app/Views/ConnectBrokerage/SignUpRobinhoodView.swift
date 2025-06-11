@@ -131,7 +131,6 @@ struct SignUpRobinhoodView: View {
             if mfaMethod == nil {
                 if isSignUp {
                     recieved = false
-                    print("recieved mfa issignup")
                     sessionManager.brokerageCompleted = true
                     navManager.append(.plaidInfo)
                 } else {

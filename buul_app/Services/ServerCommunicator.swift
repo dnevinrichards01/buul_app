@@ -145,6 +145,7 @@ class ServerCommunicator: @unchecked Sendable {
 
                 do {
                     let decoder = JSONDecoder()
+                    decoder.dateDecodingStrategy = .iso8601
                     decoder.keyDecodingStrategy = .convertFromSnakeCase
                     let decodedResponse = try decoder.decode(T.self, from: data)
 //                    print(decodedResponse)

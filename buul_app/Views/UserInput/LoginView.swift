@@ -91,7 +91,6 @@ struct LoginView: View {
                     let refreshTokenSaved: Bool = await sessionManager.refreshTokenSet(refreshToken)
                     let accessTokenSaved: Bool = await sessionManager.accessTokenSet(accessToken)
                     if refreshTokenSaved && accessTokenSaved {
-                        print("saved")
                         self.tokensSaved = true
                         return
                     }
@@ -109,7 +108,6 @@ struct LoginView: View {
         .onChange(of: tokensSaved) {
             guard tokensSaved else { return }
             Task.detached {
-                print(await self.tokensSaved)
                 await getUserInfo()
             }
         }
@@ -240,11 +238,9 @@ struct LoginView: View {
                     if status == 401 {
                         self.alertMessage = "We were unable to log you into your account. Please try again or contact Buul."
                     }
-                    print("status code", status)
                 default:
                     break
                 }
-                print("re-initializing")
                 self.accessToken = nil
                 self.refreshToken = nil
                 self.sessionManager.accessToken = nil

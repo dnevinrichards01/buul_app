@@ -21,6 +21,8 @@ class UserSessionManager: ObservableObject {
     @Published var refreshFailed: Bool = false
     @Published var refreshFailedMessage: String = ""
     
+    @Published var graphData: [[StockDataPoint]]?
+    
     var sharedKeychainReadContext: LAContext = LAContext()
     
     var verificationEmail: String?
@@ -228,7 +230,6 @@ class UserSessionManager: ObservableObject {
     
     // login / sign up navigation path helpers
     func signUpFlowPlacement() -> NavigationPathViews? {
-//        print(phoneNumber, email, fullName, etfSymbol, brokerageName, isLoggedIn)
         if isLoggedIn == true {
             if let _ = phoneNumber, let _ = email, let _ = fullName, let _ = etfSymbol, let _ = brokerageName, brokerageCompleted, linkCompleted {
                 return .home
@@ -259,8 +260,6 @@ class UserSessionManager: ObservableObject {
     func signUpFlowPlacementPaths(_ destinationPage: NavigationPathViews?) -> [NavigationPathViews] {
         let sharedPath: [NavigationPathViews] = [.accountCreated, .signUpETFs, .signUpBrokerage, .signUpRobinhoodSecurityInfo, .signUpRobinhood, .signUpMfaRobinhood, .plaidInfo, .link, .home]
         let signUpBasePath: [NavigationPathViews] = [.landing, .signUpPhone, .signUpEmail, .signUpEmailVerify, .signUpFullName, .signUpPassword]
-        
-//        print(destinationPage)
         
         if destinationPage == .signUpPhone {
             return Array(signUpBasePath[0..<2])

@@ -19,17 +19,27 @@ struct HomeView: View {
     @State private var retryRequestGraphData: Bool = false
     @State private var graphDataRequested: Bool = false
     
-    @State private var graphData: [RecieveStockDataPoint]?
+    @State private var graphData: [StockDataPoint]?
     @State private var defaultData: [[StockDataPoint]]
     @State private var processedData: [[StockDataPoint]]?
     @State private var useDefaultData: Bool = true
     @State private var graphDataRecieved: Bool = false
     @State private var initialGraphDataRecievedOrError: Bool = false
     
+    @State private var oneDayColor: Color = .gray
+    @State private var oneWeekColor: Color = .gray
+    @State private var oneMonthColor: Color = .gray
+    @State private var threeMonthsColor: Color = .gray
+    @State private var oneYearColor: Color = .gray
+    @State private var ytdColor: Color = .gray
+    @State private var allColor: Color = .gray
+    
     init() {
         self.date = Self.getGraphParams()
-        // maybe have this recalculate onappear so that the default data updates too?
-        self.defaultData = Utils.processDefaultGraphData(graphData: Self.calculateDefaultData())
+        self.defaultData = GraphUtils.createDefaultGraphData(
+            now: Date(),
+            earliestDate: GraphUtils.calendar.date(byAdding: .year, value: -5, to: Date())!
+        )
     }
     
     var body: some View {
@@ -42,13 +52,29 @@ struct HomeView: View {
                     switch tabSelected {
                     case .stocks:
                         if useDefaultData {
-                            HomeStocksView(processedData: $defaultData)
+                            HomeStocksView(
+                                processedData: $defaultData,
+                                oneDayColor: $oneDayColor,
+                                oneWeekColor: $oneWeekColor,
+                                oneMonthColor: $oneMonthColor,
+                                threeMonthsColor: $threeMonthsColor,
+                                oneYearColor: $oneYearColor,
+                                ytdColor: $ytdColor,
+                                allColor: $allColor
+                            )
                         } else {
                             HomeStocksView(
                                 processedData: Binding<[[StockDataPoint]]>(
                                     get: { processedData ?? defaultData },
                                     set: { newValue in processedData = newValue }
-                                )
+                                ),
+                                oneDayColor: $oneDayColor,
+                                oneWeekColor: $oneWeekColor,
+                                oneMonthColor: $oneMonthColor,
+                                threeMonthsColor: $threeMonthsColor,
+                                oneYearColor: $oneYearColor,
+                                ytdColor: $ytdColor,
+                                allColor: $allColor
                             )
                         }
                     case .cards:
@@ -60,10 +86,10 @@ struct HomeView: View {
                 Spacer()
             }
             // instead of this you could have a loading circle etc...
-            if !initialGraphDataRecievedOrError {
-                Color.black
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
+//            if !initialGraphDataRecievedOrError {
+//                Color.black
+//                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+//            }
         }
         .alert(alertMessage, isPresented: $showAlert) {
             if sessionManager.refreshFailed {
@@ -88,22 +114,36 @@ struct HomeView: View {
             useDefaultData = true
             print("on appear ")
             
-            Task.detached {
-                // move to initializer
-                // update default data whenever we pull data from backend
-                let processedDataDict = await CoreDataStockManager.shared.fetchAllSeries()
-                print("fetched")
-                if processedDataDict != [:] {
-                    let processedDataList: [[StockDataPoint]] = processedDataDict
-                        .sorted(by: { $0.key < $1.key })
-                        .map { $0.value }
-                    print("processed")
-                    await MainActor.run {
-                        self.processedData = processedDataList
-                        useDefaultData = false
+            Task.detached(priority: .userInitiated) {
+                print("will now fetch")
+                var processedDataList: [[StockDataPoint]]? = nil
+                if let graphData = await self.sessionManager.graphData {
+                    processedDataList = graphData
+                } else {
+                    let processedDataDict = await CoreDataStockManager.shared.fetchAllSeries()
+                    print("fetched")
+                    if processedDataDict != [:] {
+                        processedDataList = processedDataDict
+                            .sorted(by: { $0.key < $1.key })
+                            .map { $0.value }
                     }
                 }
-                // make sure state changes are runs on the right thread. mb make only state changes run on main thread?
+                
+                if let processedDataList = processedDataList {
+                    let colors = GraphUtils.getColors(graphData: processedDataList)
+                    await MainActor.run {
+                        self.processedData = processedDataList
+                        self.useDefaultData = false
+                        self.oneDayColor = colors[0]
+                        self.oneWeekColor = colors[1]
+                        self.oneMonthColor = colors[2]
+                        self.threeMonthsColor = colors[3]
+                        self.oneYearColor = colors[4]
+                        self.ytdColor = colors[5]
+                        self.allColor = colors[7]
+                    }
+                }
+                
                 await requestGraphData()
             }
         }
@@ -134,21 +174,37 @@ struct HomeView: View {
         }
         .onChange(of: graphDataRecieved) {
             guard let graphData = graphData, graphDataRecieved else { return }
+            
             Task.detached {
-                print("graphData")
-                // update defaults if curremtday = empty
-                let defaultData = await Utils.processDefaultGraphData(graphData: Self.calculateDefaultData())
-                let processedGraphData = Utils.processGraphData(graphData: graphData, defaultData: defaultData)
+                print("recieved")
+                let now: Date = Date()
+                let defaultData = GraphUtils.createDefaultGraphData(
+                    now: now,
+                    earliestDate: GraphUtils.calendar.date(byAdding: .year, value: -5, to: now)!
+                )
+                let processedGraphData = GraphUtils.processGraphData(
+                    graphData: graphData,
+                    now: now
+                )
+                let colors = GraphUtils.getColors(graphData: processedGraphData)
                 CoreDataStockManager.shared.save(series: processedGraphData)
                 print("processed")
                 await MainActor.run {
+                    self.sessionManager.graphData = processedGraphData
                     self.defaultData = defaultData
                     self.graphDataRecieved = false
                     self.initialGraphDataRecievedOrError = true
                     self.useDefaultData = false
                     self.processedData = processedGraphData
+                    self.oneDayColor = colors[0]
+                    self.oneWeekColor = colors[1]
+                    self.oneMonthColor = colors[2]
+                    self.threeMonthsColor = colors[3]
+                    self.oneYearColor = colors[4]
+                    self.ytdColor = colors[5]
+                    self.allColor = colors[7]
                 }
-                try? await Task.sleep(nanoseconds: 10_000_000_000)
+                try? await Task.sleep(nanoseconds: 20_000_000_000)
                 await requestGraphData()
             }
         }
@@ -180,54 +236,13 @@ struct HomeView: View {
         }
     }
     
-    static func calculateDefaultData() -> [RecieveStockDataPoint] {
-        let calendar = Calendar.current
-        let now = Date()
-        var data: [RecieveStockDataPoint] = []
-        
-        var currentTime = calendar.dateInterval(of: .minute, for: now)!.end
-        while currentTime > calendar.date(byAdding: .day, value: -1, to: now)! {
-            data.append(RecieveStockDataPoint(date: currentTime.ISO8601Format(), price: 0))
-            currentTime = calendar.date(byAdding: .minute, value: -1, to: currentTime)!
-        }
-
-        currentTime = calendar.date(byAdding: .day, value: -1, to: now)!
-        while currentTime > calendar.date(byAdding: .month, value: -1, to: now)! {
-            data.append(RecieveStockDataPoint(date: currentTime.ISO8601Format(), price: 0))
-            currentTime = calendar.date(byAdding: .hour, value: -1, to: currentTime)!
-        }
-        
-        currentTime = calendar.date(byAdding: .month, value: -1, to: now)!
-        while currentTime > calendar.date(byAdding: .year, value: -1, to: now)! {
-            data.append(RecieveStockDataPoint(date: currentTime.ISO8601Format(), price: 0))
-            currentTime = calendar.date(byAdding: .day, value: -1, to: currentTime)!
-        }
-        
-        currentTime = calendar.date(byAdding: .year, value: -1, to: now)!
-        while currentTime > calendar.date(byAdding: .year, value: -5, to: now)! {
-            data.append(RecieveStockDataPoint(date: currentTime.ISO8601Format(), price: 0))
-            currentTime = calendar.date(byAdding: .weekOfYear, value: -1, to: currentTime)!
-        }
-        
-        // to optimize we can calculate exact length of array (but it changes so that's hard), and use indices not reversed()
-        return data.reversed()
-    }
-    
     private static func getGraphParams() -> String {
-//        let formatter = DateFormatter()
-//        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-
         let fiveYearsAgo = Calendar.current.date(byAdding: .year, value: -5, to: Date())!
-//        let date = formatter.string(from: fiveYearsAgo)
-        
         let isoFormatter = ISO8601DateFormatter()
         isoFormatter.timeZone = TimeZone(abbreviation: "UTC")
         isoFormatter.formatOptions = [.withInternetDateTime]  // = "yyyy-MM-dd'T'HH:mm:ssZ"
-
         let isoString = isoFormatter.string(from: fiveYearsAgo)
         return isoString
-        
-//        return date
     }
     
     private func requestGraphData() async {
@@ -279,11 +294,13 @@ struct HomeView: View {
             print("self.date", self.date)
             switch response {
             case .success(let responseData):
+                print("successful getGraphData")
                 self.retryGetGraphData = false
                 self.useDefaultData = false
                 self.graphDataRecieved = true
                 self.graphData = responseData.data
             case .failure(let networkError):
+                print("failed getGraphData", networkError)
                 switch networkError {
                 case .decodingError:
                     self.retryGetGraphData = false

@@ -214,7 +214,6 @@ struct SignUpRobinhoodMFAView: View {
         .onChange(of: recieved) {
             if !recieved { return }
             if isSignUp {
-                print("recieved issignup")
                 sessionManager.brokerageCompleted = true
                 navManager.append(.plaidInfo)
             } else {
