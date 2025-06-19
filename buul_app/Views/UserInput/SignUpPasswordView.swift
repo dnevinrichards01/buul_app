@@ -197,6 +197,7 @@ struct SignUpPasswordView: View {
                 "full_name" : sessionManager.fullName as Any,
                 "phone_number" : sessionManager.phoneNumber as Any
             ],
+            app_version: sessionManager.app_version,
             responseType: CreateUserRequest.self
         ) { response in
             // extract errorMessages and network error from the Result<T, NetworkError> object
@@ -266,7 +267,9 @@ struct SignUpPasswordView: View {
             params: [
                 "email" : sessionManager.email as Any,
                 "password" : password as Any,
+                "app_version": sessionManager.app_version as Any
             ],
+            app_version: sessionManager.app_version,
             responseType: LoginResponse.self
         ) { response in
             // extract errorMessages and network error from the Result<T, NetworkError> object
@@ -283,10 +286,8 @@ struct SignUpPasswordView: View {
             
             // error if network error
             if let networkError = networkError {
-//                if !sessionManager.refreshFailed {
-                    self.alertMessage = "Your account was created but we ran into trouble loggin you in." + networkError.errorMessage + "Press 'Create Account' to retry login."
-                    self.showAlert = true
-//                }
+                self.alertMessage = "Your account was created but we ran into trouble loggin you in." + networkError.errorMessage + "Press 'Create Account' to retry login."
+                self.showAlert = true
                 self.buttonDisabled = false
                 return
             }
@@ -296,10 +297,8 @@ struct SignUpPasswordView: View {
                 sessionManager.accessToken = accessToken
                 self.tokensRecieved = true
             } else {
-//                if !sessionManager.refreshFailed {
-                    self.alertMessage = "Your account was created but we ran into trouble loggin you in." + ServerCommunicator.NetworkError.nilData.errorMessage + "Press 'Create Account' to retry login."
-                    self.showAlert = true
-//                }
+                self.alertMessage = "Your account was created but we ran into trouble loggin you in." + ServerCommunicator.NetworkError.nilData.errorMessage + "Press 'Create Account' to retry login."
+                self.showAlert = true
                 self.buttonDisabled = false
             }
         }

@@ -16,6 +16,7 @@ struct HomeView: View {
     @State private var alertMessage: String = ""
     @State private var showAlert: Bool = false
     @State private var retryGetGraphData: Bool = false
+    @State private var getGraphDataRetries: Int = 5
     @State private var retryRequestGraphData: Bool = false
     @State private var graphDataRequested: Bool = false
     
@@ -23,7 +24,6 @@ struct HomeView: View {
     @State private var defaultData: [[StockDataPoint]]
     @State private var processedData: [[StockDataPoint]]?
     @State private var useDefaultData: Bool = true
-    @State private var graphDataRecieved: Bool = false
     @State private var initialGraphDataRecievedOrError: Bool = false
     
     @State private var oneDayColor: Color = .gray
@@ -36,9 +36,10 @@ struct HomeView: View {
     
     init() {
         self.date = Self.getGraphParams()
+        let now = Date()
         self.defaultData = GraphUtils.createDefaultGraphData(
-            now: Date(),
-            earliestDate: GraphUtils.calendar.date(byAdding: .year, value: -5, to: Date())!
+            now: now,
+            earliestDate: GraphUtils.calendar.date(byAdding: .year, value: -5, to: now)!
         )
     }
     
@@ -85,12 +86,13 @@ struct HomeView: View {
                 }
                 Spacer()
             }
-            // instead of this you could have a loading circle etc...
-//            if !initialGraphDataRecievedOrError {
-//                Color.black
-//                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-//            }
+            if !initialGraphDataRecievedOrError {
+                HomeLoadingScreen()
+                    .transition(.opacity)
+                    .zIndex(1)
+            }
         }
+        .animation(.easeInOut(duration: 0.4), value: initialGraphDataRecievedOrError)
         .alert(alertMessage, isPresented: $showAlert) {
             if sessionManager.refreshFailed {
                 Button("OK", role: .cancel) {
@@ -147,6 +149,17 @@ struct HomeView: View {
                 await requestGraphData()
             }
         }
+        .onChange(of: retryRequestGraphData) {
+            guard retryRequestGraphData else { return }
+            print("retryRequestGraphData")
+            Task.detached {
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                await MainActor.run {
+                    retryRequestGraphData = false
+                }
+                await requestGraphData()
+            }
+        }
         .onChange(of: retryGetGraphData) {
             guard retryGetGraphData else { return }
             print("retryGetGraphData")
@@ -155,7 +168,7 @@ struct HomeView: View {
                 await MainActor.run {
                     retryGetGraphData = false
                 }
-                await requestGraphData()
+                await getGraphData()
             }
             
         }
@@ -172,8 +185,8 @@ struct HomeView: View {
             }
             
         }
-        .onChange(of: graphDataRecieved) {
-            guard let graphData = graphData, graphDataRecieved else { return }
+        .onChange(of: graphData) {
+            guard let graphData = graphData else { return }
             
             Task.detached {
                 print("recieved")
@@ -187,13 +200,10 @@ struct HomeView: View {
                     now: now
                 )
                 let colors = GraphUtils.getColors(graphData: processedGraphData)
-                CoreDataStockManager.shared.save(series: processedGraphData)
                 print("processed")
                 await MainActor.run {
                     self.sessionManager.graphData = processedGraphData
                     self.defaultData = defaultData
-                    self.graphDataRecieved = false
-                    self.initialGraphDataRecievedOrError = true
                     self.useDefaultData = false
                     self.processedData = processedGraphData
                     self.oneDayColor = colors[0]
@@ -204,7 +214,16 @@ struct HomeView: View {
                     self.ytdColor = colors[5]
                     self.allColor = colors[7]
                 }
-                try? await Task.sleep(nanoseconds: 20_000_000_000)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    self.initialGraphDataRecievedOrError = true
+                }
+                DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 0.2) {
+                    CoreDataStockManager.shared.save(series: processedGraphData)
+                }
+                
+                let seconds = await secondsUntilNextMinute()
+                let nanoseconds = UInt64(seconds * 1_000_000_000)
+                try? await Task.sleep(nanoseconds: nanoseconds)
                 await requestGraphData()
             }
         }
@@ -213,28 +232,58 @@ struct HomeView: View {
         .navigationBarBackButtonHidden(true)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItemGroup(placement: .bottomBar) {
-                HStack {
-                    Spacer()
-                    ForEach(HomeTabs.allCases, id: \.self) { tab in
-                        Button {
-                            tabSelected = tab
-                        } label: {
-                            Image(systemName: tab.imageName)
-                                .resizable()
-                                .scaledToFit()
-                                .foregroundStyle(tabSelected == tab ? .white : .gray)
-                                .frame(width: tab == .account ? 25 : 35, height: 25)
+            if initialGraphDataRecievedOrError {
+                ToolbarItemGroup(placement: .bottomBar) {
+                    HStack {
+                        Spacer()
+                        ForEach(HomeTabs.allCases, id: \.self) { tab in
+                            Button {
+                                tabSelected = tab
+                            } label: {
+                                Image(systemName: tab.imageName)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .foregroundStyle(tabSelected == tab ? .white : .gray)
+                                    .frame(width: tab == .account ? 25 : 35, height: 25)
+                            }
+                            .padding(.horizontal, 25)
+                            
                         }
-                        .padding(.horizontal, 25)
-                        
+                        Spacer()
                     }
-                    Spacer()
+                    .padding(.leading, -20)
                 }
-                .padding(.leading, -20)
             }
         }
     }
+    
+    func secondsUntilNextMinute() -> TimeInterval {
+        let now = Date()
+        let calendar = Calendar.current
+
+        if let nextMinute = calendar.nextDate(after: now, matching: DateComponents(second: 0), matchingPolicy: .strict, direction: .forward) {
+            return nextMinute.timeIntervalSince(now) + 5
+        } else {
+            return 20
+        }
+    }
+    
+    private static func getCustomDate() -> Date {
+        let utcCalendar = Calendar(identifier: .gregorian)
+        let utcTimeZone = TimeZone(secondsFromGMT: 0)!
+
+        var components = DateComponents()
+        components.year = 2025
+        components.month = 1
+        components.day = 1
+        components.hour = 8
+        components.minute = 30
+        components.timeZone = utcTimeZone
+
+        let utcDate = utcCalendar.date(from: components)!
+        return utcDate
+    }
+
     
     private static func getGraphParams() -> String {
         let fiveYearsAgo = Calendar.current.date(byAdding: .year, value: -5, to: Date())!
@@ -245,10 +294,13 @@ struct HomeView: View {
         return isoString
     }
     
+    
+    
     private func requestGraphData() async {
         await ServerCommunicator().callMyServer(
             path: "api/user/getstockgraphdata/",
             httpMethod: .put,
+            app_version: sessionManager.app_version,
             sessionManager: sessionManager,
             responseType: SuccessErrorResponse.self
         ) { response in
@@ -277,6 +329,7 @@ struct HomeView: View {
                 self.retryRequestGraphData = true
                 self.graphDataRequested = false
                 self.initialGraphDataRecievedOrError = true
+
             }
         }
     }
@@ -288,6 +341,7 @@ struct HomeView: View {
             params: [
                 "start_date" : self.date as Any
             ],
+            app_version: sessionManager.app_version,
             sessionManager: sessionManager,
             responseType: StockDataPoints.self
         ) { response in
@@ -297,7 +351,6 @@ struct HomeView: View {
                 print("successful getGraphData")
                 self.retryGetGraphData = false
                 self.useDefaultData = false
-                self.graphDataRecieved = true
                 self.graphData = responseData.data
             case .failure(let networkError):
                 print("failed getGraphData", networkError)
@@ -317,10 +370,18 @@ struct HomeView: View {
                     }
                 default: break
                 }
-                self.retryGetGraphData = true
-                self.graphDataRequested = false
-                self.retryRequestGraphData = false
-                self.initialGraphDataRecievedOrError = true
+                if self.getGraphDataRetries > 0 {
+                    self.getGraphDataRetries -= 1
+                    self.retryGetGraphData = true
+                    self.graphDataRequested = false
+                    self.retryRequestGraphData = false
+                } else {
+                    self.getGraphDataRetries = 5
+                    self.retryGetGraphData = false
+                    self.graphDataRequested = false
+                    self.retryRequestGraphData = true
+                    self.initialGraphDataRecievedOrError = true
+                }
             }
         }
     }

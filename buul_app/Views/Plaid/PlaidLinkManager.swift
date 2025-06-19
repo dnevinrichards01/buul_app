@@ -53,6 +53,7 @@ class PlaidLinkManager: ObservableObject {
         await ServerCommunicator().callMyServer(
             path: "api/plaid/usercreate/",
             httpMethod: .post,
+            app_version: sessionManager.app_version,
             sessionManager: sessionManager,
             responseType: SuccessErrorResponse.self
         ) { response in
@@ -72,6 +73,7 @@ class PlaidLinkManager: ObservableObject {
         await ServerCommunicator().callMyServer(
             path: "api/plaid/usercreate/",
             httpMethod: .get,
+            app_version: sessionManager.app_version,
             sessionManager: sessionManager,
             responseType: SuccessErrorResponse.self
         ) { response in
@@ -118,6 +120,7 @@ class PlaidLinkManager: ObservableObject {
             path: "api/plaid/linktokencreate/",
             httpMethod: .post,
             params: getRequestLinkTokenParams(),
+            app_version: sessionManager.app_version,
             sessionManager: sessionManager,
             responseType: SuccessErrorResponse.self
         ) { response in
@@ -135,6 +138,7 @@ class PlaidLinkManager: ObservableObject {
         await ServerCommunicator().callMyServer(
             path: "api/plaid/linktokencreate/",
             httpMethod: .get,
+            app_version: sessionManager.app_version,
             sessionManager: sessionManager,
             responseType: SuccessErrorResponse.self
         ) { response in

@@ -49,7 +49,8 @@ struct HomeStocksView: View {
                 let stockData = processedData[0]
                 StockGraphView(
                     stockData: stockData,
-                    timePeriod: .day,
+                    mostRecentValue: processedData[0].last!.price,
+                    timePeriod: .oneDay,
                     color: getColorFromPeriod(period: .day)
                 )
                 .frame(height: 500)
@@ -57,7 +58,8 @@ struct HomeStocksView: View {
                 let stockData = processedData[0]
                 StockGraphView(
                     stockData: stockData,
-                    timePeriod: .day,
+                    mostRecentValue: processedData[0].last!.price,
+                    timePeriod: .oneDay,
                     color: getColorFromPeriod(period: .day)
                 )
                 .frame(height: 500)
@@ -65,7 +67,8 @@ struct HomeStocksView: View {
                 let stockData = processedData[1]
                 StockGraphView(
                     stockData: stockData,
-                    timePeriod: .week,
+                    mostRecentValue: processedData[0].last!.price,
+                    timePeriod: .oneWeek,
                     color: getColorFromPeriod(period: .week)
                 )
                 .frame(height: 500)
@@ -73,7 +76,8 @@ struct HomeStocksView: View {
                 let stockData = processedData[2]
                 StockGraphView(
                     stockData: stockData,
-                    timePeriod: .month,
+                    mostRecentValue: processedData[0].last!.price,
+                    timePeriod: .oneMonth,
                     color: getColorFromPeriod(period: .month)
                 )
                 .frame(height: 500)
@@ -81,6 +85,7 @@ struct HomeStocksView: View {
                 let stockData = processedData[3]
                 StockGraphView(
                     stockData: stockData,
+                    mostRecentValue: processedData[0].last!.price,
                     timePeriod: .threeMonths,
                     color: getColorFromPeriod(period: .threeMonths)
                 )
@@ -89,7 +94,8 @@ struct HomeStocksView: View {
                 let stockData = processedData[4]
                 StockGraphView(
                     stockData: stockData,
-                    timePeriod: .year,
+                    mostRecentValue: processedData[0].last!.price,
+                    timePeriod: .oneYear,
                     color: getColorFromPeriod(period: .year)
                 )
                 .frame(height: 500)
@@ -97,6 +103,7 @@ struct HomeStocksView: View {
                 let stockData = processedData[5]
                 StockGraphView(
                     stockData: stockData,
+                    mostRecentValue: processedData[0].last!.price,
                     timePeriod: .ytd,
                     color: getColorFromPeriod(period: .ytd)
                 )
@@ -105,6 +112,7 @@ struct HomeStocksView: View {
                 let stockData = processedData[7]
                 StockGraphView(
                     stockData: stockData,
+                    mostRecentValue: processedData[0].last!.price,
                     timePeriod: .all,
                     color: getColorFromPeriod(period: .all)
                 )

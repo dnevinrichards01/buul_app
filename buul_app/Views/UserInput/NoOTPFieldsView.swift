@@ -221,6 +221,7 @@ struct NoOTPFieldsView: View {
             path: Utils.getSignUpFieldsValidateEndpoint(signUpField),
             httpMethod: .post,
             params: generateParams(),
+            app_version: sessionManager.app_version,
             sessionManager: authenticate ? sessionManager : nil,
             responseType: OTPRequest.self
         ) { response in

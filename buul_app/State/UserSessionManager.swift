@@ -23,6 +23,8 @@ class UserSessionManager: ObservableObject {
     
     @Published var graphData: [[StockDataPoint]]?
     
+    var app_version: String = "build_8"
+    
     var sharedKeychainReadContext: LAContext = LAContext()
     
     var verificationEmail: String?

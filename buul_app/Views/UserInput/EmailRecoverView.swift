@@ -123,6 +123,7 @@ struct EmailRecoverView: View {
             params: [
                 "email": email
             ],
+            app_version: sessionManager.app_version,
             sessionManager: sessionManager,
             responseType: SuccessErrorResponse.self
         ) { response in

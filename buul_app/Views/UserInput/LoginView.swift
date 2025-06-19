@@ -149,7 +149,9 @@ struct LoginView: View {
             params: [
                 "email" : email as Any,
                 "password" : password as Any,
+                "app_version": sessionManager.app_version as Any
             ],
+            app_version: sessionManager.app_version,
             responseType: LoginResponse.self
         ) { response in
             // extract errorMessages and network error from the Result<T, NetworkError> object
@@ -209,6 +211,7 @@ struct LoginView: View {
         await ServerCommunicator().callMyServer(
             path: "api/user/getuserinfo/",
             httpMethod: .get,
+            app_version: sessionManager.app_version,
             sessionManager: sessionManager,
             responseType: GetUserInfoResponse.self
         ) { response in

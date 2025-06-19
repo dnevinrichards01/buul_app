@@ -10,9 +10,6 @@ import SwiftUI
 
 class GraphUtils {
     static let calendar: Calendar = Calendar.current
-    let now: Date = Date()
-//    let earliestDate: Date
-
     
     enum GraphPartitions: String, CaseIterable {
         case oneDay = "oneDay"
@@ -78,6 +75,22 @@ class GraphUtils {
         case .all:
             let components = calendar.dateComponents([.year, .month, .day], from: earliestDate, to: now)
             return granularityByTimeRange(dateComponents: components)
+        }
+    }
+    
+    static func getDateFormatString(calendarComponents: Set<Calendar.Component>) -> String {
+        if calendarComponents == [.year, .month, .day, .hour, .minute] {
+            return "h:mm a"
+        } else if calendarComponents == [.year, .month, .day, .hour] {
+            return "h a, MMM dd"
+        } else if calendarComponents == [.year, .month, .day] || calendarComponents == [.yearForWeekOfYear, .weekOfYear] {
+            return "MMM d, yyyy"
+        } else if calendarComponents == [.year, .month, .day, .hour] {
+            return "h a, MMM dd"
+        } else if calendarComponents == [.year, .month] {
+            return "MMM, yyyy"
+        } else {
+            return "MMM d, yyyy"
         }
     }
     
@@ -174,24 +187,63 @@ class GraphUtils {
     static func getGraphDataPartitions(graphData: [StockDataPoint], earliestDate: Date, now: Date) -> [[StockDataPoint]] {
         var partitions: [[StockDataPoint]] = []
         for partitionType in GraphPartitions.allCases {
-            partitions.append(getGraphDataPartition(graphData: graphData, partitionType: partitionType, earliestDate: earliestDate, now: now))
+            partitions.append(
+                getGraphDataPartition(graphData: graphData, partitionType: partitionType, earliestDate: earliestDate, now: now)
+            )
         }
         return partitions
     }
     
-    static func startingValuesPerGraphDataGroup(graphDataPartitions: [[StockDataPoint]]) -> [Double] {
-        var resultList: [Double] = []
-        for i in 0..<graphDataPartitions.count-1 {
-            let earlierPeriod = graphDataPartitions[i]
-            let olderPeriod = graphDataPartitions[i+1]
-            var recentmostOlderPeriodPrice: Double = 0
-            if let oldestEarlierPeriodDate = earlierPeriod.first?.date,
-               let startIndex = olderPeriod.lastIndex(where: { $0.date < oldestEarlierPeriodDate }) {
-                recentmostOlderPeriodPrice = olderPeriod[startIndex].price
+    static func reOrderPartitionsByRange(graphDataPartitions: [[StockDataPoint]]) -> [Int: Int] {
+        let now = Date()
+        
+        var partitionRanges: [(originalIndex: Int, range: CGFloat)] = []
+        for (index, list) in graphDataPartitions.enumerated() {
+            if let firstDate = list.first?.date {
+                partitionRanges.append((originalIndex: index, range:  now.timeIntervalSince(firstDate)))
+            } else {
+                partitionRanges.append((originalIndex: index, range: partitionRanges.last?.range ?? 0.0))
             }
-            resultList.append(recentmostOlderPeriodPrice)
         }
-        resultList.append(0)
+        
+        let partitionRangesSorted = partitionRanges.sorted { $0.range <= $1.range }
+        
+        // Build a map from newIndex -> oldIndex
+        let indexMap: [Int: Int] = Dictionary(uniqueKeysWithValues: partitionRangesSorted.enumerated().map { (newIndex, pair) in
+            (newIndex, pair.originalIndex)
+        })
+        
+        // Return just the sorted lists (without original index), and the map
+        return indexMap
+    }
+    
+    static func startingValuesPerGraphDataGroup(graphDataPartitions: [[StockDataPoint]]) -> [Double] {
+        var resultList: [Double] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        let newToOldIndexMap = reOrderPartitionsByRange(graphDataPartitions: graphDataPartitions)
+        print("newToOldIndexMap", newToOldIndexMap)
+        
+        for i in 0..<graphDataPartitions.count-1 {
+            var recentmostPriceFromOlderPeriod: Double = 0
+            let recentPeriod = graphDataPartitions[newToOldIndexMap[i] ?? i]
+            var olderPeriodIndex = i + 1
+            while olderPeriodIndex < graphDataPartitions.count && recentmostPriceFromOlderPeriod == 0 {
+                if olderPeriodIndex > i + 1 {
+                    print("startingValuesOlderIndex", i, olderPeriodIndex)
+                }
+                let olderPeriod = graphDataPartitions[newToOldIndexMap[olderPeriodIndex] ?? olderPeriodIndex]
+                if let oldestDateFromEarlierPeriod = recentPeriod.first?.date,
+                   let startIndex = olderPeriod.lastIndex(where: { $0.date < oldestDateFromEarlierPeriod }) {
+                    recentmostPriceFromOlderPeriod = olderPeriod[startIndex].price
+                    print("recentmostPriceFromOlderPeriod", i, olderPeriodIndex, recentmostPriceFromOlderPeriod)
+                } else if recentPeriod.isEmpty && !olderPeriod.isEmpty {
+                    recentmostPriceFromOlderPeriod = olderPeriod.last!.price
+                }
+                olderPeriodIndex += 1
+            }
+            
+            resultList[newToOldIndexMap[i] ?? i] = recentmostPriceFromOlderPeriod
+        }
+        print("starting values", resultList)
         return resultList
     }
     
@@ -222,16 +274,33 @@ class GraphUtils {
         let startDateTruncated = truncateDate(date: startDate, granularity: granularity)
         let endDateTruncated = truncateDate(date: now, granularity: granularity)
         
-        if let firstDataPointDate = data.first?.date,
+        //
+        if let firstDataPointDate = data.first?.date, let firstDataPointPrice = data.first?.price,
            startDateTruncated < truncateDate(date: firstDataPointDate, granularity: granularity) {
             augmentedData.insert(StockDataPoint(date: startDateTruncated, price: startValue), at: 0)
+            print("firstDataPointPrice", firstDataPointPrice, startDateTruncated, truncateDate(date: firstDataPointDate, granularity: granularity))
+            
         }
         if let lastDataPointDate = data.last?.date, let lastDataPointPrice = data.last?.price,
            endDateTruncated > truncateDate(date: lastDataPointDate, granularity: granularity) {
             augmentedData.append(StockDataPoint(date: endDateTruncated, price: lastDataPointPrice))
+            print("lastDataPointPrice", lastDataPointPrice)
         }
         
+        
+        if augmentedData.isEmpty {
+            print(augmentedData.count, augmentedData.isEmpty, partitionType, startValue)
+            augmentedData.append(StockDataPoint(date: startDateTruncated, price: startValue))
+            augmentedData.append(StockDataPoint(date: endDateTruncated, price: startValue))
+        }
+        
+        if augmentedData.count < 2 {
+            return filled
+        }
         for i in 0..<augmentedData.count - 1 {
+            if partitionType == .oneDay {
+                print(augmentedData.count, augmentedData.isEmpty, partitionType)
+            }
             let current = augmentedData[i]
             let currentDate = truncateDate(date: current.date, granularity: granularity)
             let next = augmentedData[i + 1]
@@ -265,14 +334,18 @@ class GraphUtils {
         return gapsFilledPartitions
     }
     
-    
-    static func processGraphData(graphData: [StockDataPoint], now: Date) -> [[StockDataPoint]] {
+    static func getEarliestDate(graphData: [StockDataPoint], now: Date) -> Date {
         let earliestDate: Date
-        if let firstInvestmentIndex = graphData.firstIndex(where: {$0.price > 0}) {
+        if let firstInvestmentIndex = graphData.firstIndex(where: {$0.price != 0}) {
             earliestDate = graphData[firstInvestmentIndex].date
         } else {
             earliestDate = calendar.date(byAdding: .year, value: -5, to: now)!
         }
+        return earliestDate
+    }
+    
+    static func processGraphData(graphData: [StockDataPoint], now: Date) -> [[StockDataPoint]] {
+        let earliestDate: Date = getEarliestDate(graphData: graphData, now: now)
         
         let defaults = createDefaultGraphData(now: now, earliestDate: earliestDate)
         let partitions = getGraphDataPartitions(graphData: graphData, earliestDate: earliestDate, now: now)

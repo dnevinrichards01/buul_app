@@ -9,11 +9,10 @@ import SwiftUI
 import Charts
 import CoreGraphics
 
-
-
 struct StockGraphView: View {
     var graphHeight: Double = 300
     var stockData: [StockDataPoint]
+    @State var mostRecentValue: Double? = nil
     
     @State private var selectedPrice: Double? = nil
     @State private var selectedDate: Date? = nil
@@ -22,8 +21,7 @@ struct StockGraphView: View {
     @State private var interpolatedY: CGFloat? = nil
     @State private var interpolatedPrice: Double? = nil
     
-//    @State var domain: [Double]
-    var timePeriod: TimePeriods
+    var timePeriod: GraphUtils.GraphPartitions
     @Binding var color: Color
     
     
@@ -36,7 +34,7 @@ struct StockGraphView: View {
                     .fontWeight(.bold)
                     .padding(.bottom, -5)
                     .foregroundStyle(.white)
-                Text(formatAsCurrency(stockData.last?.price ?? 0))
+                Text(formatAsCurrency(self.mostRecentValue ?? stockData.last!.price))
                     .font(.headline)
                     .foregroundStyle(.white)
                 HStack {
@@ -95,7 +93,7 @@ struct StockGraphView: View {
                                         if let date: Date = proxy.value(atX: location.x) {
                                             let lastDate = stockData.last!.date
                                             let lastPrice = stockData.last!.price
-                                            if date >= stockData.last!.date && timePeriod == .day {
+                                            if date >= stockData.last!.date && timePeriod == .oneDay {
                                                 exactDate = lastDate
                                                 exactX = proxy.position(forX: lastDate)
                                                 interpolatedPrice = lastPrice
@@ -219,13 +217,6 @@ struct StockGraphView: View {
 //        let point2 = stockData[index]      // Right neighbor
         
         return point1
-
-//        // Linear interpolation formula
-//        if date.timeIntervalSince(point1.date) < -1 * date.timeIntervalSince(point2.date) {
-//            return point1
-//        } else {
-//            return point2
-//        }
     }
     
     func interpolatePrice(for date: Date) -> Double? {
@@ -262,11 +253,9 @@ struct StockGraphView: View {
     func getDomain() -> [Date] {
         let min = stockData.first!.date
         var max = stockData.last!.date
-        if timePeriod == .day {
+        if timePeriod == .oneDay {
             max = Calendar.current.dateInterval(of: .day, for: max)!.end
-//            print("max", max)
         }
-//        print("domain", [min, max])
         return [min, max]
     }
 
@@ -281,7 +270,7 @@ struct StockGraphView: View {
     func boundTooltipX(_ x: CGFloat, width: CGFloat) -> CGFloat {
         let xPos = x - width / 2
         var buffer: CGFloat = 50
-        if timePeriod == .week || timePeriod == .month {
+        if timePeriod == .oneWeek || timePeriod == .oneMonth {
             buffer = 70
         }
         if xPos < (buffer - width / 2) {
@@ -293,56 +282,49 @@ struct StockGraphView: View {
         }
     }
     
+    private static func getCustomDate() -> Date {
+        let utcCalendar = Calendar(identifier: .gregorian)
+        let utcTimeZone = TimeZone(secondsFromGMT: 0)! // UTC
+
+        var components = DateComponents()
+        components.year = 2025
+        components.month = 1
+        components.day = 1
+        components.hour = 8
+        components.minute = 30
+        components.timeZone = utcTimeZone
+
+        let utcDate = utcCalendar.date(from: components)!
+        return utcDate
+    }
+    
     func formatDate(_ date: Date) -> String {
+        let granularity = GraphUtils.granularityByPartition(
+            partitionName: timePeriod,
+            earliestDate: self.stockData.first!.date,
+            now: Date()
+        )
+        let dateFormatString: String = GraphUtils.getDateFormatString(calendarComponents: granularity)
         let formatter = DateFormatter()
-        let dateToFormat = date
-        switch timePeriod {
-        case .day:
-            formatter.dateFormat = "h:mm a"
-        case .week:
-//            dateToFormat = Calendar.current.date(
-//                bySettingHour: Calendar.current.component(.hour, from: date),
-//                minute: 0,
-//                second: 0,
-//                of: date
-//            )!
-            formatter.dateFormat = "h a, MMM dd"
-        case .month:
-//            dateToFormat = Calendar.current.date(
-//                bySettingHour: Calendar.current.component(.hour, from: date),
-//                minute: 0,
-//                second: 0,
-//                of: date
-//            )!
-            formatter.dateFormat = "h a, MMM dd"
-        case .threeMonths:
-            formatter.dateFormat = "MMM d, yyyy"
-        case .year:
-            formatter.dateFormat = "MMM d, yyyy"
-        case .ytd:
-            formatter.dateFormat = "MMM d, yyyy"
-        case .all:
-            formatter.dateFormat = "MMM, yyyy"
-        }
-        
-        return formatter.string(from: dateToFormat)
+        formatter.dateFormat = dateFormatString
+        return formatter.string(from: date)
     }
     
     func changeText() -> String {
         guard stockData.count > 1 else { return "0.00%" }
-        let change = stockData.last!.price - stockData[0].price
+        let change = (self.mostRecentValue ?? stockData.last!.price) - stockData.first!.price
         var percentage: CGFloat
-        if stockData[0].price == 0 {
+        if change == 0 {
             percentage = 0
         } else {
-            percentage = (change / stockData[0].price ) * 100
+            percentage = (change / max(stockData[0].price, 0) ) * 100
         }
         return formatAsCurrency(abs(change)) + " (" + String(format: "%.2f%%", percentage) + ")"
     }
     
     func changeSymbol() -> String {
         guard stockData.count > 1 else { return "minus.circle.fill" }
-        let change = stockData.last!.price - stockData[0].price
+        let change = (self.mostRecentValue ?? stockData.last!.price) - stockData.first!.price
         if change > 0 {
             return "arrowtriangle.up.fill"
         } else if change < 0 {
@@ -372,7 +354,7 @@ let stockData: [StockDataPoint] = [
 
 struct StockGraphView_Previews: PreviewProvider {
     static var previews: some View {
-        StockGraphView(stockData: stockData, timePeriod: .day, color: .constant(.gray))
+        StockGraphView(stockData: stockData, timePeriod: .oneDay, color: .constant(.gray))
     }
 }
 

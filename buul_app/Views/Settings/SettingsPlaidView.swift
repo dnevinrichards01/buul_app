@@ -150,6 +150,7 @@ struct SettingsPlaidView: View {
         await ServerCommunicator().callMyServer(
             path: "api/user/getplaiditems/",
             httpMethod: .get,
+            app_version: sessionManager.app_version,
             sessionManager: sessionManager,
             responseType: GetPlaidItemsResponse.self
         ) { response in

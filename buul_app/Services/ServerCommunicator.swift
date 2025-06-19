@@ -54,12 +54,13 @@ class ServerCommunicator: @unchecked Sendable {
         path: String,
         httpMethod: HTTPMethod,
         params: [String: Any]? = nil,
+        app_version: String,
         sessionManager: UserSessionManager? = nil,
         responseType: T.Type,
         tryRefresh: Bool = true,
         completion: @escaping (Result<T, NetworkError>) -> Void
     ) async {
-        print("params", params as Any)
+        
         guard let url = URL(string: baseURL + path) else {
             completion(.failure(.invalidUrl))
             return
@@ -76,8 +77,10 @@ class ServerCommunicator: @unchecked Sendable {
         request.timeoutInterval = 3
 
         if let params = params {
+            var paramsCopy = params
+            paramsCopy["app_version"] = app_version
             do {
-                let jsonData = try JSONSerialization.data(withJSONObject: params, options: [])
+                let jsonData = try JSONSerialization.data(withJSONObject: paramsCopy, options: [])
                 request.httpBody = jsonData
             } catch {
                 DispatchQueue.main.async {
@@ -119,6 +122,7 @@ class ServerCommunicator: @unchecked Sendable {
                                 path: path,
                                 httpMethod: httpMethod,
                                 params: params,
+                                app_version: app_version,
                                 responseType: responseType,
                                 tryRefresh: false,
                                 completion: completion
@@ -170,6 +174,7 @@ class ServerCommunicator: @unchecked Sendable {
         path: String,
         httpMethod: HTTPMethod,
         params: [String: Any]? = nil,
+        app_version: String,
         responseType: T.Type,
         tryRefresh: Bool,
         completion: @escaping (Result<T, NetworkError>) -> Void
@@ -192,7 +197,10 @@ class ServerCommunicator: @unchecked Sendable {
         request.timeoutInterval = 3
         
         do {
-            let jsonData = try JSONSerialization.data(withJSONObject: ["refresh": await sessionManager.refreshToken], options: [])
+            let jsonData = try JSONSerialization.data(
+                withJSONObject: ["refresh": await sessionManager.refreshToken, "app_version": app_version],
+                options: []
+            )
             request.httpBody = jsonData
         } catch {
             DispatchQueue.main.async {
@@ -238,6 +246,7 @@ class ServerCommunicator: @unchecked Sendable {
                             path: path,
                             httpMethod: httpMethod,
                             params: params,
+                            app_version: app_version,
                             responseType: responseType,
                             tryRefresh: false,
                             completion: completion
@@ -279,6 +288,7 @@ class ServerCommunicator: @unchecked Sendable {
                         path: path,
                         httpMethod: httpMethod,
                         params: params,
+                        app_version: app_version,
                         sessionManager: sessionManager,
                         responseType: responseType,
                         tryRefresh: false,

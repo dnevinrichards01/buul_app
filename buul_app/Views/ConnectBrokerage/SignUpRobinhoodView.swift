@@ -180,6 +180,7 @@ struct SignUpRobinhoodView: View {
                 "username": email,
                 "password": password,
             ],
+            app_version: sessionManager.app_version,
             sessionManager: sessionManager,
             responseType: OTPRequest.self
         ) { response in
@@ -245,6 +246,7 @@ struct SignUpRobinhoodView: View {
             path: "rh/login/",
             httpMethod: .get,
             params: nil,
+            app_version: sessionManager.app_version,
             sessionManager: sessionManager,
             responseType: RobinhoodSignInResponse.self
         ) { response in

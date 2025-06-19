@@ -308,6 +308,7 @@ struct FieldsRequestOTPView: View {
             path: Utils.getOTPEndpoint(signUpField, authenticate),
             httpMethod: .put,
             params: generateOTPParams(),
+            app_version: sessionManager.app_version,
             sessionManager: authenticate ? sessionManager : nil,
             responseType: OTPRequest.self
         ) { response in

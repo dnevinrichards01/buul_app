@@ -322,6 +322,7 @@ struct OTPView: View {
             path: Utils.getOTPEndpoint(signUpField, authenticate),
             httpMethod: .post,
             params: generateOTPParams(isRequestOTP: false),
+            app_version: sessionManager.app_version,
             sessionManager: authenticate ? sessionManager : nil,
             responseType: OTPRequest.self
         ) { response in
@@ -393,6 +394,7 @@ struct OTPView: View {
             path: Utils.getOTPEndpoint(signUpField, authenticate),
             httpMethod: .put,
             params: generateOTPParams(isRequestOTP: true),
+            app_version: sessionManager.app_version,
             sessionManager: authenticate ? sessionManager : nil,
             responseType: OTPRequest.self
         ) { response in

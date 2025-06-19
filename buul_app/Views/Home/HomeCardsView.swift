@@ -139,6 +139,7 @@ struct HomeCardsView: View {
         await ServerCommunicator().callMyServer(
             path: "api/user/getspendingrecommendations/",
             httpMethod: .get,
+            app_version: sessionManager.app_version,
             sessionManager: sessionManager,
             responseType: SpendingCategoriesResponse.self
         ) { response in

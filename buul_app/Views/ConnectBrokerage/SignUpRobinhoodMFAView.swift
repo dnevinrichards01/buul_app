@@ -299,6 +299,7 @@ struct SignUpRobinhoodMFAView: View {
             path: "rh/login/",
             httpMethod: .post,
             params: getParams(mfaMethod: self.mfaMethod, resendCode: self.resendCode),
+            app_version: sessionManager.app_version,
             sessionManager: sessionManager,
             responseType: OTPRequest.self
         ) { response in
@@ -361,6 +362,7 @@ struct SignUpRobinhoodMFAView: View {
             path: "rh/login/",
             httpMethod: .get,
             params: nil,
+            app_version: sessionManager.app_version,
             sessionManager: sessionManager,
             responseType: RobinhoodSignInResponse.self
         ) { response in
