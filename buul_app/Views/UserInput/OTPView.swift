@@ -123,15 +123,15 @@ struct OTPView: View {
                 guard reEnterInfo || submitted else { return }
                 if reEnterInfo {
                     reEnterInfo = false
-                    print("redo?")
+//                    print("redo?")
                     navManager.removeLast(goBackNPagesToRedoEntries)
                 } else if submitted {
                     submitted = false
                     if let nextPage = nextPage {
-                        print("append")
+//                        print("append")
                         navManager.append(nextPage)
                     } else {
-                        print("correct path")
+//                        print("correct path")
                         navManager.removeLast(goBackNPagesIfCompleted)
                     }
                 }
@@ -193,10 +193,10 @@ struct OTPView: View {
                 sessionManager.stringToVerify = nil
                 sessionManager.boolToVerify = nil
                 if let nextPage = nextPage {
-                    print("append signup")
+//                    print("append signup")
                     navManager.append(nextPage)
                 } else {
-                    print("incorrect path")
+//                    print("incorrect path")
                     navManager.removeLast(goBackNPagesIfCompleted)
                 }
             } else {
@@ -246,7 +246,7 @@ struct OTPView: View {
                     sessionManager.boolToVerify = nil
                     submitted = false
                     reEnterInfo = false
-                    print("toolbar")
+//                    print("toolbar")
                     navManager.path.removeLast()
                 }) {
                     Image(systemName: "chevron.left")

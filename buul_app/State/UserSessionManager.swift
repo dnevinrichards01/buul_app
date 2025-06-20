@@ -168,7 +168,7 @@ class UserSessionManager: ObservableObject {
         if context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) {
             context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "Authenticate to access your saved credentials") { success, authenticationError in
                 if success {
-                    print("success")
+//                    print("success")
                     completion(.success(true))
                 } else {
                     completion(.failure(.failedAuthentication))

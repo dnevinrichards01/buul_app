@@ -12,7 +12,7 @@ import CoreGraphics
 struct StockGraphView: View {
     var graphHeight: Double = 300
     var stockData: [StockDataPoint]
-    @State var mostRecentValue: Double? = nil
+    @Binding var mostRecentValue: Double?
     
     @State private var selectedPrice: Double? = nil
     @State private var selectedDate: Date? = nil
@@ -354,7 +354,7 @@ let stockData: [StockDataPoint] = [
 
 struct StockGraphView_Previews: PreviewProvider {
     static var previews: some View {
-        StockGraphView(stockData: stockData, timePeriod: .oneDay, color: .constant(.gray))
+        StockGraphView(stockData: stockData, mostRecentValue: .constant(0.0), timePeriod: .oneDay, color: .constant(.gray))
     }
 }
 

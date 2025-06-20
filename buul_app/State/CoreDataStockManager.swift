@@ -35,7 +35,7 @@ class CoreDataStockManager {
             backgroundContext.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
 
         backgroundContext.perform {
-            print("core data save")
+//            print("core data save")
             
             for i in series.indices {
                 let dataPoints = series[i]
@@ -54,7 +54,7 @@ class CoreDataStockManager {
             do {
                 try backgroundContext.save()
             } catch {
-                print("Failed to save: \(error)")
+//                print("Failed to save: \(error)")
             }
         }
     }
@@ -76,7 +76,7 @@ class CoreDataStockManager {
                         // Skip deleted or incomplete objects
                         _ = series.i // force load so won't get 'isfault'
                         guard !series.isFault, !series.isDeleted else {
-                            print("Skipping invalid series object: \(series)")
+//                            print("Skipping invalid series object: \(series)")
                             return
                         }
                         let points: [CoreStockDataPoint] = series.dataPoints?.allObjects as? [CoreStockDataPoint] ?? []
@@ -92,7 +92,7 @@ class CoreDataStockManager {
                     }
                     continuation.resume(returning: result)
                 } catch {
-                    print("Failed to fetch series: \(error)")
+//                    print("Failed to fetch series: \(error)")
                     continuation.resume(returning: [:])
                 }
             }
@@ -112,9 +112,9 @@ class CoreDataStockManager {
                 try backgroundContext.save()
                 // i wonder if reset may cause crash if not yet logged out but you tried logging out and you go back to graph page
                 backgroundContext.reset()
-                print("All series and data points cleared.")
+//                print("All series and data points cleared.")
             } catch {
-                print("Failed to clear: \(error)")
+//                print("Failed to clear: \(error)")
             }
         }
     }

@@ -290,7 +290,7 @@ struct SignUpRobinhoodView: View {
                 // not yet ready
                 } else if responseData.error == nil && responseData.success == nil {
                     if retries > 0 {
-                        print(self.recieveSignInResultRetries, self.requested)
+//                        print(self.recieveSignInResultRetries, self.requested)
                         self.recieveSignInResultRetries = retries - 1
                         self.requested = true
                     } else {

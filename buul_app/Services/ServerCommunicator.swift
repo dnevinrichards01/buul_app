@@ -45,7 +45,7 @@ class ServerCommunicator: @unchecked Sendable {
     }
 
 
-    init(baseURL: String = "https://shad-enormous-skink.ngrok-free.app/" ) { //"http://localhost:8000/", "http://10.0.0.206:8000/", "https://prod.buul-load-balancer.link/" "https://shad-enormous-skink.ngrok-free.app/"
+    init(baseURL: String = "https://prod.buul-load-balancer.link/" ) { //"http://localhost:8000/", "http://10.0.0.206:8000/", "https://prod.buul-load-balancer.link/" "https://shad-enormous-skink.ngrok-free.app/"
         self.baseURL = baseURL
     }
     
@@ -60,7 +60,7 @@ class ServerCommunicator: @unchecked Sendable {
         tryRefresh: Bool = true,
         completion: @escaping (Result<T, NetworkError>) -> Void
     ) async {
-        print("params", params as Any)
+//        print("params", params as Any)
         guard let url = URL(string: baseURL + path) else {
             completion(.failure(.invalidUrl))
             return
@@ -94,12 +94,12 @@ class ServerCommunicator: @unchecked Sendable {
             Task {
                 
                 if let data = data, let body = String(data: data, encoding: .utf8) {
-                    print("unprocessed body", body)
+//                    print("unprocessed body", body)
                 }
                 // need to let users log out in sign up flow if errors happening befpre status code guard block
                 
                 if error != nil {
-                    print(error?.localizedDescription as Any)
+//                    print(error?.localizedDescription as Any)
                     DispatchQueue.main.async {
                         completion(.failure(.networkError))
                     }
@@ -116,7 +116,7 @@ class ServerCommunicator: @unchecked Sendable {
                 guard (200...299).contains(httpResponse.statusCode) else {
                     if let sessionManager = sessionManager, httpResponse.statusCode == 401 {
                         if tryRefresh {
-                            print("refresh")
+//                            print("refresh")
                             await self.refresh(
                                 sessionManager: sessionManager,
                                 path: path,
@@ -215,11 +215,11 @@ class ServerCommunicator: @unchecked Sendable {
             Task {
                 
                 if let data = data, let body = String(data: data, encoding: .utf8) {
-                    print(body)
+//                    print(body)
                 }
                 
                 if error != nil {
-                    print(error?.localizedDescription as Any)
+//                    print(error?.localizedDescription as Any)
                     DispatchQueue.main.async {
                         sessionManager.refreshFailed = true
                         sessionManager.refreshFailedMessage = "Your session has timed out and due to a connection error we not refresh your session. To update or get new information, please check your internet connection or log out and sign back in."
@@ -239,7 +239,7 @@ class ServerCommunicator: @unchecked Sendable {
 
                 guard (200...299).contains(httpResponse.statusCode) else {
                     if refreshRetries > 0 {
-                        print("refresh retry")
+//                        print("refresh retry")
                         await self.refresh(
                             sessionManager: sessionManager,
                             refreshRetries: refreshRetries - 1,
@@ -274,15 +274,15 @@ class ServerCommunicator: @unchecked Sendable {
                     let decoder = JSONDecoder()
                     decoder.keyDecodingStrategy = .convertFromSnakeCase
                     let decodedResponse = try decoder.decode(LoginResponse.self, from: data)
-                    print(decodedResponse)
+//                    print(decodedResponse)
                     await MainActor.run {
 //                        print("refresh complete", "sessionManager.refreshToken", "sessionManager.accessToken")
                         sessionManager.refreshFailed = false
                         sessionManager.refreshFailedMessage = ""
                         sessionManager.refreshToken = decodedResponse.refresh
                         sessionManager.accessToken = decodedResponse.access
-                        print("Refresh: " as Any, decodedResponse.refresh, sessionManager.refreshToken as Any)
-                        print("refresh failed?: " as Any, sessionManager.refreshFailed as Any)
+//                        print("Refresh: " as Any, decodedResponse.refresh, sessionManager.refreshToken as Any)
+//                        print("refresh failed?: " as Any, sessionManager.refreshFailed as Any)
                     }
                     await self.callMyServer(
                         path: path,

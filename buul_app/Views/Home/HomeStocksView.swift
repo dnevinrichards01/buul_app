@@ -22,6 +22,8 @@ struct HomeStocksView: View {
     @Binding var allColor: Color
     @State private var selectedButtonColor: Color?
     
+    @State private var mostRecentValue: Double?
+    
     init(
         processedData: Binding<[[StockDataPoint]]>,
         oneDayColor: Binding<Color>,
@@ -49,7 +51,7 @@ struct HomeStocksView: View {
                 let stockData = processedData[0]
                 StockGraphView(
                     stockData: stockData,
-                    mostRecentValue: processedData[0].last!.price,
+                    mostRecentValue: $mostRecentValue,
                     timePeriod: .oneDay,
                     color: getColorFromPeriod(period: .day)
                 )
@@ -58,7 +60,7 @@ struct HomeStocksView: View {
                 let stockData = processedData[0]
                 StockGraphView(
                     stockData: stockData,
-                    mostRecentValue: processedData[0].last!.price,
+                    mostRecentValue: $mostRecentValue,
                     timePeriod: .oneDay,
                     color: getColorFromPeriod(period: .day)
                 )
@@ -67,7 +69,7 @@ struct HomeStocksView: View {
                 let stockData = processedData[1]
                 StockGraphView(
                     stockData: stockData,
-                    mostRecentValue: processedData[0].last!.price,
+                    mostRecentValue: $mostRecentValue,
                     timePeriod: .oneWeek,
                     color: getColorFromPeriod(period: .week)
                 )
@@ -76,7 +78,7 @@ struct HomeStocksView: View {
                 let stockData = processedData[2]
                 StockGraphView(
                     stockData: stockData,
-                    mostRecentValue: processedData[0].last!.price,
+                    mostRecentValue: $mostRecentValue,
                     timePeriod: .oneMonth,
                     color: getColorFromPeriod(period: .month)
                 )
@@ -85,7 +87,7 @@ struct HomeStocksView: View {
                 let stockData = processedData[3]
                 StockGraphView(
                     stockData: stockData,
-                    mostRecentValue: processedData[0].last!.price,
+                    mostRecentValue: $mostRecentValue,
                     timePeriod: .threeMonths,
                     color: getColorFromPeriod(period: .threeMonths)
                 )
@@ -94,7 +96,7 @@ struct HomeStocksView: View {
                 let stockData = processedData[4]
                 StockGraphView(
                     stockData: stockData,
-                    mostRecentValue: processedData[0].last!.price,
+                    mostRecentValue: $mostRecentValue,
                     timePeriod: .oneYear,
                     color: getColorFromPeriod(period: .year)
                 )
@@ -103,7 +105,7 @@ struct HomeStocksView: View {
                 let stockData = processedData[5]
                 StockGraphView(
                     stockData: stockData,
-                    mostRecentValue: processedData[0].last!.price,
+                    mostRecentValue: $mostRecentValue,
                     timePeriod: .ytd,
                     color: getColorFromPeriod(period: .ytd)
                 )
@@ -112,7 +114,7 @@ struct HomeStocksView: View {
                 let stockData = processedData[7]
                 StockGraphView(
                     stockData: stockData,
-                    mostRecentValue: processedData[0].last!.price,
+                    mostRecentValue: $mostRecentValue,
                     timePeriod: .all,
                     color: getColorFromPeriod(period: .all)
                 )
@@ -179,6 +181,7 @@ struct HomeStocksView: View {
         }
         .onAppear {
             selectedPeriod = .day
+            mostRecentValue = processedData[0].last!.price
         }
         .onChange(of: selectedPeriod) {
             if let selectedPeriod = selectedPeriod {
@@ -188,6 +191,7 @@ struct HomeStocksView: View {
         .onChange(of: processedData) {
             if let selectedPeriod = selectedPeriod {
                 selectedButtonColor = getColorFromPeriod(period: selectedPeriod).wrappedValue
+                mostRecentValue = processedData[0].last!.price
             }
         }
         .frame(maxHeight: .infinity)

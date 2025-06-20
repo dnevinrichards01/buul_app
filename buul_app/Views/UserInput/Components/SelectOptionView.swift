@@ -221,11 +221,11 @@ struct SelectOptionView: View {
                                     if customField == "" {
                                         customFieldError = "Please enter a value."
                                     } else {
-                                        print("otherStart", otherSelected)
+//                                        print("otherStart", otherSelected)
                                         customFieldError = ""
                                         showAlert = true
                                         alertMessage = "We can save this selection as your brokerage, but we are not yet able to connect with it. Do you want to select it anyways?"
-                                        print("otherStart2", otherSelected)
+//                                        print("otherStart2", otherSelected)
                                     }
                                 } else {
                                     if customField == "" {
@@ -266,7 +266,7 @@ struct SelectOptionView: View {
                     showAlert = false
                 }
                 Button("Select", role: .none) {
-                    print("otherSelect", otherSelected)
+//                    print("otherSelect", otherSelected)
                     showAlert = false
                     buttonDisabled = true
                 }
@@ -290,7 +290,7 @@ struct SelectOptionView: View {
             }
         }
         .onAppear {
-            print(selectedETF)
+//            print(selectedETF)
             buttonDisabled = false
         }
         .background(.black)

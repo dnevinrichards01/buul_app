@@ -116,7 +116,7 @@ struct NoOTPFieldsView: View {
         .onChange(of: buttonDisabled) {
             if !buttonDisabled { return }
             Task.detached {
-                print("other", await otherSelected)
+//                print("other", await otherSelected)
                 if signUpFields == [.fullName] && signUpField == .fullName {
                     let errorMessagesDictLocal = SignUpFieldsUtils.validateInputs(
                         signUpFields: signUpFields,
@@ -191,7 +191,7 @@ struct NoOTPFieldsView: View {
     private func generateParams() -> [String : Any] {
         let fieldString = Utils.camelCaseToSnakeCase(signUpField.rawValue)
         var fieldValue: Any
-        print("other", otherSelected)
+//        print("other", otherSelected)
         switch signUpField {
         case .fullName:
             fieldValue = fullName as Any

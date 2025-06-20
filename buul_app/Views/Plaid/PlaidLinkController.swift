@@ -82,7 +82,7 @@ class PlaidViewController: UIViewController {
     
     func openPlaidLink() {
         guard let handler = handler else {
-            print("Handler is nil, Link won't open")
+//            print("Handler is nil, Link won't open")
             return
         }
         handler.open(presentUsing: .viewController(self))

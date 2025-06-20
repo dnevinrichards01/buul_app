@@ -220,7 +220,7 @@ class GraphUtils {
     static func startingValuesPerGraphDataGroup(graphDataPartitions: [[StockDataPoint]]) -> [Double] {
         var resultList: [Double] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         let newToOldIndexMap = reOrderPartitionsByRange(graphDataPartitions: graphDataPartitions)
-        print("newToOldIndexMap", newToOldIndexMap)
+//        print("newToOldIndexMap", newToOldIndexMap)
         
         for i in 0..<graphDataPartitions.count-1 {
             var recentmostPriceFromOlderPeriod: Double = 0
@@ -228,13 +228,13 @@ class GraphUtils {
             var olderPeriodIndex = i + 1
             while olderPeriodIndex < graphDataPartitions.count && recentmostPriceFromOlderPeriod == 0 {
                 if olderPeriodIndex > i + 1 {
-                    print("startingValuesOlderIndex", i, olderPeriodIndex)
+//                    print("startingValuesOlderIndex", i, olderPeriodIndex)
                 }
                 let olderPeriod = graphDataPartitions[newToOldIndexMap[olderPeriodIndex] ?? olderPeriodIndex]
                 if let oldestDateFromEarlierPeriod = recentPeriod.first?.date,
                    let startIndex = olderPeriod.lastIndex(where: { $0.date < oldestDateFromEarlierPeriod }) {
                     recentmostPriceFromOlderPeriod = olderPeriod[startIndex].price
-                    print("recentmostPriceFromOlderPeriod", i, olderPeriodIndex, recentmostPriceFromOlderPeriod)
+//                    print("recentmostPriceFromOlderPeriod", i, olderPeriodIndex, recentmostPriceFromOlderPeriod)
                 } else if recentPeriod.isEmpty && !olderPeriod.isEmpty {
                     recentmostPriceFromOlderPeriod = olderPeriod.last!.price
                 }
@@ -243,7 +243,7 @@ class GraphUtils {
             
             resultList[newToOldIndexMap[i] ?? i] = recentmostPriceFromOlderPeriod
         }
-        print("starting values", resultList)
+//        print("starting values", resultList)
         return resultList
     }
     
@@ -278,18 +278,18 @@ class GraphUtils {
         if let firstDataPointDate = data.first?.date, let firstDataPointPrice = data.first?.price,
            startDateTruncated < truncateDate(date: firstDataPointDate, granularity: granularity) {
             augmentedData.insert(StockDataPoint(date: startDateTruncated, price: startValue), at: 0)
-            print("firstDataPointPrice", firstDataPointPrice, startDateTruncated, truncateDate(date: firstDataPointDate, granularity: granularity))
+//            print("firstDataPointPrice", firstDataPointPrice, startDateTruncated, truncateDate(date: firstDataPointDate, granularity: granularity))
             
         }
         if let lastDataPointDate = data.last?.date, let lastDataPointPrice = data.last?.price,
            endDateTruncated > truncateDate(date: lastDataPointDate, granularity: granularity) {
             augmentedData.append(StockDataPoint(date: endDateTruncated, price: lastDataPointPrice))
-            print("lastDataPointPrice", lastDataPointPrice)
+//            print("lastDataPointPrice", lastDataPointPrice)
         }
         
         
         if augmentedData.isEmpty {
-            print(augmentedData.count, augmentedData.isEmpty, partitionType, startValue)
+//            print(augmentedData.count, augmentedData.isEmpty, partitionType, startValue)
             augmentedData.append(StockDataPoint(date: startDateTruncated, price: startValue))
             augmentedData.append(StockDataPoint(date: endDateTruncated, price: startValue))
         }
@@ -299,7 +299,7 @@ class GraphUtils {
         }
         for i in 0..<augmentedData.count - 1 {
             if partitionType == .oneDay {
-                print(augmentedData.count, augmentedData.isEmpty, partitionType)
+//                print(augmentedData.count, augmentedData.isEmpty, partitionType)
             }
             let current = augmentedData[i]
             let currentDate = truncateDate(date: current.date, granularity: granularity)

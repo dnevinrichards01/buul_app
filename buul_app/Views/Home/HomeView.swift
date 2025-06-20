@@ -114,16 +114,16 @@ struct HomeView: View {
             retryRequestGraphData = false
             graphDataRequested = false
             useDefaultData = true
-            print("on appear ")
+//            print("on appear ")
             
             Task.detached(priority: .userInitiated) {
-                print("will now fetch")
+//                print("will now fetch")
                 var processedDataList: [[StockDataPoint]]? = nil
                 if let graphData = await self.sessionManager.graphData {
                     processedDataList = graphData
                 } else {
                     let processedDataDict = await CoreDataStockManager.shared.fetchAllSeries()
-                    print("fetched")
+//                    print("fetched")
                     if processedDataDict != [:] {
                         processedDataList = processedDataDict
                             .sorted(by: { $0.key < $1.key })
@@ -151,7 +151,7 @@ struct HomeView: View {
         }
         .onChange(of: retryRequestGraphData) {
             guard retryRequestGraphData else { return }
-            print("retryRequestGraphData")
+//            print("retryRequestGraphData")
             Task.detached {
                 try? await Task.sleep(nanoseconds: 2_000_000_000)
                 await MainActor.run {
@@ -162,7 +162,7 @@ struct HomeView: View {
         }
         .onChange(of: retryGetGraphData) {
             guard retryGetGraphData else { return }
-            print("retryGetGraphData")
+//            print("retryGetGraphData")
             Task.detached {
                 try? await Task.sleep(nanoseconds: 500_000_000)
                 await MainActor.run {
@@ -175,7 +175,7 @@ struct HomeView: View {
         .onChange(of: graphDataRequested) {
             guard graphDataRequested else { return }
             Task.detached {
-                print("graphDataRequested")
+//                print("graphDataRequested")
                 try? await Task.sleep(nanoseconds: 500_000_000)
                 await MainActor.run {
                     graphDataRequested = false
@@ -189,7 +189,7 @@ struct HomeView: View {
             guard let graphData = graphData else { return }
             
             Task.detached {
-                print("recieved")
+//                print("recieved")
                 let now: Date = Date()
                 let defaultData = GraphUtils.createDefaultGraphData(
                     now: now,
@@ -200,7 +200,7 @@ struct HomeView: View {
                     now: now
                 )
                 let colors = GraphUtils.getColors(graphData: processedGraphData)
-                print("processed")
+//                print("processed")
                 await MainActor.run {
                     self.sessionManager.graphData = processedGraphData
                     self.defaultData = defaultData
@@ -345,15 +345,15 @@ struct HomeView: View {
             sessionManager: sessionManager,
             responseType: StockDataPoints.self
         ) { response in
-            print("self.date", self.date)
+//            print("self.date", self.date)
             switch response {
             case .success(let responseData):
-                print("successful getGraphData")
+//                print("successful getGraphData")
                 self.retryGetGraphData = false
                 self.useDefaultData = false
                 self.graphData = responseData.data
             case .failure(let networkError):
-                print("failed getGraphData", networkError)
+//                print("failed getGraphData", networkError)
                 switch networkError {
                 case .decodingError:
                     self.retryGetGraphData = false

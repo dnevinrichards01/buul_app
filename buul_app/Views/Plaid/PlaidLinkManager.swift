@@ -243,7 +243,7 @@ class PlaidLinkManager: ObservableObject {
         }
         linkTokenConfig.onExit = { linkExit in
             Task { @MainActor in
-                print(linkExit)
+//                print(linkExit)
                 self.disableLoadingCircle = true
                 self.reset()
             }
