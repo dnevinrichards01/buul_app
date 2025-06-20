@@ -45,7 +45,7 @@ class ServerCommunicator: @unchecked Sendable {
     }
 
 
-    init(baseURL: String = "https://prod.buul-load-balancer.link/" ) { //"http://localhost:8000/", "http://10.0.0.206:8000/", "https://prod.buul-load-balancer.link/" "https://shad-enormous-skink.ngrok-free.app/"
+    init(baseURL: String = "https://shad-enormous-skink.ngrok-free.app/" ) { //"http://localhost:8000/", "http://10.0.0.206:8000/", "https://prod.buul-load-balancer.link/" "https://shad-enormous-skink.ngrok-free.app/"
         self.baseURL = baseURL
     }
     
@@ -60,7 +60,7 @@ class ServerCommunicator: @unchecked Sendable {
         tryRefresh: Bool = true,
         completion: @escaping (Result<T, NetworkError>) -> Void
     ) async {
-        
+        print("params", params as Any)
         guard let url = URL(string: baseURL + path) else {
             completion(.failure(.invalidUrl))
             return

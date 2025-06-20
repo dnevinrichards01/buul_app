@@ -20,6 +20,7 @@ struct SignUpRobinhoodMFAView: View {
     @State private var alertMessage: String = ""
     @State private var showAlert: Bool = false
     @State private var mfaMethod: RobinhoodMFAMethod?
+    @State private var prevMfaMethod: RobinhoodMFAMethod?
     @State private var resendCode: Bool = false
     @State private var defaultToSms: Bool = false
 
@@ -284,6 +285,7 @@ struct SignUpRobinhoodMFAView: View {
             params[mfaFieldString] = true
             params["default_to_sms"] = defaultToSms
         }
+//        self.defaultToSms = false
         
 //        if mfaMethod == .app {
 //            params[mfaFieldString] = otp as Any
@@ -323,10 +325,8 @@ struct SignUpRobinhoodMFAView: View {
                 // alert because unexpected response
                 } else if let _ = responseData.error, let _ = responseData.success {
                     self.errorMessage = nil
-//                    if !sessionManager.refreshFailed {
-                        self.alertMessage = ServerCommunicator.NetworkError.decodingError.errorMessage
-                        self.showAlert = true
-//                    }
+                    self.alertMessage = ServerCommunicator.NetworkError.decodingError.errorMessage
+                    self.showAlert = true
                     self.buttonDisabled = false
                 // alert because unexpected response
                 } else {
@@ -375,13 +375,15 @@ struct SignUpRobinhoodMFAView: View {
                     if let challengeType = errors.challengeType {
                         for mfaMethod in RobinhoodMFAMethod.allCases {
                             if Utils.camelCaseToSnakeCase(mfaMethod.rawValue) == challengeType {
+                                self.prevMfaMethod = self.mfaMethod
                                 self.sessionManager.robinhoodMFAType = mfaMethod
                                 self.mfaMethod = mfaMethod
                             }
                         }
                     }
-                    
-                    self.errorMessage = errors.errorMessage
+                    if let prevMfaMethod = self.prevMfaMethod, prevMfaMethod == self.mfaMethod {
+                        self.errorMessage = errors.errorMessage
+                    }
                     self.requested = false
                     self.buttonDisabled = false
                     return
@@ -392,7 +394,7 @@ struct SignUpRobinhoodMFAView: View {
                     self.sessionManager.robinhoodMFAType = nil
                     self.buttonDisabled = false
                 // not yet ready
-                } else if let _ = responseData.error, let _ = responseData.success {
+                } else if responseData.error == nil && responseData.success == nil {
                     
                     if self.recieveSignInResultRetries > 0 {
                         self.recieveSignInResultRetries = self.recieveSignInResultRetries - 1
@@ -403,19 +405,15 @@ struct SignUpRobinhoodMFAView: View {
                         return
                     }
                     self.errorMessage = nil
-//                    if !sessionManager.refreshFailed {
-                        self.alertMessage = ServerCommunicator.NetworkError.networkError.errorMessage
-                        self.showAlert = true
-//                    }
+                    self.alertMessage = ServerCommunicator.NetworkError.networkError.errorMessage
+                    self.showAlert = true
                     self.requested = false
                     self.buttonDisabled = false
                 // alert because unexpected response
                 } else {
                     self.errorMessage = nil
-//                    if !sessionManager.refreshFailed {
-                        self.alertMessage = ServerCommunicator.NetworkError.decodingError.errorMessage
-                        self.showAlert = true
-//                    }
+                    self.alertMessage = ServerCommunicator.NetworkError.decodingError.errorMessage
+                    self.showAlert = true
                     self.requested = false
                     self.buttonDisabled = false
                 }
