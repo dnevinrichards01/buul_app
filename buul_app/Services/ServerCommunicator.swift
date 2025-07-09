@@ -45,7 +45,7 @@ class ServerCommunicator: @unchecked Sendable {
     }
 
 
-    init(baseURL: String = "https://prod.buul-load-balancer.link/" ) { //"http://localhost:8000/", "http://10.0.0.206:8000/", "https://prod.buul-load-balancer.link/" "https://shad-enormous-skink.ngrok-free.app/"
+    init(baseURL: String = "https://shad-enormous-skink.ngrok-free.app/" ) { //"http://localhost:8000/", "http://10.0.0.206:8000/", "https://prod.buul-load-balancer.link/" "https://shad-enormous-skink.ngrok-free.app/"
         self.baseURL = baseURL
     }
     
@@ -60,7 +60,7 @@ class ServerCommunicator: @unchecked Sendable {
         tryRefresh: Bool = true,
         completion: @escaping (Result<T, NetworkError>) -> Void
     ) async {
-//        print("params", params as Any)
+        print("params", params as Any)
         guard let url = URL(string: baseURL + path) else {
             completion(.failure(.invalidUrl))
             return
@@ -94,7 +94,7 @@ class ServerCommunicator: @unchecked Sendable {
             Task {
                 
                 if let data = data, let body = String(data: data, encoding: .utf8) {
-//                    print("unprocessed body", body)
+                    print("unprocessed body", body)
                 }
                 // need to let users log out in sign up flow if errors happening befpre status code guard block
                 
@@ -152,11 +152,13 @@ class ServerCommunicator: @unchecked Sendable {
                     decoder.dateDecodingStrategy = .iso8601
                     decoder.keyDecodingStrategy = .convertFromSnakeCase
                     let decodedResponse = try decoder.decode(T.self, from: data)
-//                    print(decodedResponse)
+                    print(decodedResponse)
                     DispatchQueue.main.async {
                         completion(.success(decodedResponse))
                     }
                 } catch {
+                    print("Decoding failed with error: \(error)")
+                    
                     DispatchQueue.main.async {
                         completion(.failure(.decodingError))
                     }
@@ -214,9 +216,9 @@ class ServerCommunicator: @unchecked Sendable {
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             Task {
                 
-                if let data = data, let body = String(data: data, encoding: .utf8) {
+//                if let data = data, let body = String(data: data, encoding: .utf8) {
 //                    print(body)
-                }
+//                }
                 
                 if error != nil {
 //                    print(error?.localizedDescription as Any)

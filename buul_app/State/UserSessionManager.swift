@@ -23,6 +23,9 @@ class UserSessionManager: ObservableObject {
     
     @Published var graphData: [[StockDataPoint]]?
     
+    @Published var investmentHistory: [Int : [UserInvestment]] = [0:[]]
+    @Published var investmentHistoryMaxPage: Int = 0
+    
     var app_version: String = "build_8"
     
     var sharedKeychainReadContext: LAContext = LAContext()

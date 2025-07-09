@@ -115,6 +115,8 @@ struct HomeAccountView: View {
                         navManager.append(NavigationPathViews.delete)
                     case .logout:
                         logout = true
+                    case .investmentHistory:
+                        navManager.append(NavigationPathViews.investmentHistory)
                     }
                 }
             }
@@ -146,6 +148,7 @@ enum AccountSettings: CaseIterable {
     case help
     case delete
     case logout
+    case investmentHistory
     
     /// Returns the corresponding SF Symbol name
     var systemImageName: String {
@@ -155,6 +158,7 @@ enum AccountSettings: CaseIterable {
         case .help: return "questionmark.circle.fill"
         case .delete: return "trash.fill"
         case .logout: return "arrow.right.square"
+        case .investmentHistory: return "calendar"
         }
     }
     
@@ -166,6 +170,7 @@ enum AccountSettings: CaseIterable {
         case .help: return "Help & Support"
         case .delete: return "Delete"
         case .logout: return "Logout"
+        case .investmentHistory: return "Investment History"
         }
     }
 }

@@ -61,5 +61,7 @@ enum NavigationPathViews: CaseIterable {
     case plaidSettingsHelp
     case plaidSettings
     case redeemCashbackInstructionsHelp
+    
+    case investmentHistory
 }
 

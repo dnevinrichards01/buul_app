@@ -482,6 +482,8 @@ struct LoadingScreen: View {
                         isSignUp: true,
                         goBackNPagesOnCompletion: 1
                     )
+                case .investmentHistory:
+                    InvestmentHistoryView()
                 }
             }
         }
