@@ -49,10 +49,10 @@ struct HomeView: View {
                 Color.black
                     .frame(height: 5)
                     .edgesIgnoringSafeArea(.top)
-                ScrollView {
-                    switch tabSelected {
-                    case .stocks:
-                        if useDefaultData {
+                switch tabSelected {
+                case .stocks:
+                    if useDefaultData {
+                        ScrollView {
                             HomeStocksView(
                                 processedData: $defaultData,
                                 oneDayColor: $oneDayColor,
@@ -63,7 +63,9 @@ struct HomeView: View {
                                 ytdColor: $ytdColor,
                                 allColor: $allColor
                             )
-                        } else {
+                        }
+                    } else {
+                        ScrollView {
                             HomeStocksView(
                                 processedData: Binding<[[StockDataPoint]]>(
                                     get: { processedData ?? defaultData },
@@ -78,11 +80,18 @@ struct HomeView: View {
                                 allColor: $allColor
                             )
                         }
-                    case .cards:
+                    }
+                case .cards:
+                    ScrollView {
                         HomeCardsView()
-                    case .account:
+                    }
+                case .account:
+                    ScrollView {
                         HomeAccountView()
                     }
+                case .projections:
+                    ProjectionsView()
+                        .background(Color.black.ignoresSafeArea())
                 }
                 Spacer()
             }
@@ -390,13 +399,14 @@ struct HomeView: View {
 
 
 enum HomeTabs: CaseIterable {
-    case stocks, cards, account
+    case stocks, cards, account, projections
 
     var imageName: String {
         switch self {
         case .stocks: return "chart.line.uptrend.xyaxis"
         case .cards: return "creditcard"
         case .account: return "person.crop.circle"
+        case .projections: return "calendar"
         }
     }
     
