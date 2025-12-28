@@ -118,10 +118,49 @@ class Utils {
         return nil
     }
     
+    static func searchGraphDataForValue(value: Double, graphData: [[StockDataPoint]]?) -> Date? {
+        guard let graphData = graphData else { return nil }
+        var previous: Date? = nil
+        for point in graphData.lazy.flatMap({ $0.reversed() }) {
+            if point.price < value {
+                return previous
+            }
+            previous = point.date
+        }
+        return Date()
+    }
     
-    
-    
-    
+    static func getGoalDate(
+        amount: Double,
+        contribution: Double,
+        annualRate: Double,
+        currentPortfolioValue: Double,
+        graphData: [[StockDataPoint]]?
+    ) -> Date {
+        if amount == 0 || currentPortfolioValue > amount {
+            return searchGraphDataForValue(value: amount, graphData: graphData) ?? Date()
+        }
+        
+        let monthlyRate = pow(1 + annualRate, 1 / 12.0) - 1
+        if monthlyRate == 0 && contribution == 0 {
+            return Date.distantFuture
+        } else if  monthlyRate < 0 || contribution < 0 {
+            return Date.distantFuture
+        }
+        
+        let numerator = contribution + amount * monthlyRate
+        let denominator = contribution + currentPortfolioValue * monthlyRate
+
+        guard numerator > 0, denominator > 0 else {
+            return Date.distantFuture
+        }
+
+        let n = log(numerator / denominator) / log(1 + monthlyRate)
+        let months = Int(ceil(n))
+
+        return Calendar.current.date(byAdding: .month, value: months, to: Date()) ?? Date()
+        
+    }
     
     static func censor(_ input: String) -> String {
         if input.count == 0 {

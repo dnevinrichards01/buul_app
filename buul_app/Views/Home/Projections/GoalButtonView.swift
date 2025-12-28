@@ -8,27 +8,38 @@
 import SwiftUI
 
 struct GoalButtonView: View {
+    @EnvironmentObject var sessionManager: UserSessionManager
     @Binding var buttonState: GoalButtonState
     @Binding var buttonCreated: Bool
-    var buttonIndex: Int
+    @Binding var selectedInvestment: InvestmentButtonPresets
+    @Binding var avgRates: [InvestmentButtonPresets:Double]
+    @Binding var avgMonthlyContr: Double
+    @Binding var portfolioValue: Double
     var onDelete: (() -> Void)? = nil
     
     @State private var expanded: Bool = false
-    private var imageOptions: [String] = ["flag", "car"]
+    private var imageOptions: [String] = ["Icon", "Flag", "Car"]
     private var images: [String:String] = [
-        "flag": "flag",
-        "car": "car"
+        "Icon": "chevron.down",
+        "Flag": "flag",
+        "Car": "car"
     ]
     
     init(
         buttonState: Binding<GoalButtonState>,
         buttonCreated: Binding<Bool>,
-        buttonIndex: Int,
+        selectedInvestment: Binding<InvestmentButtonPresets>,
+        avgRates: Binding<[InvestmentButtonPresets:Double]>,
+        avgMonthlyContr: Binding<Double>,
+        portfolioValue: Binding<Double>,
         onDelete: (() -> Void)?
     ) {
         self._buttonState = buttonState
         self._buttonCreated = buttonCreated
-        self.buttonIndex = buttonIndex
+        self._selectedInvestment = selectedInvestment
+        self._avgMonthlyContr = avgMonthlyContr
+        self._avgRates = avgRates
+        self._portfolioValue = portfolioValue
         self.onDelete = onDelete
     }
     
@@ -38,29 +49,20 @@ struct GoalButtonView: View {
                 expanded.toggle()
             } label: {
                 HStack {
-                    if buttonState.amount == nil && buttonState.image == "plus" && buttonState.name == "" {
+                    if !buttonCreated {
                         Image(systemName: "plus")
                             .font(.title3)
                             .foregroundColor(.white)
                             .background(.clear)
                     } else {
-                        Image(systemName: buttonState.image)
+                        Image(systemName: buttonState.image == "Icon" ? "" : images[buttonState.image] ?? "flag")
                             .font(.title3)
                             .foregroundColor(.white)
                             .background(.clear)
-                        Text(buttonState.name)
+                        Text("\(buttonState.name) \(formatAmount(buttonState.amount ?? 0.0)) \(formatDate(buttonState.date ?? .now))")
                             .font(.headline)
                             .foregroundColor(.white)
                             .background(.clear)
-                        Text(formatAmount(buttonState.amount ?? 0.0))
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .background(.clear)
-                        Text("by \(formatDate(buttonState.date ?? .now))")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .background(.clear)
-                        Spacer()
                         Image(systemName: "chevron.down")
                             .font(.headline)
                             .foregroundColor(.white)
@@ -79,90 +81,76 @@ struct GoalButtonView: View {
                         .background(.clear)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     VStack (alignment: .leading, spacing: 10) {
-                        HStack {
-                            Text("Icon: ")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .background(.clear)
-                                .frame(width: 80, alignment: .leading)
-                            Picker("Select an option", selection: $buttonState.image) {
-                                ForEach(imageOptions, id: \.self) { option in
+                        Menu {
+                            ForEach(imageOptions, id: \.self) { option in
+                                Button {
+                                    buttonState.image = option
+                                } label: {
                                     HStack {
                                         Text(option)
-                                            .foregroundColor(.white)
+                                        Spacer()
                                         Image(systemName: images[option] ?? "flag")
-                                            .resizable()
-                                            .frame(width: 15, height: 15)
-                                            .foregroundColor(.white)
                                     }
-//                                    .frame(minWidth: .infinity, alignment: .leading)
-                                    .foregroundStyle(.white)
                                 }
                             }
+                        } label: {
+                            HStack {
+                                Text(buttonState.image)
+                                Spacer()
+                                Image(systemName: images[buttonState.image] ?? "flag")
+                            }
+                            .frame(minWidth: 60) // gives area
+                            .frame(maxWidth: .infinity) // will take up area
+                            .contentShape(Rectangle()) // defines tappable area
+                        }
+                        .foregroundColor(.white)
+                        .padding(.horizontal)
+                        .frame(maxWidth: .infinity)
+                        .background(!buttonCreated ? selectedInvestment.borderColor : .blue)//.textBoxColor)
+                        .cornerRadius(20)
+                        TextField("Name", text: $buttonState.name)
+                            .padding(.leading, 13)
+                            .padding(.trailing, 5)
+                            .font(.subheadline)
                             .foregroundColor(.white)
-                            .pickerStyle(MenuPickerStyle())
-                            .background(buttonState.textBoxColor)
+                            .background(!buttonCreated ? selectedInvestment.borderColor : .cyan)//.textBoxColor)
                             .cornerRadius(20)
-                        }
-                        HStack {
-                            Text("Name: ")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .background(.clear)
-                                .frame(width: 80, alignment: .leading)
-                            TextField("", text: $buttonState.name)
-                                .padding(.leading, 13)
-                                .padding(.trailing, 5)
-                                .font(.subheadline)
-                                .foregroundColor(.white)
-                                .background(buttonState.textBoxColor)
-                                .cornerRadius(20)
-                        }
-                        HStack {
-                            Text("Amount: ")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .background(.clear)
-                                .frame(width: 80, alignment: .leading)
-                            TextField("", value: $buttonState.amount, formatter: getNumberFormatter())
-                                .padding(.leading, 13)
-                                .padding(.trailing, 5)
-                                .font(.subheadline)
-                                .foregroundColor(.white)
-                                .background(buttonState.textBoxColor)
-                                .cornerRadius(20)
-                                .keyboardType(.decimalPad)
-                        }
+                        TextField("Amount (USD)", value: $buttonState.amount, formatter: getNumberFormatter())
+                            .padding(.leading, 13)
+                            .padding(.trailing, 5)
+                            .font(.subheadline)
+                            .foregroundColor(.white)
+                            .background(!buttonCreated ? selectedInvestment.borderColor : .cyan)//buttonState.textBoxColor)
+                            .cornerRadius(20)
+                            .keyboardType(.decimalPad)
                     }
                     .padding(.leading, 15)
                 }
-                .transition(.asymmetric(insertion: .move(edge: .bottom), removal: .identity))
-                .animation(.easeInOut(duration: 0.3), value: expanded)
             }
         }
         .padding()
-        .animation(.easeInOut(duration: 0.5), value: expanded)
-        .cornerRadius(20)
-        .background(buttonState.color.cornerRadius(20))
+        .background(selectedInvestment.color.cornerRadius(20))//!buttonCreated ? selectedInvestment.color.cornerRadius(20) : Color.blue.cornerRadius(20))//buttonState.color.cornerRadius(20))
         .overlay(
             RoundedRectangle(cornerRadius: 20)
-                .stroke(buttonState.borderColor, lineWidth: 4)
+                .stroke(!buttonCreated ? selectedInvestment.borderColor : .cyan, lineWidth: 4)
         )
         .onChange(of: expanded) {
             if !expanded {
-                if buttonState.amount != nil || buttonState.image != "plus" || buttonState.name != "" {
-//                    withAnimation {
-//                        onCreate?()
-//                    }
+                if buttonState.amount != nil || buttonState.image != "Icon" || buttonState.name != "" {
                     buttonCreated = true
+                    buttonState.date = Utils.getGoalDate(
+                        amount: buttonState.amount ?? 0.0,
+                        contribution: avgMonthlyContr,
+                        annualRate: avgRates[selectedInvestment] ?? 0.0,
+                        currentPortfolioValue: portfolioValue,
+                        graphData: sessionManager.graphData
+                    )
                 } else {
                     withAnimation {
                         onDelete?()
                     }
-                    
                 }
             }
-//            print("buttonCreated", buttonCreated, index)
         }
     }
 
@@ -174,20 +162,25 @@ struct GoalButtonView: View {
     
     private func formatAmount(_ amount: Double) -> String {
         if amount < 1000 {
-            return String(format: "$%.2f%", amount)
+            return String(format: "$%d", Int(round(amount)))
+//            return String(format: "$%.2f%", amount)
         } else if amount < 1000000 {
             let thousands = amount / 1000
-            return String(format: "$%.2f%K", thousands)
+//            return String(format: "$%.2f%K", thousands)
+            return String(format: "$%d%K", Int(round(thousands)))
         } else {
             let millions = amount / 1000000
-            return String(format: "$%.2f%M", millions)
+            return String(format: "$%.1f%M", millions)
         }
     }
     
     private func formatDate(_ date: Date) -> String {
+        if date >= Date.distantFuture {
+            return "in 4+ millenia"
+        }
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM, yyyy"
-        return formatter.string(from: date)
+        return "by \(formatter.string(from: date))"
     }
 }
 
@@ -196,7 +189,7 @@ struct GoalButtonView: View {
         buttonState: .constant(
             GoalButtonState(
                 name: "",
-                image: "plus",
+                image: "Icon",
                 amount: nil,
                 date: .now,
                 color: .blue,
@@ -205,7 +198,10 @@ struct GoalButtonView: View {
             )
         ),
         buttonCreated: .constant(false),
-        buttonIndex: 0,
+        selectedInvestment: .constant(.VOO),
+        avgRates: .constant([:]),
+        avgMonthlyContr: .constant(0.0),
+        portfolioValue: .constant(0.0),
         onDelete: {}
     )
 }

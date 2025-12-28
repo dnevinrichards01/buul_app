@@ -40,6 +40,7 @@ class UserSessionManager: ObservableObject {
     var robinhoodMFAType: RobinhoodMFAMethod?
     
     // page?
+    @AppStorage("buul.user.avgMonthlyContr") var avgMonthlyContr: Double?
     @AppStorage("buul.user.preAccountId") var _preAccountId: Int?
     @AppStorage("buul.user.isLoggedIn") var isLoggedIn: Bool = false
     @AppStorage("buul.user.phoneNumber") var phoneNumber: String?
