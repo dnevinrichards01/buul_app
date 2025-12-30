@@ -45,7 +45,7 @@ class ServerCommunicator: @unchecked Sendable {
     }
 
 
-    init(baseURL: String = "https://prod.buul-load-balancer.link/" ) { //"http://localhost:8000/", "http://10.0.0.206:8000/", "https://prod.buul-load-balancer.link/" "https://shad-enormous-skink.ngrok-free.app/"
+    init(baseURL: String = "http://localhost:8000/" ) { //"http://localhost:8000/", "http://10.0.0.206:8000/", "https://prod.buul-load-balancer.link/" "https://shad-enormous-skink.ngrok-free.app/"
         self.baseURL = baseURL
     }
     
