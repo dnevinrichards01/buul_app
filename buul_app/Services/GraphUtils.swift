@@ -78,6 +78,7 @@ class GraphUtils {
         }
     }
     
+    
     static func getDateFormatString(calendarComponents: Set<Calendar.Component>) -> String {
         if calendarComponents == [.year, .month, .day, .hour, .minute] {
             return "h:mm a"

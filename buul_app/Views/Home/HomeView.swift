@@ -12,13 +12,12 @@ struct HomeView: View {
     @EnvironmentObject var navManager: NavigationPathManager
     @EnvironmentObject var sessionManager: UserSessionManager
     @State private var tabSelected: HomeTabs = .stocks
-    @State private var date: String
+    @State private var startDate: String
     @State private var alertMessage: String = ""
     @State private var showAlert: Bool = false
-    @State private var retryGetGraphData: Bool = false
     @State private var getGraphDataRetries: Int = 5
-    @State private var retryRequestGraphData: Bool = false
-    @State private var graphDataRequested: Bool = false
+    @State private var graphRefreshState: GraphRefreshState = .start
+    @State private var graphRefreshStateUpdated: Bool = false
     
     @State private var graphData: [StockDataPoint]?
     @State private var defaultData: [[StockDataPoint]]
@@ -35,7 +34,7 @@ struct HomeView: View {
     @State private var allColor: Color = .gray
     
     init() {
-        self.date = Self.getGraphParams()
+        self.startDate = Self.getStartDate()
         let now = Date()
         self.defaultData = GraphUtils.createDefaultGraphData(
             now: now,
@@ -110,27 +109,19 @@ struct HomeView: View {
             }
         }
         .onAppear() {
-            retryGetGraphData = false
-            retryRequestGraphData = false
-            graphDataRequested = false
             useDefaultData = true
-//            print("on appear ")
-            
             Task.detached(priority: .userInitiated) {
-//                print("will now fetch")
                 var processedDataList: [[StockDataPoint]]? = nil
-                if let graphData = await self.sessionManager.graphData {
-                    processedDataList = graphData
+                if let cachedGraphData = await self.sessionManager.graphData {
+                    processedDataList = cachedGraphData
                 } else {
                     let processedDataDict = await CoreDataStockManager.shared.fetchAllSeries()
-//                    print("fetched")
                     if processedDataDict != [:] {
                         processedDataList = processedDataDict
                             .sorted(by: { $0.key < $1.key })
                             .map { $0.value }
                     }
                 }
-                
                 if let processedDataList = processedDataList {
                     let colors = GraphUtils.getColors(graphData: processedDataList)
                     await MainActor.run {
@@ -145,86 +136,44 @@ struct HomeView: View {
                         self.allColor = colors[7]
                     }
                 }
-                
                 await requestGraphData()
             }
         }
-        .onChange(of: retryRequestGraphData) {
-            guard retryRequestGraphData else { return }
-//            print("retryRequestGraphData")
-            Task.detached {
-                try? await Task.sleep(nanoseconds: 2_000_000_000)
-                await MainActor.run {
-                    retryRequestGraphData = false
+        .onChange(of: graphRefreshStateUpdated) {
+            print(self.graphRefreshState)
+            switch self.graphRefreshState {
+            case .retryRequestGraphData:
+                Task.detached {
+                    try? await Task.sleep(nanoseconds: 2_000_000_000)
+//                    await updateGraph()
+                    await requestGraphData()
                 }
-                await requestGraphData()
-            }
-        }
-        .onChange(of: retryGetGraphData) {
-            guard retryGetGraphData else { return }
-//            print("retryGetGraphData")
-            Task.detached {
-                try? await Task.sleep(nanoseconds: 500_000_000)
-                await MainActor.run {
-                    retryGetGraphData = false
+            case .retryGetGraphData:
+                Task.detached {
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                    await MainActor.run {
+                        self.startDate = Self.getStartDate()
+                    }
+                    await getGraphData()
                 }
-                await getGraphData()
-            }
-            
-        }
-        .onChange(of: graphDataRequested) {
-            guard graphDataRequested else { return }
-            Task.detached {
-//                print("graphDataRequested")
-                try? await Task.sleep(nanoseconds: 500_000_000)
-                await MainActor.run {
-                    graphDataRequested = false
-                    self.date = Self.getGraphParams()
+            case .graphDataRequested:
+                Task.detached {
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                    await getGraphData()
                 }
-                await getGraphData()
-            }
-            
-        }
-        .onChange(of: graphData) {
-            guard let graphData = graphData else { return }
-            
-            Task.detached {
-//                print("recieved")
-                let now: Date = Date()
-                let defaultData = GraphUtils.createDefaultGraphData(
-                    now: now,
-                    earliestDate: GraphUtils.calendar.date(byAdding: .year, value: -5, to: now)!
-                )
-                let processedGraphData = GraphUtils.processGraphData(
-                    graphData: graphData,
-                    now: now
-                )
-                let colors = GraphUtils.getColors(graphData: processedGraphData)
-//                print("processed")
-                await MainActor.run {
-                    self.sessionManager.graphData = processedGraphData
-                    self.defaultData = defaultData
-                    self.useDefaultData = false
-                    self.processedData = processedGraphData
-                    self.oneDayColor = colors[0]
-                    self.oneWeekColor = colors[1]
-                    self.oneMonthColor = colors[2]
-                    self.threeMonthsColor = colors[3]
-                    self.oneYearColor = colors[4]
-                    self.ytdColor = colors[5]
-                    self.allColor = colors[7]
+            case .updateGraph:
+                self.useDefaultData = false
+                Task.detached {
+                    await updateGraph()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                        self.initialGraphDataRecievedOrError = true
+                    }
+                    let seconds = await secondsUntilNextMinute()
+                    let nanoseconds = UInt64(seconds * 1_000_000_000)
+                    try? await Task.sleep(nanoseconds: nanoseconds)
+                    await requestGraphData()
                 }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                    self.initialGraphDataRecievedOrError = true
-                }
-                DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 0.2) {
-                    CoreDataStockManager.shared.save(series: processedGraphData)
-                }
-                
-                let seconds = await secondsUntilNextMinute()
-                let nanoseconds = UInt64(seconds * 1_000_000_000)
-                try? await Task.sleep(nanoseconds: nanoseconds)
-                await requestGraphData()
+            case .start: break
             }
         }
         .background(Color.black.ignoresSafeArea())
@@ -257,6 +206,41 @@ struct HomeView: View {
         }
     }
     
+    func updateGraph() async {
+        print("entered updateGraph function")
+        let now = Date()
+        if useDefaultData {
+            await MainActor.run {
+                print("updated default data with date", now)
+                self.defaultData = GraphUtils.createDefaultGraphData(
+                    now: now,
+                    earliestDate: GraphUtils.calendar.date(byAdding: .year, value: -5, to: now)!
+                )
+            }
+        } else if let graphData = self.graphData {
+            print("updated graph data with date", now)
+            let processedGraphData = GraphUtils.processGraphData(
+                graphData: graphData,
+                now: now
+            )
+            let colors = GraphUtils.getColors(graphData: processedGraphData)
+            await MainActor.run {
+                self.sessionManager.graphData = processedGraphData
+                self.useDefaultData = false
+                self.processedData = processedGraphData
+                self.oneDayColor = colors[0]
+                self.oneWeekColor = colors[1]
+                self.oneMonthColor = colors[2]
+                self.threeMonthsColor = colors[3]
+                self.oneYearColor = colors[4]
+                self.ytdColor = colors[5]
+                self.allColor = colors[7]
+            }
+            DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 0.2) {
+                CoreDataStockManager.shared.save(series: processedGraphData)
+            }
+        }
+    }
     func secondsUntilNextMinute() -> TimeInterval {
         let now = Date()
         let calendar = Calendar.current
@@ -267,25 +251,8 @@ struct HomeView: View {
             return 20
         }
     }
-    
-    private static func getCustomDate() -> Date {
-        let utcCalendar = Calendar(identifier: .gregorian)
-        let utcTimeZone = TimeZone(secondsFromGMT: 0)!
 
-        var components = DateComponents()
-        components.year = 2025
-        components.month = 1
-        components.day = 1
-        components.hour = 8
-        components.minute = 30
-        components.timeZone = utcTimeZone
-
-        let utcDate = utcCalendar.date(from: components)!
-        return utcDate
-    }
-
-    
-    private static func getGraphParams() -> String {
+    private static func getStartDate() -> String {
         let fiveYearsAgo = Calendar.current.date(byAdding: .year, value: -5, to: Date())!
         let isoFormatter = ISO8601DateFormatter()
         isoFormatter.timeZone = TimeZone(abbreviation: "UTC")
@@ -293,8 +260,6 @@ struct HomeView: View {
         let isoString = isoFormatter.string(from: fiveYearsAgo)
         return isoString
     }
-    
-    
     
     private func requestGraphData() async {
         await ServerCommunicator().callMyServer(
@@ -307,27 +272,27 @@ struct HomeView: View {
             switch response {
             case .success(let responseData):
                 if responseData.error == nil, let _ = responseData.success {
-                    self.retryRequestGraphData = false
-                    self.graphDataRequested = true
+                    self.graphRefreshState = .graphDataRequested
+                    self.graphRefreshStateUpdated.toggle()
                 } else {
+                    self.graphRefreshState = .retryRequestGraphData
+                    self.graphRefreshStateUpdated.toggle()
                     self.initialGraphDataRecievedOrError = true
-                    self.retryRequestGraphData = true
-                    self.graphDataRequested = false
                 }
             case .failure(let networkError):
                 switch networkError {
                 case .statusCodeError(let status):
                     if status == 401 {
                         self.alertMessage = "Your session has expired. To retrieve updated information, please logout then sign in."
-                        self.retryRequestGraphData = false
-                        self.graphDataRequested = false
+                        self.graphRefreshState = .start
+                        self.graphRefreshStateUpdated.toggle()
                         self.showAlert = true
                         return
                     }
                 default: break
                 }
-                self.retryRequestGraphData = true
-                self.graphDataRequested = false
+                self.graphRefreshState = .retryRequestGraphData
+                self.graphRefreshStateUpdated.toggle()
                 self.initialGraphDataRecievedOrError = true
 
             }
@@ -339,32 +304,23 @@ struct HomeView: View {
             path: "api/user/getstockgraphdata/",
             httpMethod: .post,
             params: [
-                "start_date" : self.date as Any
+                "start_date" : self.startDate as Any
             ],
             app_version: sessionManager.app_version,
             sessionManager: sessionManager,
             responseType: StockDataPoints.self
         ) { response in
-//            print("self.date", self.date)
             switch response {
             case .success(let responseData):
-//                print("successful getGraphData")
-                self.retryGetGraphData = false
-                self.useDefaultData = false
+                self.graphRefreshState = .updateGraph
+                self.graphRefreshStateUpdated.toggle()
                 self.graphData = responseData.data
             case .failure(let networkError):
-//                print("failed getGraphData", networkError)
                 switch networkError {
-                case .decodingError:
-                    self.retryGetGraphData = false
-                    self.graphDataRequested = true
-                    self.retryRequestGraphData = true
                 case .statusCodeError(let status):
                     if status == 401 {
                         self.alertMessage = "Your session has expired. To retrieve updated information, please logout then sign in."
-                        self.retryRequestGraphData = false
-                        self.graphDataRequested = false
-                        self.retryGetGraphData = false
+                        self.graphRefreshState = .start
                         self.showAlert = true
                         return
                     }
@@ -372,14 +328,12 @@ struct HomeView: View {
                 }
                 if self.getGraphDataRetries > 0 {
                     self.getGraphDataRetries -= 1
-                    self.retryGetGraphData = true
-                    self.graphDataRequested = false
-                    self.retryRequestGraphData = false
+                    self.graphRefreshState = .retryGetGraphData
+                    self.graphRefreshStateUpdated.toggle()
                 } else {
                     self.getGraphDataRetries = 5
-                    self.retryGetGraphData = false
-                    self.graphDataRequested = false
-                    self.retryRequestGraphData = true
+                    self.graphRefreshState = .retryRequestGraphData
+                    self.graphRefreshStateUpdated.toggle()
                     self.initialGraphDataRecievedOrError = true
                 }
             }
@@ -399,7 +353,10 @@ enum HomeTabs: CaseIterable {
         case .account: return "person.crop.circle"
         }
     }
-    
+}
+
+enum GraphRefreshState: CaseIterable {
+    case retryGetGraphData, retryRequestGraphData, graphDataRequested, updateGraph, start
 }
 
 #Preview {

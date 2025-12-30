@@ -282,22 +282,6 @@ struct StockGraphView: View {
         }
     }
     
-    private static func getCustomDate() -> Date {
-        let utcCalendar = Calendar(identifier: .gregorian)
-        let utcTimeZone = TimeZone(secondsFromGMT: 0)! // UTC
-
-        var components = DateComponents()
-        components.year = 2025
-        components.month = 1
-        components.day = 1
-        components.hour = 8
-        components.minute = 30
-        components.timeZone = utcTimeZone
-
-        let utcDate = utcCalendar.date(from: components)!
-        return utcDate
-    }
-    
     func formatDate(_ date: Date) -> String {
         let granularity = GraphUtils.granularityByPartition(
             partitionName: timePeriod,
